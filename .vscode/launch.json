@@ -1,0 +1,16 @@
+{
+    "configurations": [
+        {
+            "name": "C#: API [Default Configuration]",
+            "type": "dotnet",
+            "request": "launch",
+            "projectPath": "${workspaceFolder}\\ajk-iot-api\\ajk-iot-api.csproj"
+        },
+        {
+            "name": "C#: WEB [Default Configuration]",
+            "type": "dotnet",
+            "request": "launch",
+            "projectPath": "${workspaceFolder}\\ajk-iot-web\\ajk-iot-web.csproj"
+        }
+    ]
+}
