@@ -1,3 +1,0 @@
-# AJKIOTSolution
-
-Mobile App
