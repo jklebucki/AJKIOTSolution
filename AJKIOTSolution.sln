@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ajk-iot-api", "ajk-iot-api\ajk-iot-api.csproj", "{433481F9-C14C-4E8C-A5AA-252E96D4095D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "API", "API\API.csproj", "{30CCC5C0-3667-403D-A08C-AD65B8D1B31C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ajk-iot-web", "ajk-iot-web\ajk-iot-web.csproj", "{3DE137B9-4801-4D5D-A3FA-5A21A19600E3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WEB", "WEB\WEB.csproj", "{97B76F79-FDB4-493A-9575-BB31907E935E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,14 +13,14 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{433481F9-C14C-4E8C-A5AA-252E96D4095D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{433481F9-C14C-4E8C-A5AA-252E96D4095D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{433481F9-C14C-4E8C-A5AA-252E96D4095D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{433481F9-C14C-4E8C-A5AA-252E96D4095D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3DE137B9-4801-4D5D-A3FA-5A21A19600E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3DE137B9-4801-4D5D-A3FA-5A21A19600E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3DE137B9-4801-4D5D-A3FA-5A21A19600E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3DE137B9-4801-4D5D-A3FA-5A21A19600E3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{30CCC5C0-3667-403D-A08C-AD65B8D1B31C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{30CCC5C0-3667-403D-A08C-AD65B8D1B31C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{30CCC5C0-3667-403D-A08C-AD65B8D1B31C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{30CCC5C0-3667-403D-A08C-AD65B8D1B31C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97B76F79-FDB4-493A-9575-BB31907E935E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97B76F79-FDB4-493A-9575-BB31907E935E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97B76F79-FDB4-493A-9575-BB31907E935E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97B76F79-FDB4-493A-9575-BB31907E935E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
