@@ -4,13 +4,18 @@
             "name": "C#: API [Default Configuration]",
             "type": "dotnet",
             "request": "launch",
-            "projectPath": "${workspaceFolder}\\ajk-iot-api\\ajk-iot-api.csproj"
+            "projectPath": "${workspaceFolder}/ajk-iot-api/ajk-iot-api.csproj"
         },
         {
-            "name": "C#: WEB [Default Configuration]",
-            "type": "dotnet",
+            "name": "c#: WEB",
+            "type": "coreclr",
             "request": "launch",
-            "projectPath": "${workspaceFolder}\\ajk-iot-web\\ajk-iot-web.csproj"
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/ajk-iot-web/bin/Debug/net7.0/ajk-iot-web.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/ajk-iot-web",
+            "console": "internalConsole",
+            "stopAtEntry": false
         }
     ]
 }
