@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AJKIOT.Web", "AJKIOT.Web\AJKIOT.Web.csproj", "{F432228E-E740-436C-AAEA-F716B08AD3B7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AJKIOT.Web", "AJKIOT.Web\AJKIOT.Web.csproj", "{F432228E-E740-436C-AAEA-F716B08AD3B7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AJKIOT.Api", "AJKIOT.Api\AJKIOT.Api.csproj", "{58A935EE-6B0C-4512-B1AF-B627DDA65B97}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AJKIOT.Api", "AJKIOT.Api\AJKIOT.Api.csproj", "{58A935EE-6B0C-4512-B1AF-B627DDA65B97}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
