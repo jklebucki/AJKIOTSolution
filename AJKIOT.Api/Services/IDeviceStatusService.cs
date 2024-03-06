@@ -1,6 +1,5 @@
-using System;
-using System.Net.WebSockets;
 using AJKIOT.Api.Models;
+using System.Net.WebSockets;
 
 namespace AJKIOT.Api.Services
 {
