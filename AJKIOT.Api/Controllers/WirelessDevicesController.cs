@@ -1,10 +1,12 @@
 using AJKIOT.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AJKIoTServer.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Authorize]
     public class WirelessDevicesController : ControllerBase
     {
         private readonly IDeviceStatusService _statusService;
