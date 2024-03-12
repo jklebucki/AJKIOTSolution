@@ -1,5 +1,3 @@
-using System;
-
 namespace AJKIOT.Api.Models
 {
     public class DeviceStatus
