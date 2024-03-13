@@ -1,4 +1,4 @@
-using AJKIOT.Api.Models;
+using AJKIOT.Shared.Models;
 using System.Net.WebSockets;
 
 namespace AJKIOT.Api.Services

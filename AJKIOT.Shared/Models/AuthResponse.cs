@@ -1,4 +1,4 @@
-﻿namespace AJKIOT.Api.Models
+﻿namespace AJKIOT.Shared.Models
 {
     public class AuthResponse
     {

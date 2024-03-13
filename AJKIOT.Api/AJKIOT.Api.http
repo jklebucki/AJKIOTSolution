@@ -1,6 +1,6 @@
-@AJKIOT.Api_HostAddress = http://localhost:5217
+@AJKIOT.Api_HostAddress = http://localhost:5158
 
-GET {{AJKIOT.Api_HostAddress}}/weatherforecast/
+GET {{AJKIOT.Api_HostAddress}}/device/all/
 Accept: application/json
 
 ###

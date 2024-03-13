@@ -1,4 +1,4 @@
-﻿namespace AJKIOT.Api.Models.DeviceFeatures
+﻿namespace AJKIOT.Shared.Models.DeviceFeatures
 {
     public class Knob
     {
