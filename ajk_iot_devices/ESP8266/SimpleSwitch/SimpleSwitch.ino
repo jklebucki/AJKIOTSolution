@@ -3,21 +3,27 @@
 #include <WiFiClient.h>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
+#include <ArduinoJson.h>
 using namespace websockets2_generic;
 
 WebsocketsClient client;
 const char* ssid = "---";
 const char* password = "---";
-const String device_name = "Door";
 const String api_address = "wss://iot.ajk-software.pl/ws";
-const int device_id = 100002;
 const long utcOffsetInSeconds = 3600;
+JsonDocument device;
+
+
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
 char daysOfTheWeek[7][12] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
 int PIN_P = 0;
 
 void setup() {
+  device["name"] = "Door";
+  device["id"] = "100002";
+  device["features"][0]="Switch";
+  device["features"][1]="Knob";
   Serial.begin(115200);
   pinMode(PIN_P, OUTPUT);
   digitalWrite(PIN_P, HIGH);
@@ -37,13 +43,13 @@ void setup() {
 }
 
 void onClientMessage(WebsocketsMessage message) {
-  if (message.data() == String(device_name + ":" + device_id + ":1:")) {
+  if (message.data() == String(device["name"].as<String>() + ":" + device["id"].as<String>() + ":1:")) {
     Serial.println("Switched");
     timeClient.update();
     Serial.println(timeClient.getFormattedTime());
     digitalWrite(PIN_P, LOW);
     delay(3000);
-    String device_status = String(device_name + ":" + device_id + ":2:");
+    String device_status = String(device["name"].as<String>() + ":" + device["id"].as<String>() + ":2:");
     client.send(device_status);
   }
   digitalWrite(PIN_P, HIGH);
@@ -56,7 +62,7 @@ void loop() {
       return;
     }
   }
-  String device_status = String(device_name + ":" + device_id + ":" + digitalRead(PIN_P) + ":");
+  String device_status = String(device["name"].as<String>() + ":" + device["id"].as<String>() + ":" + digitalRead(PIN_P) + ":");
   client.send(device_status);
   client.poll();
 }
