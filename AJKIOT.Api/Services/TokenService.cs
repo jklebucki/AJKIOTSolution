@@ -49,12 +49,12 @@ namespace AJKIOT.Api.Services
             {
                 var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, jwtSub),
+                new Claim(JwtRegisteredClaimNames.Sub, jwtSub!),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()),
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(ClaimTypes.Name, user.UserName),
-                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Name, user.UserName!),
+                new Claim(ClaimTypes.Email, user.Email!),
                 new Claim(ClaimTypes.Role, user.Role.ToString())
             };
 
@@ -73,7 +73,7 @@ namespace AJKIOT.Api.Services
 
             return new SigningCredentials(
                 new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes(symmetricSecurityKey)
+                    Encoding.UTF8.GetBytes(symmetricSecurityKey!)
                 ),
                 SecurityAlgorithms.HmacSha256
             );

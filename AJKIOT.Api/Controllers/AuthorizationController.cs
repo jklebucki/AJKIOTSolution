@@ -1,7 +1,7 @@
 ﻿using AJKIOT.Api.Data;
-using AJKIOT.Api.Enums;
 using AJKIOT.Api.Models;
 using AJKIOT.Api.Services;
+using AJKIOT.Shared.Enums;
 using AJKIOT.Shared.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;

@@ -2,7 +2,7 @@ namespace AJKIOT.Shared.Models
 {
     public class DeviceStatus
     {
-        public string OwnerId { get; set; } 
+        public string? OwnerId { get; set; }
         public int DeviceId { get; set; }
         public string? DeviceName { get; set; }
         public int PinStatus { get; set; }

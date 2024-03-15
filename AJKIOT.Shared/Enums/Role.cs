@@ -1,4 +1,4 @@
-﻿namespace AJKIOT.Api.Enums
+﻿namespace AJKIOT.Shared.Enums
 {
     public enum Role
     {

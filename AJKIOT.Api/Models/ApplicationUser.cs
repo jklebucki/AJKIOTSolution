@@ -1,4 +1,4 @@
-﻿using AJKIOT.Api.Enums;
+﻿using AJKIOT.Shared.Enums;
 using Microsoft.AspNetCore.Identity;
 
 namespace AJKIOT.Api.Models

@@ -1,7 +1,7 @@
-﻿using AJKIOT.Api.Enums;
+﻿using AJKIOT.Shared.Enums;
 using System.ComponentModel.DataAnnotations;
 
-namespace AJKIOT.Api.Models
+namespace AJKIOT.Shared.Models
 {
     public class RegistrationRequest
     {
