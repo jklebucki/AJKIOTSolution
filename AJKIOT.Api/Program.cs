@@ -12,7 +12,8 @@ using System.Text.Json.Serialization;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IDeviceStatusService, DeviceStatusService>();
-builder.Services.AddScoped<TokenService, TokenService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddDbContext<ApplicationDbContext>(opt => opt.UseNpgsql("Host=localhost;Database=ajkiotapi;Username=pguser;Password=pguser@99"));
 

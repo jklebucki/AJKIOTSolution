@@ -6,7 +6,7 @@ using System.Text;
 
 namespace AJKIOT.Api.Services
 {
-    public class TokenService
+    public class TokenService : ITokenService
     {
         private const int ExpirationMinutes = 30;
         private readonly ILogger<TokenService> _logger;
