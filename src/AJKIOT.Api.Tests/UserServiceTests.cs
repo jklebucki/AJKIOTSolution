@@ -1,12 +1,8 @@
-﻿using Moq;
-using Microsoft.AspNetCore.Identity;
-using AJKIOT.Api.Data;
-using AJKIOT.Api.Models;
+﻿using AJKIOT.Api.Models;
 using AJKIOT.Api.Services;
-using System;
-using System.Threading.Tasks;
-using Xunit;
 using AJKIOT.Shared.Models;
+using Microsoft.AspNetCore.Identity;
+using Moq;
 
 namespace AJKIOT.Api.Tests
 {
