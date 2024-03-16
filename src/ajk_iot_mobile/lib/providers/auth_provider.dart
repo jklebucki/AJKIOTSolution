@@ -27,7 +27,7 @@ class AuthProvider with ChangeNotifier {
     if (response.statusCode == 200) {
       final responseData = json.decode(response.body);
       _token = responseData['token'][0];
-      _refreshToken = responseData['token'][0];
+      _refreshToken = responseData['token'][1];
       await _storage.write(key: 'jwt', value: _token);
       await _storage.write(key: 'jwtRefresh', value: _refreshToken);
       setUserInfo(responseData);
@@ -50,7 +50,7 @@ class AuthProvider with ChangeNotifier {
     if (response.statusCode == 200) {
       final responseData = json.decode(response.body);
       _token = responseData['token'][0];
-      _refreshToken = responseData['token'][0];
+      _refreshToken = responseData['token'][1];
       await _storage.write(key: 'jwt', value: _token);
       await _storage.write(key: 'jwtRefresh', value: _refreshToken);
       notifyListeners();
