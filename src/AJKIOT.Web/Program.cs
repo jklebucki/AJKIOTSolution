@@ -1,6 +1,7 @@
 using AJKIOT.Web.Components;
 using AJKIOT.Web.Components.Account;
 using AJKIOT.Web.Data;
+using AJKIOT.Web.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -34,6 +35,11 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
     .AddDefaultTokenProviders();
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+
+builder.Services.AddScoped<LocalStorageService>();
+builder.Services.AddSingleton<ITokenService, TokenService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://twojapi.com") });
 
 var app = builder.Build();
 
