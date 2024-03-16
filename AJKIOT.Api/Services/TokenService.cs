@@ -1,4 +1,5 @@
 ﻿using AJKIOT.Api.Models;
+using AJKIOT.Shared.Enums;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -9,6 +10,7 @@ namespace AJKIOT.Api.Services
     public class TokenService : ITokenService
     {
         private const int ExpirationMinutes = 30;
+        private const int RefreshTokenExpirationDays = 7;
         private readonly ILogger<TokenService> _logger;
 
         public TokenService(ILogger<TokenService> logger)
@@ -16,7 +18,7 @@ namespace AJKIOT.Api.Services
             _logger = logger;
         }
 
-        public string CreateToken(ApplicationUser user)
+        public string[] CreateToken(ApplicationUser user)
         {
             var expiration = DateTime.UtcNow.AddMinutes(ExpirationMinutes);
             var token = CreateJwtToken(
@@ -28,7 +30,20 @@ namespace AJKIOT.Api.Services
 
             _logger.LogInformation("JWT Token created");
 
-            return tokenHandler.WriteToken(token);
+            var refreshTokenExpiration = DateTime.UtcNow.AddDays(RefreshTokenExpirationDays);
+            user.Role = Role.RefreshToken;
+            var refreshToken = CreateJwtToken(
+                CreateClaims(user),
+                CreateSigningCredentials(),
+                refreshTokenExpiration
+            );
+            _logger.LogInformation("JWT Refresh Token created");
+
+            return
+            [
+                tokenHandler.WriteToken(token),
+                tokenHandler.WriteToken(token)
+            ];
         }
 
         private JwtSecurityToken CreateJwtToken(List<Claim> claims, SigningCredentials credentials,

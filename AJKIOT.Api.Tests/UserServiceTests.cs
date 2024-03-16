@@ -21,7 +21,7 @@ namespace AJKIOT.Api.Tests
             _mockUserManager = new Mock<UserManager<ApplicationUser>>(
                 Mock.Of<IUserStore<ApplicationUser>>(), null, null, null, null, null, null, null, null);
 
-            _mockTokenService.Setup(x => x.CreateToken(It.IsAny<ApplicationUser>())).Returns("MockedToken");
+            _mockTokenService.Setup(x => x.CreateToken(It.IsAny<ApplicationUser>())).Returns(["MockedToken"]);
 
             _userService = new UserService(_mockUserManager.Object, null, _mockTokenService.Object);
         }
@@ -47,7 +47,7 @@ namespace AJKIOT.Api.Tests
             var user = new ApplicationUser { UserName = "user@example.com", Email = "user@example.com" };
             _mockUserManager.Setup(x => x.FindByEmailAsync(It.IsAny<string>())).ReturnsAsync(user);
             _mockUserManager.Setup(x => x.CheckPasswordAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>())).ReturnsAsync(true);
-            _mockTokenService.Setup(x => x.CreateToken(It.IsAny<ApplicationUser>())).Returns("MockedToken");
+            _mockTokenService.Setup(x => x.CreateToken(It.IsAny<ApplicationUser>())).Returns(["MockedToken"]);
 
             // Act
             var result = await _userService.AuthenticateUserAsync(new AuthRequest { Email = "user@example.com", Password = "Password123!" });
@@ -55,7 +55,7 @@ namespace AJKIOT.Api.Tests
             // Assert
             Assert.True(result.IsSuccess);
             Assert.NotNull(result.Data);
-            Assert.Equal("MockedToken", result.Data.Token);
+            Assert.Equal("MockedToken", result.Data.Token[0]);
         }
 
         [Fact]

@@ -3,6 +3,7 @@
     public enum Role
     {
         Admin,
-        User
+        User,
+        RefreshToken
     }
 }
