@@ -6,9 +6,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class AuthProvider with ChangeNotifier {
   final String _baseUrl = 'https://localhost:7253/api/Users';
   String _token = "";
+  String _refreshToken = "";
   final _storage = const FlutterSecureStorage();
   Map<String, dynamic> _userInfo = {};
-
 
   bool get isAuthenticated => _token != null;
   Map<String, dynamic> get userInfo => _userInfo;
@@ -26,9 +26,33 @@ class AuthProvider with ChangeNotifier {
 
     if (response.statusCode == 200) {
       final responseData = json.decode(response.body);
-      _token = responseData['token'];
+      _token = responseData['token'][0];
+      _refreshToken = responseData['token'][0];
       await _storage.write(key: 'jwt', value: _token);
-      setUserInfo(responseData); // Załóżmy, że API zwraca informacje o użytkowniku w 'user'
+      await _storage.write(key: 'jwtRefresh', value: _refreshToken);
+      setUserInfo(responseData);
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  Future<bool> refreshToken() async {
+    final url = Uri.parse('$_baseUrl/refresh');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'refreshToken': _refreshToken,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final responseData = json.decode(response.body);
+      _token = responseData['token'][0];
+      _refreshToken = responseData['token'][0];
+      await _storage.write(key: 'jwt', value: _token);
+      await _storage.write(key: 'jwtRefresh', value: _refreshToken);
       notifyListeners();
       return true;
     }
@@ -40,20 +64,21 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> tryAutoLogin() async {
-    final storedToken = await _storage.read(key: 'jwt');
+  Future<bool> tryAutoLogin() async {
+    final storedToken = await _storage.read(key: 'jwtRefresh');
     if (storedToken != null) {
-      _token = storedToken;
-      // Tutaj możesz chcieć ponownie pobrać informacje o użytkowniku z API,
-      // używając storedToken do uwierzytelnienia żądania
+      await refreshToken();
       notifyListeners();
+      return true;
     }
+    return false;
   }
 
   Future<void> logout() async {
     _token = "";
     _userInfo = {};
     await _storage.delete(key: 'jwt');
+    await _storage.delete(key: 'jwtRefresh');
     notifyListeners();
   }
 }
