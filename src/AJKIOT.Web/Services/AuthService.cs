@@ -1,6 +1,5 @@
 ﻿using AJKIOT.Shared.Models;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Identity.Data;
 using System.Net.Http.Headers;
 
 namespace AJKIOT.Web.Services
