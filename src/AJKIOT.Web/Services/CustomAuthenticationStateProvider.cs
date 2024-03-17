@@ -15,16 +15,16 @@ namespace AJKIOT.Web.Services
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
             var identity = new ClaimsIdentity();
-            if (_authenticationService.CurrentUser != null && !string.IsNullOrEmpty(_authenticationService.CurrentUser.Token))
-            {
-                // Tutaj możesz dodać więcej informacji na temat użytkownika, jeśli są dostępne
-                var claims = new[]
-                {
-                new Claim(ClaimTypes.Name, _authenticationService.CurrentUser.Username),
-                // Dodaj inne claims, jeśli są dostępne i potrzebne
-            };
-                identity = new ClaimsIdentity(claims, "CustomAuth");
-            }
+            //if (_authenticationService.CurrentUser != null && !string.IsNullOrEmpty(_authenticationService.CurrentUser.Token))
+            //{
+            //    // Tutaj możesz dodać więcej informacji na temat użytkownika, jeśli są dostępne
+            //    var claims = new[]
+            //    {
+            //    new Claim(ClaimTypes.Name, _authenticationService.CurrentUser.Username),
+            //    // Dodaj inne claims, jeśli są dostępne i potrzebne
+            //};
+            //    identity = new ClaimsIdentity(claims, "CustomAuth");
+            //}
 
             var user = new ClaimsPrincipal(identity);
             return new AuthenticationState(user);
