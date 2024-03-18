@@ -1,11 +1,12 @@
 ﻿using AJKIOT.Shared.Models;
+using AJKIOT.Web.Data;
 
 namespace AJKIOT.Web.Services
 {
     public interface ITokenService
     {
-        Task SaveToken(UserCredentials tokens);
-        Task<UserCredentials> GetSavedToken();
+        Task SaveToken(ApplicationUser applicationUser);
+        Task<ApplicationUser> GetSavedToken();
         Task ClearToken();
     }
 }

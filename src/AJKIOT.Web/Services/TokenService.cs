@@ -1,4 +1,5 @@
 ﻿using AJKIOT.Shared.Models;
+using AJKIOT.Web.Data;
 
 namespace AJKIOT.Web.Services
 {
@@ -13,14 +14,14 @@ namespace AJKIOT.Web.Services
             _localStorageService = localStorageService;
         }
 
-        public async Task SaveToken(UserCredentials tokenResponse)
+        public async Task SaveToken(ApplicationUser applicatioUser)
         {
-            await _localStorageService.SaveTokenAsync(tokenResponse.AccessToken, tokenResponse.RefreshToken);
+            await _localStorageService.SaveApplicationUserAsync(applicatioUser);
         }
 
-        public async Task<UserCredentials> GetSavedToken()
+        public async Task<ApplicationUser> GetSavedToken()
         {
-            return await _localStorageService.GetTokenAsync();
+            return await _localStorageService.GetApplicationUserAsync();
         }
 
         public async Task ClearToken()

@@ -1,4 +1,5 @@
 ﻿using AJKIOT.Shared.Models;
+using AJKIOT.Web.Data;
 using Microsoft.AspNetCore.Components;
 using System.Net.Http.Headers;
 
@@ -23,13 +24,11 @@ namespace AJKIOT.Web.Services
         {
             var response = await _httpClient.PostAsJsonAsync("api/auth/login", new AuthRequest { Email = email, Password = password });
 
-            if (!response.IsSuccessStatusCode)
-            {
-                return false;
-            }
+            if (!response.IsSuccessStatusCode) return false;
 
             var loginResponse = await response.Content.ReadFromJsonAsync<AuthResponse>();
-            await _tokenService.SaveToken(new UserCredentials() { AccessToken = loginResponse.Token[0], RefreshToken = loginResponse.Token[1] });
+            if (loginResponse == null) return false;
+            await _tokenService.SaveToken(new ApplicationUser { Username = loginResponse.Username!, Email = loginResponse.Email!, Credentials = new UserCredentials() { AccessToken = loginResponse.Token[0], RefreshToken = loginResponse.Token[1] } });
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResponse.Token[0]);
             return true;
         }
@@ -44,7 +43,8 @@ namespace AJKIOT.Web.Services
             }
 
             var registerResponse = await response.Content.ReadFromJsonAsync<AuthResponse>();
-            await _tokenService.SaveToken(new UserCredentials() { AccessToken = registerResponse.Token[0], RefreshToken = registerResponse.Token[1] });
+            if (registerResponse == null) return false;
+            await _tokenService.SaveToken(new ApplicationUser { Username = registerResponse.Username!, Email = registerResponse.Email!, Credentials = new UserCredentials() { AccessToken = registerResponse.Token[0], RefreshToken = registerResponse.Token[1] } });
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", registerResponse.Token[0]);
             return true;
         }
@@ -58,13 +58,14 @@ namespace AJKIOT.Web.Services
 
         public async Task<bool> RefreshTokenAsync()
         {
-            var credentials = await _localStorageService.GetTokenAsync();
-            if (credentials == null || string.IsNullOrEmpty(credentials?.RefreshToken) || string.IsNullOrEmpty(credentials?.AccessToken))
+            var applicationUser = await _localStorageService.GetApplicationUserAsync();
+            if (applicationUser == null) return false;
+            if (applicationUser == null || string.IsNullOrEmpty(applicationUser.Credentials?.RefreshToken) || string.IsNullOrEmpty(applicationUser.Credentials?.AccessToken))
             {
                 return false;
             }
 
-            var refreshResponse = await _httpClient.PostAsJsonAsync("api/auth/refresh", new { RefreshToken = credentials.RefreshToken });
+            var refreshResponse = await _httpClient.PostAsJsonAsync("api/auth/refresh", new { RefreshToken = applicationUser.Credentials.RefreshToken });
 
             if (!refreshResponse.IsSuccessStatusCode)
             {
@@ -74,7 +75,8 @@ namespace AJKIOT.Web.Services
             var loginResponse = await refreshResponse.Content.ReadFromJsonAsync<AuthResponse>();
             if (loginResponse == null || loginResponse.Token == null)
                 return false;
-            await _localStorageService.SaveTokenAsync(loginResponse.Token[0], loginResponse.Token[1]);
+            var newUser = new ApplicationUser { Username = loginResponse.Username!, Email = loginResponse.Email!, Credentials = new UserCredentials { AccessToken = loginResponse.Token[0], RefreshToken = loginResponse.Token[1] } };
+            await _localStorageService.SaveApplicationUserAsync(newUser);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResponse.Token[0]);
             return true;
         }
