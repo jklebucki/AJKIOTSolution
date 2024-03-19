@@ -2,6 +2,7 @@
 using AJKIOT.Web.Data;
 using Microsoft.AspNetCore.Components;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 
 namespace AJKIOT.Web.Services
 {
@@ -22,7 +23,7 @@ namespace AJKIOT.Web.Services
 
         public async Task<bool> LoginAsync(string email, string password)
         {
-            var response = await _httpClient.PostAsJsonAsync("api/auth/login", new AuthRequest { Email = email, Password = password });
+            var response = await _httpClient.PostAsJsonAsync("api/Users/login", new AuthRequest { Email = email, Password = password });
 
             if (!response.IsSuccessStatusCode) return false;
 
@@ -35,7 +36,7 @@ namespace AJKIOT.Web.Services
 
         public async Task<bool> RegisterAsync(RegistrationRequest registrationRequest)
         {
-            var response = await _httpClient.PostAsJsonAsync("api/auth/register", registrationRequest);
+            var response = await _httpClient.PostAsJsonAsync("api/Users/register", registrationRequest);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -65,7 +66,7 @@ namespace AJKIOT.Web.Services
                 return false;
             }
 
-            var refreshResponse = await _httpClient.PostAsJsonAsync("api/auth/refresh", new { RefreshToken = applicationUser.Credentials.RefreshToken });
+            var refreshResponse = await _httpClient.PostAsJsonAsync("api/Users/refresh", new { RefreshToken = applicationUser.Credentials.RefreshToken });
 
             if (!refreshResponse.IsSuccessStatusCode)
             {

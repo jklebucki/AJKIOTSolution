@@ -1,5 +1,4 @@
-﻿using AJKIOT.Shared.Models;
-using AJKIOT.Web.Data;
+﻿using AJKIOT.Web.Data;
 
 namespace AJKIOT.Web.Services
 {
