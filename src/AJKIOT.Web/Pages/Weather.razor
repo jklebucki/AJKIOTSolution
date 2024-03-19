@@ -1,9 +1,9 @@
-﻿@page "/fetchdata"
+﻿@page "/weather"
 @inject HttpClient Http
 
-<PageTitle>Blazor Bootstrap - Weather forecast</PageTitle>
+<PageTitle>Weather</PageTitle>
 
-<h1>Weather forecast</h1>
+<h1>Weather</h1>
 
 <p>This component demonstrates fetching data from the server.</p>
 
@@ -41,7 +41,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("sample-data/weather.json");
+        //forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("sample-data/weather.json");
     }
 
     public class WeatherForecast

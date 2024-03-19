@@ -23,7 +23,16 @@ namespace AJKIOT.Web.Services
 
         public async Task<bool> LoginAsync(string email, string password)
         {
-            var response = await _httpClient.PostAsJsonAsync("api/Users/login", new AuthRequest { Email = email, Password = password });
+            var response = new HttpResponseMessage();
+            try
+            {
+                response = await _httpClient.PostAsJsonAsync("api/Users/login", new AuthRequest { Email = email, Password = password });
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+
 
             if (!response.IsSuccessStatusCode) return false;
 

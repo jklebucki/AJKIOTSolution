@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components.Authorization;
+﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
 using System.Text.Json;
 
@@ -8,26 +9,36 @@ namespace AJKIOT.Web.Services
     {
         private readonly IAuthService _authenticationService;
         private readonly LocalStorageService _localStorageService;
+        private readonly ILogger<CustomAuthenticationStateProvider> _logger;
+        private NavigationManager Navigation;
 
-        public CustomAuthenticationStateProvider(IAuthService authenticationService, LocalStorageService localStorageService)
+        public CustomAuthenticationStateProvider(IAuthService authenticationService, LocalStorageService localStorageService, ILogger<CustomAuthenticationStateProvider> logger)
         {
-            _authenticationService = authenticationService;
-            _localStorageService = localStorageService;
+            _authenticationService = authenticationService ?? throw new ArgumentNullException(nameof(authenticationService));
+            _localStorageService = localStorageService ?? throw new ArgumentNullException(nameof(localStorageService));
+            _logger = logger;
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
             var identity = new ClaimsIdentity();
-            var currentUser = await _localStorageService.GetApplicationUserAsync();
-            if (currentUser != null)
+            try
             {
-                var claims = new List<Claim>
+                var currentUser = await _localStorageService.GetApplicationUserAsync();
+                if (currentUser != null && !string.IsNullOrWhiteSpace(currentUser.Credentials?.AccessToken))
                 {
-                    new Claim(ClaimTypes.Name, currentUser.Username),
-                    new Claim(ClaimTypes.Role, "User")
-                };
-                claims.AddRange(ParseClaimsFromJwt(currentUser.Credentials!.AccessToken!));
-                identity = new ClaimsIdentity(claims, "Bearer");
+                    var claims = new List<Claim>
+                    {
+                        new Claim(ClaimTypes.Name, currentUser.Username),
+                        new Claim(ClaimTypes.Role, "User")
+                    };
+                    claims.AddRange(ParseClaimsFromJwt(currentUser.Credentials.AccessToken));
+                    identity = new ClaimsIdentity(claims, "Bearer");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
             }
 
             var user = new ClaimsPrincipal(identity);
@@ -50,11 +61,23 @@ namespace AJKIOT.Web.Services
         private IEnumerable<Claim> ParseClaimsFromJwt(string jwt)
         {
             var claims = new List<Claim>();
-            var payload = jwt.Split('.')[1];
-            var jsonBytes = ParseBase64WithoutPadding(payload);
-            var keyValuePairs = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonBytes);
-            keyValuePairs.TryGetValue(ClaimTypes.Name, out var name);
-            claims.Add(new Claim(ClaimTypes.Name, name.ToString()));
+            try
+            {
+                var payload = jwt.Split('.')[1];
+                var jsonBytes = ParseBase64WithoutPadding(payload);
+                var keyValuePairs = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonBytes);
+                if (keyValuePairs != null)
+                {
+                    foreach (var keyValuePair in keyValuePairs)
+                    {
+                        claims.Add(new Claim(keyValuePair.Key, keyValuePair.Value.ToString()));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+            }
             return claims;
         }
 
@@ -68,5 +91,4 @@ namespace AJKIOT.Web.Services
             return Convert.FromBase64String(base64);
         }
     }
-
 }
