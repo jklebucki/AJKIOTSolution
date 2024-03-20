@@ -1,0 +1,48 @@
+﻿@page "/devices"
+@using AJKIOT.Shared.Models
+@using AJKIOT.Web.Services
+@inject IApiService api
+
+<PageTitle>Devices</PageTitle>
+
+<h1>Devices</h1>
+
+<p>Your devices</p>
+
+@if (devices == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>DeviceFeaturesJson</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var device in devices)
+            {
+                <tr>
+                    <td>@device.DeviceId</td>
+                    <td>@device.DeviceName</td>
+                    <td>@device.DeviceFeaturesJson</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IEnumerable<DeviceStatus> devices = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        devices = await api.GetDeviceStatusAsync(0);
+    }
+
+    
+}

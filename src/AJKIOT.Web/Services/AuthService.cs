@@ -10,14 +10,12 @@ namespace AJKIOT.Web.Services
     {
         private readonly HttpClient _httpClient;
         private readonly ITokenService _tokenService;
-        private readonly NavigationManager _navigationManager;
         private readonly LocalStorageService _localStorageService;
 
-        public AuthService(HttpClient httpClient, ITokenService tokenService, NavigationManager navigationManager, LocalStorageService localStorageService)
+        public AuthService(HttpClient httpClient, ITokenService tokenService, LocalStorageService localStorageService)
         {
             _httpClient = httpClient;
             _tokenService = tokenService;
-            _navigationManager = navigationManager;
             _localStorageService = localStorageService;
         }
 
@@ -63,7 +61,6 @@ namespace AJKIOT.Web.Services
         {
             await _tokenService.ClearToken();
             _httpClient.DefaultRequestHeaders.Authorization = null;
-            _navigationManager.NavigateTo("/login");
         }
 
         public async Task<bool> RefreshTokenAsync()

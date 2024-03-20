@@ -7,5 +7,6 @@ namespace AJKIOT.Web.Services
         Task SaveToken(ApplicationUser applicationUser);
         Task<ApplicationUser> GetSavedToken();
         Task ClearToken();
+        Task AddTokenToHeader(HttpClient httpClient);
     }
 }

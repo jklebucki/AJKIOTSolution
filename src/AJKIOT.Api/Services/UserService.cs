@@ -11,12 +11,16 @@ namespace AJKIOT.Api.Services
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _context;
         private readonly ITokenService _tokenService;
+        private readonly ILogger _logger;
+        private readonly IEmailSender _emailSender;
 
-        public UserService(UserManager<ApplicationUser> userManager, ApplicationDbContext context, ITokenService tokenService)
+        public UserService(UserManager<ApplicationUser> userManager, ApplicationDbContext context, ITokenService tokenService, IEmailSender emailSender, ILogger logger)
         {
             _userManager = userManager;
             _context = context;
             _tokenService = tokenService;
+            _logger = logger;
+            _emailSender = emailSender;
         }
 
         public async Task<ServiceResponse<AuthResponse>> AuthenticateUserAsync(AuthRequest request)

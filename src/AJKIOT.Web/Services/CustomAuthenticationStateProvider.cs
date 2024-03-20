@@ -7,14 +7,11 @@ namespace AJKIOT.Web.Services
 {
     public class CustomAuthenticationStateProvider : AuthenticationStateProvider
     {
-        private readonly IAuthService _authenticationService;
         private readonly LocalStorageService _localStorageService;
         private readonly ILogger<CustomAuthenticationStateProvider> _logger;
-        private NavigationManager Navigation;
 
         public CustomAuthenticationStateProvider(IAuthService authenticationService, LocalStorageService localStorageService, ILogger<CustomAuthenticationStateProvider> logger)
         {
-            _authenticationService = authenticationService ?? throw new ArgumentNullException(nameof(authenticationService));
             _localStorageService = localStorageService ?? throw new ArgumentNullException(nameof(localStorageService));
             _logger = logger;
         }

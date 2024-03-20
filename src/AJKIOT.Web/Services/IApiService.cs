@@ -4,7 +4,7 @@ namespace AJKIOT.Web.Services
 {
     public interface IApiService
     {
-        Task<AuthResponse> LoginAsync(AuthRequest authRequest);
+        Task<IEnumerable<DeviceStatus>> GetDeviceStatusAsync(int userId);
 
     }
 }

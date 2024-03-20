@@ -14,6 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<IDeviceStatusService, DeviceStatusService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IEmailSender, EmailSenderService>();
 
 builder.Services.AddDbContext<ApplicationDbContext>(opt => opt.UseNpgsql("Host=dbsrv.local;Database=ajkiotapi;Username=pguser;Password=pguser@99"));
 

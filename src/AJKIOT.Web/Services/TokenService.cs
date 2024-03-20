@@ -1,4 +1,5 @@
 ﻿using AJKIOT.Web.Data;
+using System.Net.Http.Headers;
 
 namespace AJKIOT.Web.Services
 {
@@ -26,6 +27,12 @@ namespace AJKIOT.Web.Services
         public async Task ClearToken()
         {
             await _localStorageService.ClearTokenAsync();
+        }
+
+        public async Task AddTokenToHeader(HttpClient httpClient)
+        {
+            var token = await GetSavedToken();
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Credentials.AccessToken);
         }
     }
 }

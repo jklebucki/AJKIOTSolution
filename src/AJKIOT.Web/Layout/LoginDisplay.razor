@@ -1,5 +1,6 @@
-﻿@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
-@inject NavigationManager Navigation
+﻿@using AJKIOT.Web.Services
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
 
 <AuthorizeView>
     <Authorized>
@@ -12,8 +13,11 @@
 </AuthorizeView>
 
 @code{
+
     public void BeginLogOut()
     {
-        Navigation.NavigateTo("/Account/Logout");
+        AuthService.LogoutAsync();
+        NavigationManager.NavigateTo("/");
+        NavigationManager.Refresh();
     }
 }
