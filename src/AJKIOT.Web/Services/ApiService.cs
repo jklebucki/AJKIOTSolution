@@ -1,5 +1,4 @@
 ﻿using AJKIOT.Shared.Models;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
 namespace AJKIOT.Web.Services
@@ -13,7 +12,7 @@ namespace AJKIOT.Web.Services
         {
             _httpClient = httpClient;
             _tokenService = tokenService;
-            
+
         }
 
         public async Task<IEnumerable<DeviceStatus>> GetDeviceStatusAsync(int userId)

@@ -4,6 +4,7 @@ using AJKIOT.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -14,8 +15,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<IDeviceStatusService, DeviceStatusService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IEmailSender, EmailSenderService>();
-
 builder.Services.AddDbContext<ApplicationDbContext>(opt => opt.UseNpgsql("Host=dbsrv.local;Database=ajkiotapi;Username=pguser;Password=pguser@99"));
 
 builder.Services.AddControllers().AddJsonOptions(opt =>
@@ -93,6 +92,14 @@ builder.Services.AddAuthentication(options =>
             ),
         };
     });
+
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+builder.Services.AddSingleton<IEmailSender, EmailSenderService>(serviceProvider =>
+{
+    var smtpSettings = serviceProvider.GetRequiredService<IOptions<SmtpSettings>>().Value;
+    var logger = serviceProvider.GetRequiredService<ILogger<EmailSenderService>>();
+    return new EmailSenderService(smtpSettings, logger);
+});
 
 builder.Services.AddCors(options =>
 {

@@ -1,7 +1,9 @@
-﻿namespace AJKIOT.Api.Services
+﻿using MimeKit;
+
+namespace AJKIOT.Api.Services
 {
     public interface IEmailSender
     {
-        Task SendEmailAsync(string to, string subject, string body);
+        Task SendEmailAsync(MailboxAddress from, MailboxAddress to, string subject, string body);
     }
 }

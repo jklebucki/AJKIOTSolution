@@ -2,6 +2,7 @@
 using AJKIOT.Shared.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MimeKit;
 
 namespace AJKIOT.Api.Controllers
 {
@@ -19,8 +20,11 @@ namespace AJKIOT.Api.Controllers
         }
 
         [HttpPost("send")]
-        public IActionResult Send(Email email)
+        public async Task<IActionResult> Send(Email email)
         {
+            var from = new MailboxAddress("AJKIOT", email.From);
+            var to = new MailboxAddress(email.To, email.To);
+            await _emailSender.SendEmailAsync(from, to, email.Subject, email.Body);
             return Ok();
         }
     }
