@@ -8,8 +8,6 @@
 
 @inject ILogger<Register> Logger
 @inject NavigationManager NavigationManager
-@inject IEmailSender EmailSender
-
 
 <PageTitle>Register</PageTitle>
 
@@ -56,7 +54,7 @@
     public async Task RegisterUser(EditContext editContext)
     {
         var user = new ApplicationUser();
-        await EmailSender.SendEmailAsync(Input.Email,"Confirm your email","Please confirm your account by <a href=\"\">clicking here</a>.");
+
     }
 
 

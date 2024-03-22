@@ -14,7 +14,6 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IApiService, ApiService>();
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7253") });
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
-builder.Services.AddScoped<IEmailSender, EmailSenderService>();
 builder.Services.AddApiAuthorization();
 
 await builder.Build().RunAsync();
