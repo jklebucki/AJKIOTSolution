@@ -4,7 +4,7 @@ namespace AJKIOT.Api.Services
 {
     public interface IUserService
     {
-        Task<ServiceResponse<AuthResponse>> AuthenticateUserAsync(AuthRequest request);
-        Task<ServiceResponse<RegistrationRequest>> RegisterUserAsync(RegistrationRequest request);
+        Task<ApiResponse<AuthResponse>> AuthenticateUserAsync(AuthRequest request);
+        Task<ApiResponse<AuthResponse>> RegisterUserAsync(RegistrationRequest request);
     }
 }

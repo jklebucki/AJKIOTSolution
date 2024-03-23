@@ -10,50 +10,69 @@ namespace AJKIOT.Web.Services
         private readonly HttpClient _httpClient;
         private readonly ITokenService _tokenService;
         private readonly LocalStorageService _localStorageService;
+        private readonly ILogger<AuthService> _logger;
 
-        public AuthService(HttpClient httpClient, ITokenService tokenService, LocalStorageService localStorageService)
+        public AuthService(HttpClient httpClient, ITokenService tokenService, LocalStorageService localStorageService, ILogger<AuthService> logger)
         {
             _httpClient = httpClient;
             _tokenService = tokenService;
             _localStorageService = localStorageService;
+            _logger = logger;
         }
 
-        public async Task<bool> LoginAsync(string email, string password)
+        public async Task<ApiResponse<AuthResponse>> LoginAsync(AuthRequest authRequest)
         {
-            var response = new HttpResponseMessage();
             try
             {
-                response = await _httpClient.PostAsJsonAsync("api/Users/login", new AuthRequest { Email = email, Password = password });
+                var authResponse = await _httpClient.PostAsJsonAsync("api/Users/login", authRequest);
+                var loginResponse = await authResponse.Content.ReadFromJsonAsync<ApiResponse<AuthResponse>>();
+                if (!authResponse.IsSuccessStatusCode)
+                    return loginResponse!;
+
+                if (loginResponse != null && loginResponse.Data != null)
+                    await _tokenService.SaveToken(new ApplicationUser
+                    {
+                        Username = loginResponse.Data.Username!,
+                        Email = loginResponse.Data.Email!,
+                        Credentials = new UserCredentials()
+                        {
+                            AccessToken = loginResponse.Data.Tokens[0],
+                            RefreshToken = loginResponse.Data.Tokens[1]
+                        }
+                    });
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResponse.Data.Tokens[0]);
+                return loginResponse;
             }
             catch (Exception ex)
             {
-                return false;
+                return new ApiResponse<AuthResponse>() { Data = null, Errors = new List<string>() { ex.Message } };
             }
 
 
-            if (!response.IsSuccessStatusCode) return false;
 
-            var loginResponse = await response.Content.ReadFromJsonAsync<AuthResponse>();
-            if (loginResponse == null) return false;
-            await _tokenService.SaveToken(new ApplicationUser { Username = loginResponse.Username!, Email = loginResponse.Email!, Credentials = new UserCredentials() { AccessToken = loginResponse.Token[0], RefreshToken = loginResponse.Token[1] } });
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResponse.Token[0]);
-            return true;
         }
 
-        public async Task<bool> RegisterAsync(RegistrationRequest registrationRequest)
+        public async Task<ApiResponse<AuthResponse>> RegisterAsync(RegistrationRequest registrationRequest)
         {
-            var response = await _httpClient.PostAsJsonAsync("api/Users/register", registrationRequest);
-
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                return false;
-            }
+                var response = await _httpClient.PostAsJsonAsync("api/Users/register", registrationRequest);
+                if (!response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<ApiResponse<AuthResponse>>();
+                }
 
-            var registerResponse = await response.Content.ReadFromJsonAsync<AuthResponse>();
-            if (registerResponse == null) return false;
-            await _tokenService.SaveToken(new ApplicationUser { Username = registerResponse.Username!, Email = registerResponse.Email!, Credentials = new UserCredentials() { AccessToken = registerResponse.Token[0], RefreshToken = registerResponse.Token[1] } });
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", registerResponse.Token[0]);
-            return true;
+                var registerResponse = await response.Content.ReadFromJsonAsync<ApiResponse<AuthResponse>>();
+                if (registerResponse == null) return await response.Content.ReadFromJsonAsync<ApiResponse<AuthResponse>>();
+                await _tokenService.SaveToken(new ApplicationUser { Username = registerResponse.Data.Username!, Email = registerResponse.Data.Email!, Credentials = new UserCredentials() { AccessToken = registerResponse.Data.Tokens[0], RefreshToken = registerResponse.Data.Tokens[1] } });
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", registerResponse.Data.Tokens[0]);
+                return registerResponse;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return new ApiResponse<AuthResponse>() { Data = null, Errors = new List<string>() { ex.Message } };
+            }
         }
 
         public async Task LogoutAsync()
@@ -79,11 +98,11 @@ namespace AJKIOT.Web.Services
             }
 
             var loginResponse = await refreshResponse.Content.ReadFromJsonAsync<AuthResponse>();
-            if (loginResponse == null || loginResponse.Token == null)
+            if (loginResponse == null || loginResponse.Tokens == null)
                 return false;
-            var newUser = new ApplicationUser { Username = loginResponse.Username!, Email = loginResponse.Email!, Credentials = new UserCredentials { AccessToken = loginResponse.Token[0], RefreshToken = loginResponse.Token[1] } };
+            var newUser = new ApplicationUser { Username = loginResponse.Username!, Email = loginResponse.Email!, Credentials = new UserCredentials { AccessToken = loginResponse.Tokens[0], RefreshToken = loginResponse.Tokens[1] } };
             await _localStorageService.SaveApplicationUserAsync(newUser);
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResponse.Token[0]);
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResponse.Tokens[0]);
             return true;
         }
     }

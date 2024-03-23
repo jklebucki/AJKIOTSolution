@@ -23,29 +23,38 @@ namespace AJKIOT.Api.Services
             _emailSender = emailSender;
         }
 
-        public async Task<ServiceResponse<AuthResponse>> AuthenticateUserAsync(AuthRequest request)
+        public async Task<ApiResponse<AuthResponse>> AuthenticateUserAsync(AuthRequest request)
         {
-            var response = new ServiceResponse<AuthResponse>();
+            var response = new ApiResponse<AuthResponse>();
             var user = await _userManager.FindByEmailAsync(request.Email!);
-            if (user == null || !(await _userManager.CheckPasswordAsync(user, request.Password!)))
+            if (user == null || !await _userManager.CheckPasswordAsync(user, request.Password!))
             {
                 response.Errors.Add("Unauthorized");
                 return response;
             }
 
-            var token = _tokenService.CreateToken(user);
-            response.Data = new AuthResponse
-            {
-                Username = user.UserName,
-                Email = user.Email,
-                Token = token,
-            };
-            return response;
+            return await CreateAuthResponseAsync(user.Email!);
         }
 
-        public async Task<ServiceResponse<RegistrationRequest>> RegisterUserAsync(RegistrationRequest request)
+        private async Task<ApiResponse<AuthResponse>> CreateAuthResponseAsync(string email)
         {
-            var response = new ServiceResponse<RegistrationRequest>();
+            var user = await _userManager.FindByEmailAsync(email);
+            var tokens = _tokenService.CreateToken(user!);
+            return new ApiResponse<AuthResponse>
+            {
+                Data = new AuthResponse
+                {
+                    Username = user!.UserName,
+                    Email = user.Email,
+                    Tokens = tokens
+                },
+                Errors = new List<string>()
+            };
+        }
+
+        public async Task<ApiResponse<AuthResponse>> RegisterUserAsync(RegistrationRequest request)
+        {
+
             var result = await _userManager.CreateAsync(new ApplicationUser
             {
                 UserName = request.Username,
@@ -55,15 +64,29 @@ namespace AJKIOT.Api.Services
 
             if (!result.Succeeded)
             {
+                var response = new ApiResponse<AuthResponse>();
                 foreach (var error in result.Errors)
                 {
                     response.Errors.Add(error.Description);
                 }
                 return response;
             }
+            else
+            {
+                //var response = await CreateAuthResponseAsync(request.Email!);
+                var user = await _userManager.FindByEmailAsync(request.Email!);
+                return new ApiResponse<AuthResponse>
+                {
+                    Data = new AuthResponse
+                    {
+                        Username = request.Username,
+                        Email = request.Email,
+                        Tokens = _tokenService.CreateToken(user!)
+                    },
+                    Errors = new List<string>()
+                };
+            }
 
-            response.Data = request;
-            return response;
         }
     }
 }

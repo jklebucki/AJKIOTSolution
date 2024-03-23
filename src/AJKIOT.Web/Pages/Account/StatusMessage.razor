@@ -1,0 +1,15 @@
+﻿@if (!string.IsNullOrEmpty(DisplayMessage))
+{
+    var statusMessageClass = DisplayMessage.ToLower().Contains("error") ? "danger" : "success";
+    <div class="alert alert-@statusMessageClass" role="alert">
+        @DisplayMessage
+    </div>
+}
+
+@code {
+
+    [Parameter]
+    public string? Message { get; set; }
+    private string? DisplayMessage => Message;
+
+}

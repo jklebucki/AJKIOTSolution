@@ -113,6 +113,16 @@ builder.Services.AddCors(options =>
         });
 });
 
+// builder.WebHost.ConfigureKestrel(opts =>
+// {
+//     opts.ListenAnyIP(5203); 
+//     opts.ListenAnyIP(5204, listenOptions => listenOptions.UseHttps());  
+//     // opts.ListenAnyIP(5005, listenOptions => // listen on https://*:5005
+//     // {
+//     //     listenOptions.UseHttps("testCert.pfx", "testPassword");
+//     // });
+// });
+
 var app = builder.Build();
 
 app.UseCors("AllowAll");

@@ -3,11 +3,16 @@
 @using System.ComponentModel.DataAnnotations
 @using System.Text
 @using System.Text.Encodings.Web
+@using AJKIOT.Shared.Enums
+@using AJKIOT.Shared.Models
 @using AJKIOT.Web.Data
 @using AJKIOT.Web.Services
+@using AJKIOT.Web.Validation
 
 @inject ILogger<Register> Logger
 @inject NavigationManager NavigationManager
+@inject IAuthService AuthService
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Register</PageTitle>
 
@@ -22,7 +27,12 @@
             <hr />
             <ValidationSummary class="text-danger" role="alert" />
             <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                <InputText @bind-Value="Input.Username" class="form-control" autocomplete="username" aria-required="true" placeholder="example name" />
+                <label for="username">Username</label>
+                <ValidationMessage For="() => Input.Username" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.Email" class="form-control" autocomplete="email" aria-required="true" placeholder="name@example.com" />
                 <label for="email">Email</label>
                 <ValidationMessage For="() => Input.Email" class="text-danger" />
             </div>
@@ -49,26 +59,79 @@
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
 
-    private string? Message => "";
-
-    public async Task RegisterUser(EditContext editContext)
+    private string? Message = "";
+    protected override async Task OnInitializedAsync()
     {
-        var user = new ApplicationUser();
-
+        AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+        await CheckAuthenticationState();
     }
 
+    private async void OnAuthenticationStateChanged(Task<AuthenticationState> task)
+    {
+        await CheckAuthenticationState();
+    }
+
+    private async Task CheckAuthenticationState()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            NavigationManager.NavigateTo(ReturnUrl ?? "/");
+        }
+    }
+    public async Task RegisterUser(EditContext editContext)
+    {
+        if (editContext.Validate())
+        {
+            var registrationRequest = new RegistrationRequest
+                {
+                    Username = Input.Username,
+                    Email = Input.Email,
+                    Password = Input.Password,
+                    Role = Role.User
+                };
+            var registerResponse = await AuthService.RegisterAsync(registrationRequest);
+            if (registerResponse.IsSuccess)
+            {
+                var customProvider = AuthenticationStateProvider as CustomAuthenticationStateProvider;
+                if (customProvider != null)
+                {
+                    customProvider.NotifyUserAuthentication();
+                }
+            }
+            DisplayErrorMessages(registerResponse.Errors);
+        }
+    }
+
+    private void DisplayErrorMessages(IEnumerable<string> messages)
+    {
+        var stringBuilder = new StringBuilder();
+        stringBuilder.AppendLine("The following errors occurred: ");
+        foreach (var message in messages)
+        {
+            stringBuilder.AppendLine(message);
+        }
+        Message = stringBuilder.ToString();
+    }
 
     private sealed class InputModel
     {
+        [Required]
+        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]
+        [Display(Name = "Username")]
+        public string Username { get; set; } = "";
+
         [Required]
         [EmailAddress]
         [Display(Name = "Email")]
         public string Email { get; set; } = "";
 
         [Required]
-        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
         [DataType(DataType.Password)]
         [Display(Name = "Password")]
+        [StrongPassword(ErrorMessage = "Password does not meet complexity requirements.")]
         public string Password { get; set; } = "";
 
         [DataType(DataType.Password)]

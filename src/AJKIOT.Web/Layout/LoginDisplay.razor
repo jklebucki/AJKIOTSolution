@@ -1,6 +1,7 @@
 ﻿@using AJKIOT.Web.Services
 @inject IAuthService AuthService
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <AuthorizeView>
     <Authorized>
@@ -13,11 +14,34 @@
 </AuthorizeView>
 
 @code{
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+        await CheckAuthenticationState();
+    }
 
+    private async void OnAuthenticationStateChanged(Task<AuthenticationState> task)
+    {
+        await CheckAuthenticationState();
+    }
+
+    private async Task CheckAuthenticationState()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+    }
     public void BeginLogOut()
     {
         AuthService.LogoutAsync();
-        NavigationManager.NavigateTo("/");
-        NavigationManager.Refresh();
+        var customProvider = AuthenticationStateProvider as CustomAuthenticationStateProvider;
+        if (customProvider != null)
+        {
+            customProvider.NotifyUserAuthentication();
+        }
     }
 }

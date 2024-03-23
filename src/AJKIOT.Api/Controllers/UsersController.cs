@@ -22,14 +22,9 @@ namespace AJKIOT.Api.Controllers
             var result = await _userService.RegisterUserAsync(request);
             if (result.IsSuccess)
             {
-                return CreatedAtAction(nameof(Register), new { email = request.Email, role = request.Role }, request);
+                return CreatedAtAction("Register", result);
             }
-
-            foreach (var error in result.Errors)
-            {
-                ModelState.AddModelError("", error);
-            }
-            return BadRequest(ModelState);
+            return BadRequest(result);
         }
 
         [HttpPost]
@@ -39,7 +34,7 @@ namespace AJKIOT.Api.Controllers
             var result = await _userService.AuthenticateUserAsync(request);
             if (result.IsSuccess)
             {
-                return Ok(result.Data);
+                return Ok(result);
             }
 
             return Unauthorized(result.Errors);

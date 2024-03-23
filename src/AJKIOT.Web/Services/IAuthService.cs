@@ -4,9 +4,9 @@ namespace AJKIOT.Web.Services
 {
     public interface IAuthService
     {
-        Task<bool> LoginAsync(string username, string password);
+        Task<ApiResponse<AuthResponse>> LoginAsync(AuthRequest authRequest);
         Task LogoutAsync();
         Task<bool> RefreshTokenAsync();
-        Task<bool> RegisterAsync(RegistrationRequest registrationRequest);
+        Task<ApiResponse<AuthResponse>> RegisterAsync(RegistrationRequest registrationRequest);
     }
 }

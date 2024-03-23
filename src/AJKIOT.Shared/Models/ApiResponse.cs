@@ -1,6 +1,6 @@
-﻿namespace AJKIOT.Api.Services
+﻿namespace AJKIOT.Shared.Models
 {
-    public class ServiceResponse<T>
+    public class ApiResponse<T>
     {
         public T? Data { get; set; }
         public List<string> Errors { get; set; } = new List<string>();

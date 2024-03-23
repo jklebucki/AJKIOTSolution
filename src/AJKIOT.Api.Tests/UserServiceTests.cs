@@ -1,7 +1,9 @@
-﻿using AJKIOT.Api.Models;
+﻿using AJKIOT.Api.Data;
+using AJKIOT.Api.Models;
 using AJKIOT.Api.Services;
 using AJKIOT.Shared.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace AJKIOT.Api.Tests
@@ -19,7 +21,7 @@ namespace AJKIOT.Api.Tests
 
             _mockTokenService.Setup(x => x.CreateToken(It.IsAny<ApplicationUser>())).Returns(["MockedToken"]);
 
-            _userService = new UserService(_mockUserManager.Object, null, _mockTokenService.Object);
+            _userService = new UserService(_mockUserManager.Object, null, _mockTokenService.Object, null, null);
         }
 
         [Fact]
@@ -51,7 +53,7 @@ namespace AJKIOT.Api.Tests
             // Assert
             Assert.True(result.IsSuccess);
             Assert.NotNull(result.Data);
-            Assert.Equal("MockedToken", result.Data.Token[0]);
+            Assert.Equal("MockedToken", result.Data.Tokens[0]);
         }
 
         [Fact]
@@ -83,5 +85,6 @@ namespace AJKIOT.Api.Tests
             Assert.True(result.IsSuccess);
             Assert.Equal("user@example.com", result.Data.Email);
         }
-    }
+
+     }
 }
