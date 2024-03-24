@@ -1,9 +1,7 @@
-﻿using AJKIOT.Api.Data;
-using AJKIOT.Api.Models;
+﻿using AJKIOT.Api.Models;
 using AJKIOT.Api.Services;
 using AJKIOT.Shared.Models;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace AJKIOT.Api.Tests
@@ -86,5 +84,5 @@ namespace AJKIOT.Api.Tests
             Assert.Equal("user@example.com", result.Data.Email);
         }
 
-     }
+    }
 }

@@ -63,15 +63,10 @@
     protected override async Task OnInitializedAsync()
     {
         AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
-        await CheckAuthenticationState();
+        await Task.CompletedTask;
     }
 
     private async void OnAuthenticationStateChanged(Task<AuthenticationState> task)
-    {
-        await CheckAuthenticationState();
-    }
-
-    private async Task CheckAuthenticationState()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
@@ -81,7 +76,9 @@
             NavigationManager.NavigateTo(ReturnUrl ?? "/");
         }
     }
+
     public async Task RegisterUser(EditContext editContext)
+
     {
         if (editContext.Validate())
         {

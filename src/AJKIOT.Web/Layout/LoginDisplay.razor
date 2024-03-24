@@ -17,24 +17,20 @@
     protected override async Task OnInitializedAsync()
     {
         AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
-        await CheckAuthenticationState();
+        await Task.CompletedTask;
     }
 
     private async void OnAuthenticationStateChanged(Task<AuthenticationState> task)
     {
-        await CheckAuthenticationState();
-    }
-
-    private async Task CheckAuthenticationState()
-    {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
-        if (user.Identity.IsAuthenticated)
+        if (!user.Identity.IsAuthenticated)
         {
             NavigationManager.NavigateTo("/");
         }
     }
+
     public void BeginLogOut()
     {
         AuthService.LogoutAsync();
