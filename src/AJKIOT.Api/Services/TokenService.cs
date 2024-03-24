@@ -12,28 +12,35 @@ namespace AJKIOT.Api.Services
         private const int ExpirationMinutes = 30;
         private const int RefreshTokenExpirationDays = 7;
         private readonly ILogger<TokenService> _logger;
+        private readonly IConfigurationSection _jwtTokenConfig;
 
-        public TokenService(ILogger<TokenService> logger)
+        public TokenService(ILogger<TokenService> logger, IConfiguration configuration)
         {
             _logger = logger;
+            _jwtTokenConfig = configuration.GetSection("JwtTokenSettings");
+            if (_jwtTokenConfig == null || string.IsNullOrEmpty(_jwtTokenConfig["SymmetricSecurityKey"])
+                || string.IsNullOrEmpty(_jwtTokenConfig["JwtRegisteredClaimNamesSub"])
+                || string.IsNullOrEmpty(_jwtTokenConfig["ValidIssuer"])
+                || string.IsNullOrEmpty(_jwtTokenConfig["ValidAudience"]))
+            {
+                throw new InvalidOperationException("JwtTokenSettings section is missing in configuration.");
+            }
         }
 
         public string[] CreateToken(ApplicationUser user)
         {
-            var expiration = DateTime.UtcNow.AddMinutes(ExpirationMinutes);
-            var token = CreateJwtToken(
-                CreateClaims(user),
+            var accessTokenExpiration = DateTime.UtcNow.AddMinutes(ExpirationMinutes);
+            var accessToken = CreateJwtToken(
+                CreateClaims(user, false), // False indicates this is not a refresh token
                 CreateSigningCredentials(),
-                expiration
+                accessTokenExpiration
             );
             var tokenHandler = new JwtSecurityTokenHandler();
-
-            _logger.LogInformation("JWT Token created");
+            _logger.LogInformation("JWT Access Token created");
 
             var refreshTokenExpiration = DateTime.UtcNow.AddDays(RefreshTokenExpirationDays);
-            user.Role = Role.RefreshToken;
             var refreshToken = CreateJwtToken(
-                CreateClaims(user),
+                CreateClaims(user, true), // True indicates this is a refresh token
                 CreateSigningCredentials(),
                 refreshTokenExpiration
             );
@@ -41,57 +48,51 @@ namespace AJKIOT.Api.Services
 
             return
             [
-                tokenHandler.WriteToken(token),
-                tokenHandler.WriteToken(token)
+                tokenHandler.WriteToken(accessToken),
+                tokenHandler.WriteToken(refreshToken)
             ];
         }
 
-        private JwtSecurityToken CreateJwtToken(List<Claim> claims, SigningCredentials credentials,
-            DateTime expiration) =>
-            new(
-                new ConfigurationBuilder().AddJsonFile("appsettings.json").Build().GetSection("JwtTokenSettings")["ValidIssuer"],
-                new ConfigurationBuilder().AddJsonFile("appsettings.json").Build().GetSection("JwtTokenSettings")["ValidAudience"],
-                claims,
+        private JwtSecurityToken CreateJwtToken(IEnumerable<Claim> claims, SigningCredentials credentials, DateTime expiration)
+        {
+            return new JwtSecurityToken(
+                issuer: _jwtTokenConfig["ValidIssuer"],
+                audience: _jwtTokenConfig["ValidAudience"],
+                claims: claims,
                 expires: expiration,
                 signingCredentials: credentials
             );
+        }
 
-        private List<Claim> CreateClaims(ApplicationUser user)
+        private IEnumerable<Claim> CreateClaims(ApplicationUser user, bool isRefreshToken)
         {
-            var jwtSub = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build().GetSection("JwtTokenSettings")["JwtRegisteredClaimNamesSub"];
-
-            try
+            var claims = new List<Claim>
             {
-                var claims = new List<Claim>
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, jwtSub!),
+                new Claim(JwtRegisteredClaimNames.Sub, _jwtTokenConfig["JwtRegisteredClaimNamesSub"]!),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()),
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
                 new Claim(ClaimTypes.Name, user.UserName!),
                 new Claim(ClaimTypes.Email, user.Email!),
-                new Claim(ClaimTypes.Role, user.Role.ToString())
             };
 
-                return claims;
-            }
-            catch (Exception e)
+            if (isRefreshToken)
             {
-                Console.WriteLine(e);
-                throw;
+                claims.Add(new Claim(ClaimTypes.Role, Role.RefreshToken.ToString()));
             }
+            else
+            {
+                claims.Add(new Claim(ClaimTypes.Role, user.Role.ToString()));
+            }
+
+            return claims;
         }
 
         private SigningCredentials CreateSigningCredentials()
         {
-            var symmetricSecurityKey = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build().GetSection("JwtTokenSettings")["SymmetricSecurityKey"];
-
-            return new SigningCredentials(
-                new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes(symmetricSecurityKey!)
-                ),
-                SecurityAlgorithms.HmacSha256
-            );
+            var key = Encoding.UTF8.GetBytes(_jwtTokenConfig["SymmetricSecurityKey"]!);
+            var symmetricSecurityKey = new SymmetricSecurityKey(key);
+            return new SigningCredentials(symmetricSecurityKey, SecurityAlgorithms.HmacSha256);
         }
     }
 }

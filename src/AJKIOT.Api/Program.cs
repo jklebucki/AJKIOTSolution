@@ -15,6 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<IDeviceStatusService, DeviceStatusService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ITemplateService, TemplateService>();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(opt => opt.UseNpgsql(connectionString));
 
@@ -99,7 +100,8 @@ builder.Services.AddSingleton<IEmailSender, EmailSenderService>(serviceProvider 
 {
     var smtpSettings = serviceProvider.GetRequiredService<IOptions<SmtpSettings>>().Value;
     var logger = serviceProvider.GetRequiredService<ILogger<EmailSenderService>>();
-    return new EmailSenderService(smtpSettings, logger);
+    var templateService = serviceProvider.GetRequiredService<ITemplateService>();
+    return new EmailSenderService(smtpSettings, logger, templateService);
 });
 
 builder.Services.AddCors(options =>
