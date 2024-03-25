@@ -22,9 +22,10 @@ namespace AJKIOT.Api.Controllers
         [HttpPost("send")]
         public async Task<IActionResult> Send(Email email)
         {
-            var from = new MailboxAddress("AJKIOT", email.From);
-            var to = new MailboxAddress(email.To, email.To);
-            await _emailSender.SendEmailAsync(from, to, email.Subject, email.Body);
+            var from = new MailboxAddress(email.FromName, email.FromEmail);
+            var to = new MailboxAddress(email.ToName, email.ToEmail);
+            await _emailSender.SendEmailAsync(from, to, email.Subject, email.Body, email.IsHtml);
+            _logger.LogInformation($"Email from {email.FromEmail} to {email.ToEmail} sent");
             return Ok();
         }
     }

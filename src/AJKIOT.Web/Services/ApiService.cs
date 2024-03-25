@@ -7,29 +7,29 @@ namespace AJKIOT.Web.Services
     {
         private readonly HttpClient _httpClient;
         private readonly ITokenService _tokenService;
+        private readonly ILogger<ApiService> _logger;
 
-        public ApiService(HttpClient httpClient, ITokenService tokenService)
+        public ApiService(HttpClient httpClient, ITokenService tokenService, ILogger<ApiService> logger)
         {
             _httpClient = httpClient;
             _tokenService = tokenService;
-
+            _logger = logger;
         }
 
         public async Task<IEnumerable<DeviceStatus>> GetDeviceStatusAsync(int userId)
         {
             await _tokenService.AddTokenToHeader(_httpClient);
-            try
-            {
-                var response = await _httpClient.GetFromJsonAsync<IEnumerable<DeviceStatus>>("device/all");
-                if (response != null)
-                {
-                    return response;
-                }
-                return new List<DeviceStatus>();
-            }
-            catch (Exception ex)
-            {
+            var request = new HttpRequestMessage(HttpMethod.Get, "device/all");
+            var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
 
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<IEnumerable<DeviceStatus>>();
+                return result ?? new List<DeviceStatus>();
+            }
+            else
+            {
+                _logger.LogError($"Request failed with status code: {response.StatusCode}");
                 return new List<DeviceStatus>();
             }
 

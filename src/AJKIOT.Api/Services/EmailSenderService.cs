@@ -16,7 +16,7 @@ namespace AJKIOT.Api.Services
             _logger = logger;
             _templateService = templateService;
         }
-        public async Task SendEmailAsync(MailboxAddress from, MailboxAddress to, string subject, string body)
+        public async Task SendEmailAsync(MailboxAddress from, MailboxAddress to, string subject, string body, bool isHtml)
         {
             var message = new MimeMessage();
             message.From.Add(from);
