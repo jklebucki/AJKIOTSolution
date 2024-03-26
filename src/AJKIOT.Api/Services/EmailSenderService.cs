@@ -55,6 +55,7 @@ namespace AJKIOT.Api.Services
                 try
                 {
                     await SendMessageAsync(message);
+                    _logger.LogInformation($"Welcome email sent to: {email}");
                 }
                 catch (Exception ex)
                 {

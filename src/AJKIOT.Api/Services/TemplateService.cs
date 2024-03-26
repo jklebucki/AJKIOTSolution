@@ -7,7 +7,7 @@ namespace AJKIOT.Api.Services
         {
             //implement file reading here
             var filePath = Path.Combine(Directory.GetCurrentDirectory(), "HtmlTemplates", $"{name}");
-            if (!File.Exists(filePath))
+            if (File.Exists(filePath))
                 return await File.ReadAllTextAsync(filePath);
 
             return string.Empty;

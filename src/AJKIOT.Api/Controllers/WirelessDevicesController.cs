@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace AJKIoTServer.Controllers
 {
     [ApiController]
-    [Route("/api/[controller]")]
+    [Route("/api/devices")]
     [Authorize]
     public class WirelessDevicesController : ControllerBase
     {
@@ -16,7 +16,7 @@ namespace AJKIoTServer.Controllers
             _statusService = statusService;
         }
 
-        [HttpGet("/ws")]
+        [HttpGet("ws")]
         public async Task GetAsync()
         {
             if (HttpContext.WebSockets.IsWebSocketRequest)
@@ -30,20 +30,21 @@ namespace AJKIoTServer.Controllers
             }
         }
 
-        [HttpGet("/device/{deviceId}/{status}")]
+        [Route("{deviceId}/{status}")]
+        [HttpGet]
         public async Task<IActionResult> SetAsync(int deviceId, int status)
         {
             _statusService.ChangePinStatus(deviceId, status);
             return await Task.FromResult(Ok(_statusService.GetAllDevices()));
         }
 
-        [HttpGet("/device/{deviceId}")]
+        [HttpGet("{deviceId}")]
         public async Task<IActionResult> GetStatusAsync(int deviceId)
         {
             return await Task.FromResult(Ok(_statusService.GetDeviceStatus(deviceId)));
         }
 
-        [HttpGet("/device/all")]
+        [HttpGet("all")]
         public async Task<IActionResult> GetAllAsync()
         {
             return await Task.FromResult(Ok(_statusService.GetAllDevices()));

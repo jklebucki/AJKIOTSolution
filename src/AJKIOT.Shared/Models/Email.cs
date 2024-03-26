@@ -1,6 +1,4 @@
-﻿using System.Numerics;
-
-namespace AJKIOT.Shared.Models
+﻿namespace AJKIOT.Shared.Models
 {
     public class Email
     {

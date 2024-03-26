@@ -15,7 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<IDeviceStatusService, DeviceStatusService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<ITemplateService, TemplateService>();
+builder.Services.AddSingleton<ITemplateService, TemplateService>();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(opt => opt.UseNpgsql(connectionString));
 

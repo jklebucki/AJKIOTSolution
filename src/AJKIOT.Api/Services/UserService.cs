@@ -11,12 +11,14 @@ namespace AJKIOT.Api.Services
 
         private readonly ITokenService _tokenService;
         private readonly ILogger<UserService> _logger;
+        private readonly IEmailSender _emailSenderService;
 
-        public UserService(UserManager<ApplicationUser> userManager, ITokenService tokenService, ILogger<UserService> logger)
+        public UserService(UserManager<ApplicationUser> userManager, ITokenService tokenService, ILogger<UserService> logger, IEmailSender emailSenderService)
         {
             _userManager = userManager;
             _tokenService = tokenService;
             _logger = logger;
+            _emailSenderService = emailSenderService;
         }
 
         public async Task<ApiResponse<AuthResponse>> AuthenticateUserAsync(AuthRequest request)
@@ -55,6 +57,7 @@ namespace AJKIOT.Api.Services
             }
             else
             {
+                await _emailSenderService.SendWelcomeEmailAsync(request.Username!, request.Email!);
                 var response = await CreateAuthResponseAsync(request.Email!);
                 _logger.LogInformation($"User created: {request.Email}");
                 return response;
