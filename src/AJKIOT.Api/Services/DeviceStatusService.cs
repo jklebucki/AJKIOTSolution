@@ -6,7 +6,7 @@ namespace AJKIOT.Api.Services
 {
     public class DeviceStatusService : IDeviceStatusService
     {
-        private IList<DeviceStatus> devices = new List<DeviceStatus>();
+        private IList<IotDevice> devices = new List<IotDevice>();
 
         public void ChangePinStatus(int deviceId, int pinStatus)
         {
@@ -15,18 +15,18 @@ namespace AJKIOT.Api.Services
                 status.SetPinStatus = pinStatus;
         }
 
-        public IEnumerable<DeviceStatus> GetAllDevices()
+        public IEnumerable<IotDevice> GetAllDevices()
         {
             return devices;
         }
 
-        public DeviceStatus? GetDeviceStatus(int? deviceId)
+        public IotDevice? GetDeviceStatus(int? deviceId)
         {
             var deviceStatus = devices.FirstOrDefault(d => d.DeviceId == deviceId);
             return devices.FirstOrDefault(d => d.DeviceId == deviceId);
         }
 
-        public void SetDeviceStatus(DeviceStatus deviceStatus)
+        public void SetDeviceStatus(IotDevice deviceStatus)
         {
             var status = devices.FirstOrDefault(d => d.DeviceId == deviceStatus.DeviceId);
             if (status == null)
@@ -37,7 +37,7 @@ namespace AJKIOT.Api.Services
             }
         }
 
-        private void AddDeviceStatus(DeviceStatus deviceStatus)
+        private void AddDeviceStatus(IotDevice deviceStatus)
         {
             devices.Add(deviceStatus);
         }
@@ -76,9 +76,9 @@ namespace AJKIOT.Api.Services
             }
         }
 
-        public DeviceStatus MessageToDeviceStatus(string message)
+        public IotDevice MessageToDeviceStatus(string message)
         {
-            return new DeviceStatus
+            return new IotDevice
             {
                 DeviceId = int.Parse(message.Split(":")[1]),
                 DeviceName = message.Split(":")[0],

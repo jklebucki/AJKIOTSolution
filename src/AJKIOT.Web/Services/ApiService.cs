@@ -16,7 +16,7 @@ namespace AJKIOT.Web.Services
             _logger = logger;
         }
 
-        public async Task<IEnumerable<DeviceStatus>> GetDeviceStatusAsync(int userId)
+        public async Task<IEnumerable<IotDevice>> GetDeviceStatusAsync(int userId)
         {
             await _tokenService.AddTokenToHeader(_httpClient);
             var request = new HttpRequestMessage(HttpMethod.Get, "device/all");
@@ -24,13 +24,13 @@ namespace AJKIOT.Web.Services
 
             if (response.IsSuccessStatusCode)
             {
-                var result = await response.Content.ReadFromJsonAsync<IEnumerable<DeviceStatus>>();
-                return result ?? new List<DeviceStatus>();
+                var result = await response.Content.ReadFromJsonAsync<IEnumerable<IotDevice>>();
+                return result ?? new List<IotDevice>();
             }
             else
             {
                 _logger.LogError($"Request failed with status code: {response.StatusCode}");
-                return new List<DeviceStatus>();
+                return new List<IotDevice>();
             }
 
         }

@@ -1,6 +1,6 @@
 namespace AJKIOT.Shared.Models
 {
-    public class DeviceStatus
+    public class IotDevice
     {
         public string? OwnerId { get; set; }
         public int DeviceId { get; set; }
@@ -11,3 +11,4 @@ namespace AJKIOT.Shared.Models
 
     }
 }
+ n
