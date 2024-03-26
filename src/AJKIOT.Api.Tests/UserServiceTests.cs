@@ -12,6 +12,7 @@ namespace AJKIOT.Api.Tests
         private readonly Mock<UserManager<ApplicationUser>> _userManagerMock;
         private readonly Mock<ITokenService> _tokenServiceMock;
         private readonly Mock<ILogger<UserService>> _loggerMock;
+        private readonly Mock<IEmailSender> _emailSenderMock;
         private readonly UserService _userService;
 
         public UserServiceTests()
@@ -22,8 +23,8 @@ namespace AJKIOT.Api.Tests
 
             _tokenServiceMock = new Mock<ITokenService>();
             _loggerMock = new Mock<ILogger<UserService>>();
-
-            _userService = new UserService(_userManagerMock.Object, _tokenServiceMock.Object, _loggerMock.Object);
+            _emailSenderMock = new Mock<IEmailSender>();
+            _userService = new UserService(_userManagerMock.Object, _tokenServiceMock.Object, _loggerMock.Object, _emailSenderMock.Object);
         }
 
         [Fact]
