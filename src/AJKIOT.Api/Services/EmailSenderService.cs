@@ -38,6 +38,30 @@ namespace AJKIOT.Api.Services
 
         }
 
+        public async Task SendPasswordResetEmailAsync(string email, string? userName, string resetLink)
+        {
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress("AJKIOT System", "ajkiot@ajksoftware.pl"));
+            message.To.Add(new MailboxAddress(userName, email));
+            message.Subject = "AJKIOT - Password Reset";
+            var builder = new BodyBuilder();
+            var body = await _templateService.GetTemplateAsync("ResetPasswordEmail.html");
+            if (body != string.Empty)
+            {
+                body = body.Replace("[link]", resetLink).Replace("[username]", userName);
+                message.Body = builder.ToMessageBody();
+                try
+                {
+                    await SendMessageAsync(message);
+                    _logger.LogInformation($"Reset password email sent to: {email}");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"{ex.Message}");
+                }
+            }
+        }
+
         public async Task SendWelcomeEmailAsync(string username, string email)
         {
             var message = new MimeMessage();

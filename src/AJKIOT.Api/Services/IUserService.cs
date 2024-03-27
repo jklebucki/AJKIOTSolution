@@ -1,4 +1,5 @@
 ﻿using AJKIOT.Shared.Models;
+using Microsoft.AspNetCore.Identity.Data;
 
 namespace AJKIOT.Api.Services
 {
@@ -6,5 +7,7 @@ namespace AJKIOT.Api.Services
     {
         Task<ApiResponse<AuthResponse>> AuthenticateUserAsync(AuthRequest request);
         Task<ApiResponse<AuthResponse>> RegisterUserAsync(RegistrationRequest request);
+        Task<ApiResponse<bool>> SendPasswordResetLinkAsync(ResetPasswordRequest request);
+        Task<ApiResponse<bool>> ResetPasswordConfirmAsync(ResetPasswordConfirmRequest request);
     }
 }
