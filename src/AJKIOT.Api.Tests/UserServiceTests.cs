@@ -1,6 +1,7 @@
 ﻿using AJKIOT.Api.Models;
 using AJKIOT.Api.Services;
 using AJKIOT.Shared.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -14,6 +15,7 @@ namespace AJKIOT.Api.Tests
         private readonly Mock<ILogger<UserService>> _loggerMock;
         private readonly Mock<IEmailSender> _emailSenderMock;
         private readonly UserService _userService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         public UserServiceTests()
         {
@@ -23,8 +25,12 @@ namespace AJKIOT.Api.Tests
 
             _tokenServiceMock = new Mock<ITokenService>();
             _loggerMock = new Mock<ILogger<UserService>>();
-            _emailSenderMock = new Mock<IEmailSender>();
-            _userService = new UserService(_userManagerMock.Object, _tokenServiceMock.Object, _loggerMock.Object, _emailSenderMock.Object);
+            _emailSenderMock = new Mock<IEmailSender>();_httpContextAccessor = new Mock<IHttpContextAccessor>().Object;
+            var context = new DefaultHttpContext();
+            var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
+            httpContextAccessorMock.Setup(h => h.HttpContext).Returns(context);
+            _httpContextAccessor = httpContextAccessorMock.Object;
+            _userService = new UserService(_userManagerMock.Object, _tokenServiceMock.Object, _loggerMock.Object, _emailSenderMock.Object, _httpContextAccessor);
         }
 
         [Fact]

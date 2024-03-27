@@ -60,7 +60,7 @@ namespace AJKIOT.Api.Services
             }
             else
             {
-                await _emailSenderService.SendWelcomeEmailAsync(request.Username!, request.Email!);
+                await _emailSenderService.SendWelcomeEmailAsync(request.Username!, request.Email!, AppLink());
                 var response = await CreateAuthResponseAsync(request.Email!);
                 _logger.LogInformation($"User created: {request.Email}");
                 return response;
@@ -96,10 +96,8 @@ namespace AJKIOT.Api.Services
             try
             {
                 var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-                var requestScheme = _httpContextAccessor.HttpContext.Request.Scheme;
-                var host = _httpContextAccessor.HttpContext.Request.Host.Value;
-                var resetLink = $"{requestScheme}://{host}/reset-password?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email)}";
-                await _emailSenderService.SendPasswordResetEmailAsync(user.Email, user.UserName, resetLink);
+                var resetLink = $"{AppLink()}/reset-password?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email)}";
+                await _emailSenderService.SendResetPasswordEmailAsync(user.Email, user.UserName, resetLink);
                 _logger.LogInformation($"Password reset email sent: {request.Email}");
             }
             catch (Exception ex)
@@ -118,6 +116,7 @@ namespace AJKIOT.Api.Services
             if (user == null)
             {
                 _logger.LogWarning($"Attempt to reset password for non-existent email: {request.Email}");
+                response.Errors.Add("Invalid email address.");
                 return response;
             }
 
@@ -133,7 +132,16 @@ namespace AJKIOT.Api.Services
             }
 
             _logger.LogInformation($"Password has been successfully reset for {request.Email}");
+
+            await _emailSenderService.SendResetPasswordConfirmationEmailAsync(user.Email, user.UserName, AppLink());
             return response;
+        }
+
+        private string AppLink()
+        {
+            var requestScheme = _httpContextAccessor.HttpContext!.Request.Scheme;
+            var host = _httpContextAccessor.HttpContext.Request.Host.Value;
+            return $"{requestScheme}://{host}";
         }
     }
 }

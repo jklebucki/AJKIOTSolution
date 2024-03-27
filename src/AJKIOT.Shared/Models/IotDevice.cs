@@ -11,4 +11,3 @@ namespace AJKIOT.Shared.Models
 
     }
 }
- n

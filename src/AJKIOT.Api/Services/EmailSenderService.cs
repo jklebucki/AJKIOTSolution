@@ -38,7 +38,38 @@ namespace AJKIOT.Api.Services
 
         }
 
-        public async Task SendPasswordResetEmailAsync(string email, string? userName, string resetLink)
+        public async Task SendResetPasswordConfirmationEmailAsync(string? email, string? userName, string appLink)
+        {
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress("AJKIOT System", "ajkiot@ajksoftware.pl"));
+            message.To.Add(new MailboxAddress(userName, email));
+            message.Subject = "Your AJKIOT Password Has Been Reset";
+
+            var builder = new BodyBuilder();
+            var body = await _templateService.GetTemplateAsync("ResetPasswordConfirmationEmail.html");
+            if (body != string.Empty)
+            {
+                body = body.Replace("[link]", appLink).Replace("[username]", userName);
+                builder.HtmlBody = body;
+                message.Body = builder.ToMessageBody();
+
+                try
+                {
+                    await SendMessageAsync(message);
+                    _logger.LogInformation($"Password reset confirmation email sent to: {email}");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"Failed to send password reset confirmation email to {email}: {ex.Message}");
+                }
+            }
+            else
+            {
+                _logger.LogError("Failed to load the ResetPasswordConfirmationEmail.html template.");
+            }
+        }
+
+        public async Task SendResetPasswordEmailAsync(string email, string? userName, string resetLink)
         {
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress("AJKIOT System", "ajkiot@ajksoftware.pl"));
@@ -62,7 +93,7 @@ namespace AJKIOT.Api.Services
             }
         }
 
-        public async Task SendWelcomeEmailAsync(string username, string email)
+        public async Task SendWelcomeEmailAsync(string username, string email, string appLink)
         {
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress("AJKIOT System", "ajkiot@ajksoftware.pl"));
@@ -73,7 +104,7 @@ namespace AJKIOT.Api.Services
             var body = await _templateService.GetTemplateAsync("WelcomeEmail.html");
             if (body != string.Empty)
             {
-                builder.HtmlBody = body.Replace("[username]", username);
+                builder.HtmlBody = body.Replace("[link]", appLink).Replace("[username]", username);
                 message.Body = builder.ToMessageBody();
 
                 try
