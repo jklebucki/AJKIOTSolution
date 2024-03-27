@@ -7,7 +7,7 @@ namespace AJKIOT.Api.Services
     {
         Task<ApiResponse<AuthResponse>> AuthenticateUserAsync(AuthRequest request);
         Task<ApiResponse<AuthResponse>> RegisterUserAsync(RegistrationRequest request);
-        Task<ApiResponse<bool>> SendPasswordResetLinkAsync(ResetPasswordRequest request);
+        Task<ApiResponse<bool>> SendPasswordResetLinkAsync(ResetPasswordCustomRequest request);
         Task<ApiResponse<bool>> ResetPasswordConfirmAsync(ResetPasswordConfirmRequest request);
     }
 }

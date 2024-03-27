@@ -13,15 +13,13 @@ namespace AJKIOT.Api.Services
         private readonly ITokenService _tokenService;
         private readonly ILogger<UserService> _logger;
         private readonly IEmailSender _emailSenderService;
-        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public UserService(UserManager<ApplicationUser> userManager, ITokenService tokenService, ILogger<UserService> logger, IEmailSender emailSenderService, IHttpContextAccessor httpContextAccessor)
+        public UserService(UserManager<ApplicationUser> userManager, ITokenService tokenService, ILogger<UserService> logger, IEmailSender emailSenderService)
         {
             _userManager = userManager;
             _tokenService = tokenService;
             _logger = logger;
             _emailSenderService = emailSenderService;
-            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<ApiResponse<AuthResponse>> AuthenticateUserAsync(AuthRequest request)
@@ -60,7 +58,7 @@ namespace AJKIOT.Api.Services
             }
             else
             {
-                await _emailSenderService.SendWelcomeEmailAsync(request.Username!, request.Email!, AppLink());
+                await _emailSenderService.SendWelcomeEmailAsync(request.Username!, request.Email!, request.ApplicationAddress);
                 var response = await CreateAuthResponseAsync(request.Email!);
                 _logger.LogInformation($"User created: {request.Email}");
                 return response;
@@ -83,7 +81,7 @@ namespace AJKIOT.Api.Services
             };
         }
 
-        public async Task<ApiResponse<bool>> SendPasswordResetLinkAsync(ResetPasswordRequest request)
+        public async Task<ApiResponse<bool>> SendPasswordResetLinkAsync(ResetPasswordCustomRequest request)
         {
             var response = new ApiResponse<bool>();
             var user = await _userManager.FindByEmailAsync(request.Email);
@@ -96,7 +94,7 @@ namespace AJKIOT.Api.Services
             try
             {
                 var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-                var resetLink = $"{AppLink()}/reset-password?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email)}";
+                var resetLink = $"{request.ApplicationAddress}/reset-password?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email)}";
                 await _emailSenderService.SendResetPasswordEmailAsync(user.Email, user.UserName, resetLink);
                 _logger.LogInformation($"Password reset email sent: {request.Email}");
             }
@@ -133,15 +131,9 @@ namespace AJKIOT.Api.Services
 
             _logger.LogInformation($"Password has been successfully reset for {request.Email}");
 
-            await _emailSenderService.SendResetPasswordConfirmationEmailAsync(user.Email, user.UserName, AppLink());
+            await _emailSenderService.SendResetPasswordConfirmationEmailAsync(user.Email, user.UserName, request.ApplicationAddress);
             return response;
         }
 
-        private string AppLink()
-        {
-            var requestScheme = _httpContextAccessor.HttpContext!.Request.Scheme;
-            var host = _httpContextAccessor.HttpContext.Request.Host.Value;
-            return $"{requestScheme}://{host}";
-        }
     }
 }

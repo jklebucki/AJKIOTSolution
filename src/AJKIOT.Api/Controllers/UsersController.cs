@@ -40,7 +40,7 @@ namespace AJKIOT.Api.Controllers
         }
 
         [HttpPost("reset-password-request")]
-        public async Task<IActionResult> RequestResetPassword([FromBody] ResetPasswordRequest model)
+        public async Task<IActionResult> RequestResetPassword([FromBody] ResetPasswordCustomRequest model)
         {
             if (!ModelState.IsValid)
             {

@@ -26,11 +26,7 @@ namespace AJKIOT.Api.Tests
             _tokenServiceMock = new Mock<ITokenService>();
             _loggerMock = new Mock<ILogger<UserService>>();
             _emailSenderMock = new Mock<IEmailSender>();_httpContextAccessor = new Mock<IHttpContextAccessor>().Object;
-            var context = new DefaultHttpContext();
-            var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
-            httpContextAccessorMock.Setup(h => h.HttpContext).Returns(context);
-            _httpContextAccessor = httpContextAccessorMock.Object;
-            _userService = new UserService(_userManagerMock.Object, _tokenServiceMock.Object, _loggerMock.Object, _emailSenderMock.Object, _httpContextAccessor);
+            _userService = new UserService(_userManagerMock.Object, _tokenServiceMock.Object, _loggerMock.Object, _emailSenderMock.Object);
         }
 
         [Fact]

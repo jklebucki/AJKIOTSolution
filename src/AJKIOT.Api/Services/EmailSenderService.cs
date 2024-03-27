@@ -49,8 +49,7 @@ namespace AJKIOT.Api.Services
             var body = await _templateService.GetTemplateAsync("ResetPasswordConfirmationEmail.html");
             if (body != string.Empty)
             {
-                body = body.Replace("[link]", appLink).Replace("[username]", userName);
-                builder.HtmlBody = body;
+                builder.HtmlBody = body.Replace("[link]", appLink).Replace("[username]", userName);
                 message.Body = builder.ToMessageBody();
 
                 try
@@ -79,7 +78,8 @@ namespace AJKIOT.Api.Services
             var body = await _templateService.GetTemplateAsync("ResetPasswordEmail.html");
             if (body != string.Empty)
             {
-                body = body.Replace("[link]", resetLink).Replace("[username]", userName);
+                //builder.HtmlBody = body.Replace("[link]", resetLink).Replace("[username]", userName);
+                builder.TextBody = $"Hello {userName}, \nClick the following link to reset your password: {resetLink}";
                 message.Body = builder.ToMessageBody();
                 try
                 {
