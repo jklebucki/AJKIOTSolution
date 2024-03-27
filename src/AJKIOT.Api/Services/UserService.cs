@@ -2,6 +2,7 @@
 using AJKIOT.Shared.Enums;
 using AJKIOT.Shared.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.Data;
 
 namespace AJKIOT.Api.Services
 {
@@ -78,6 +79,59 @@ namespace AJKIOT.Api.Services
                 },
                 Errors = new List<string>()
             };
+        }
+
+        public async Task<ApiResponse<bool>> ResetPasswordAsync(ResetPasswordRequest request)
+        {
+            var response = new ApiResponse<bool>();
+            var user = await _userManager.FindByEmailAsync(request.Email);
+            if (user == null)
+            {
+                // Nie udostępniaj informacji, czy użytkownik istnieje w bazie danych
+                _logger.LogWarning($"Reset password attempt for non-existent email: {request.Email}");
+                return response.WithSuccess(true); // Możesz zdecydować, czy zwracać sukces, aby uniknąć ujawniania, czy email istnieje w systemie.
+            }
+
+            // Generowanie tokenu resetującego hasło
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            // Tworzenie linku resetującego hasło (np. dla frontendu aplikacji)
+            var resetLink = $"https://example.com/reset-password?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email)}";
+
+            // Wysyłanie e-maila z linkiem do resetowania hasła
+            await _emailSenderService.SendPasswordResetEmailAsync(user.Email, user.UserName, resetLink);
+
+            _logger.LogInformation($"Password reset email sent: {request.Email}");
+            return response.WithSuccess(true);
+        }
+
+        public async Task<ApiResponse<bool>> ResetPasswordConfirmAsync(ResetPasswordConfirmRequest request)
+        {
+            var response = new ApiResponse<bool>();
+            var user = await _userManager.FindByEmailAsync(request.Email);
+            if (user == null)
+            {
+                // Logowanie próby resetowania hasła dla nieistniejącego użytkownika
+                _logger.LogWarning($"Attempt to reset password for non-existent email: {request.Email}");
+                // Nie ujawniaj, czy e-mail jest zarejestrowany
+                return response.WithError("Invalid token or email.");
+            }
+
+            // Próba zresetowania hasła za pomocą tokenu
+            var result = await _userManager.ResetPasswordAsync(user, request.Token, request.NewPassword);
+            if (!result.Succeeded)
+            {
+                // Logowanie błędów resetowania hasła
+                foreach (var error in result.Errors)
+                {
+                    _logger.LogError($"Error resetting password for {request.Email}: {error.Description}");
+                    response.Errors.Add(error.Description);
+                }
+                return response.WithError("Failed to reset password.");
+            }
+
+            _logger.LogInformation($"Password has been successfully reset for {request.Email}");
+            return response.WithSuccess(true);
         }
     }
 }
