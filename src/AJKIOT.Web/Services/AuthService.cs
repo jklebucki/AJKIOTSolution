@@ -75,6 +75,50 @@ namespace AJKIOT.Web.Services
             }
         }
 
+        public async Task<ApiResponse<bool>> ResetPasswordRequestAsync(ResetPasswordCustomRequest resetPasswordCustomRequest)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("api/Users/reset-password-request", resetPasswordCustomRequest);
+                if (!response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+                }
+
+                var resetPasswordResponse = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+                if (resetPasswordResponse == null) return await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+                
+                return resetPasswordResponse;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return new ApiResponse<bool>() { Data = false, Errors = new List<string>() { ex.Message } };
+            }
+        }
+
+        public async Task<ApiResponse<bool>> ResetPasswordAsync(ResetPasswordConfirmRequest resetPasswordRequest)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("api/Users/reset-password-confirm", resetPasswordRequest);
+                if (!response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+                }
+
+                var resetPasswordResponse = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+                if (resetPasswordResponse == null) return await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+
+                return resetPasswordResponse;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return new ApiResponse<bool>() { Data = false, Errors = new List<string>() { ex.Message } };
+            }
+        }
+
         public async Task LogoutAsync()
         {
             await _tokenService.ClearToken();
@@ -105,5 +149,6 @@ namespace AJKIOT.Web.Services
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResponse.Tokens[0]);
             return true;
         }
+
     }
 }

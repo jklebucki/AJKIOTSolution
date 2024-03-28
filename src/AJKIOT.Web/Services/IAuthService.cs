@@ -8,5 +8,7 @@ namespace AJKIOT.Web.Services
         Task LogoutAsync();
         Task<bool> RefreshTokenAsync();
         Task<ApiResponse<AuthResponse>> RegisterAsync(RegistrationRequest registrationRequest);
+        Task<ApiResponse<bool>> ResetPasswordRequestAsync(ResetPasswordCustomRequest resetPasswordCustomRequest);
+        Task<ApiResponse<bool>> ResetPasswordAsync(ResetPasswordConfirmRequest resetPasswordRequest);
     }
 }
