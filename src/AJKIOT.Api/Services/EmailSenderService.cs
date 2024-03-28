@@ -16,7 +16,7 @@ namespace AJKIOT.Api.Services
             _logger = logger;
             _templateService = templateService;
         }
-        public async Task SendEmailAsync(MailboxAddress from, MailboxAddress to, string subject, string body, bool isHtml)
+        public async Task SendEmailAsync(MailboxAddress from, MailboxAddress to, string subject, string body, string htmlBody)
         {
             var message = new MimeMessage();
             message.From.Add(from);
@@ -25,6 +25,7 @@ namespace AJKIOT.Api.Services
 
             var builder = new BodyBuilder();
             builder.HtmlBody = body;
+            builder.TextBody = htmlBody;
             message.Body = builder.ToMessageBody();
 
             try
@@ -106,6 +107,7 @@ namespace AJKIOT.Api.Services
             if (body != string.Empty)
             {
                 builder.HtmlBody = body.Replace("[link]", appLink).Replace("[username]", username);
+                builder.TextBody = $"Hello {username}, \nThank you for joining AJKIOT. Click the following link to login: {appLink}";
                 message.Body = builder.ToMessageBody();
 
                 try

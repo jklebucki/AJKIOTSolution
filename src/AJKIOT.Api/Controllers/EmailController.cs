@@ -24,7 +24,7 @@ namespace AJKIOT.Api.Controllers
         {
             var from = new MailboxAddress(email.FromName, email.FromEmail);
             var to = new MailboxAddress(email.ToName, email.ToEmail);
-            await _emailSender.SendEmailAsync(from, to, email.Subject, email.Body, email.IsHtml);
+            await _emailSender.SendEmailAsync(from, to, email.Subject, email.Body, email.HtmlBody);
             _logger.LogInformation($"Email from {email.FromEmail} to {email.ToEmail} sent");
             return Ok();
         }
