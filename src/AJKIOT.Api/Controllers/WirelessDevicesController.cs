@@ -6,7 +6,7 @@ namespace AJKIoTServer.Controllers
 {
     [ApiController]
     [Route("/api/devices")]
-    [Authorize]
+    //[Authorize]
     public class WirelessDevicesController : ControllerBase
     {
         private readonly IDeviceStatusService _statusService;

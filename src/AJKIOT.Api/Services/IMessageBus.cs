@@ -1,8 +1,11 @@
-﻿namespace AJKIOT.Api.Services
+﻿using System.Text.Json;
+
+namespace AJKIOT.Api.Services
 {
     public interface IMessageBus
     {
-        Task<string> SendMessageAsync(string message);
-        void ReceiveMessage(string message);
+        void EnqueueMessage(string message);
+        Task<string> GetNextIncomingMessageAsync();
+        Task<string> GetNextMessageAsync(string message, string type);
     }
 }

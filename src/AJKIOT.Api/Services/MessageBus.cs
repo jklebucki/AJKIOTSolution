@@ -5,7 +5,8 @@ namespace AJKIOT.Api.Services
 {
     public class MessageBus : IMessageBus
     {
-        private readonly ConcurrentDictionary<string, ConcurrentQueue<TaskCompletionSource<string>>> _responseQueues = new ConcurrentDictionary<string, ConcurrentQueue<TaskCompletionSource<string>>>();
+        private readonly ConcurrentDictionary<string, ConcurrentQueue<string>> _incomingMessages = new ConcurrentDictionary<string, ConcurrentQueue<string>>();
+        private readonly ConcurrentDictionary<string, ConcurrentQueue<string>> _outgoingMessages = new ConcurrentDictionary<string, ConcurrentQueue<string>>();
         private readonly ILogger<MessageBus> _logger;
 
         public MessageBus(ILogger<MessageBus> logger)
@@ -13,58 +14,82 @@ namespace AJKIOT.Api.Services
             _logger = logger;
         }
 
-        public Task<string> SendMessageAsync(string message)
+        public void EnqueueMessage(string message)
         {
-            // Check if the message is null or empty
-            if (string.IsNullOrEmpty(message))
-            {
-                _logger.LogError("SendMessageAsync was called with a null or empty message.");
-                throw new ArgumentException("Message cannot be null or empty.", nameof(message));
-            }
-
-            // Attempt to deserialize the message and extract the 'id' property
             var messageObj = JsonSerializer.Deserialize<JsonElement>(message);
-            if (messageObj.ValueKind == JsonValueKind.Undefined || !messageObj.TryGetProperty("id", out var idProperty) || idProperty.GetString() is not string id || string.IsNullOrWhiteSpace(id))
+            var id = GetIdFromMessage(messageObj);
+            var type = GetTypeFromMessage(messageObj);
+
+            if (type == "in")
             {
-                _logger.LogError("SendMessageAsync was called with a message that lacks a non-empty 'id' property.");
-                return Task.FromResult<string>(string.Empty); // Return empty string to avoid throwing an exception
+                var queue = _incomingMessages.GetOrAdd(id, _ => new ConcurrentQueue<string>());
+                queue.Enqueue(message);
+                _logger.LogInformation($"Enqueued an incoming message for id {id}.");
             }
-
-            var tcs = new TaskCompletionSource<string>();
-            var queue = _responseQueues.GetOrAdd(id, _ => new ConcurrentQueue<TaskCompletionSource<string>>());
-            queue.Enqueue(tcs);
-
-            _logger.LogInformation($"A message has been queued for id {id}.");
-            return tcs.Task;
-        }
-
-        public void ReceiveMessage(string message)
-        {
-            // Check if the received message is null or empty
-            if (string.IsNullOrEmpty(message))
+            else if (type == "out")
             {
-                _logger.LogError("Received message cannot be null or empty.");
-                return;
-            }
-
-            // Attempt to deserialize the received message and extract the 'id' property
-            var messageObj = JsonSerializer.Deserialize<JsonElement>(message);
-            if (messageObj.ValueKind == JsonValueKind.Undefined || !messageObj.TryGetProperty("id", out var idProperty) || idProperty.GetString() is not string id || string.IsNullOrWhiteSpace(id))
-            {
-                _logger.LogError("The received message does not contain a non-empty 'id'.");
-                return;
-            }
-
-            // Try to deliver the message to the corresponding waiting task
-            if (_responseQueues.TryGetValue(id, out var queue) && queue.TryDequeue(out var tcs))
-            {
-                tcs.SetResult(message); // Set the received message as the result of the waiting task
-                _logger.LogInformation($"A message has been delivered for id {id}.");
+                var queue = _outgoingMessages.GetOrAdd(id, _ => new ConcurrentQueue<string>());
+                queue.Enqueue(message);
+                _logger.LogInformation($"Enqueued an outgoing message for id {id}.");
             }
             else
             {
-                _logger.LogWarning($"No waiting tasks found for the message with id '{id}'.");
+                _logger.LogError($"Message type {type} is not recognized.");
             }
+        }
+
+        public async Task<string> GetNextMessageAsync(string message, string type)
+        {
+            var messageRequest = JsonSerializer.Deserialize<JsonElement>(message);
+            var id = GetIdFromMessage(messageRequest);
+
+            if (type == "in" && _incomingMessages.TryGetValue(id, out var inQueue) && inQueue.TryDequeue(out var inMessage))
+            {
+                _logger.LogInformation($"Delivering an incoming message for id {id}.");
+                return inMessage;
+            }
+            else if (type == "out" && _outgoingMessages.TryGetValue(id, out var outQueue) && outQueue.TryDequeue(out var outMessage))
+            {
+                _logger.LogInformation($"Delivering an outgoing message for id {id}.");
+                return outMessage;
+            }
+
+            _logger.LogWarning($"No messages found for id {id} and type {type}.");
+            return await Task.FromResult<string>(string.Empty);
+        }
+
+        public async Task<string> GetNextIncomingMessageAsync()
+        {
+            foreach (var entry in _incomingMessages)
+            {
+                if (entry.Value.TryDequeue(out var message))
+                {
+                    _logger.LogInformation($"Delivering an incoming message for id {entry.Key}.");
+                    return message;
+                }
+            }
+
+            return await Task.FromResult<string>(string.Empty);
+        }
+
+        private string GetIdFromMessage(JsonElement messageObj)
+        {
+            if (!messageObj.TryGetProperty("id", out var idProperty) || idProperty.GetString() is not string id || string.IsNullOrWhiteSpace(id))
+            {
+                _logger.LogError("Message must contain a non-empty 'id' property.");
+                throw new InvalidOperationException("Message must contain a non-empty 'id' property.");
+            }
+            return id;
+        }
+
+        private string GetTypeFromMessage(JsonElement messageObj)
+        {
+            if (!messageObj.TryGetProperty("type", out var typeProperty) || typeProperty.GetString() is not string type || string.IsNullOrWhiteSpace(type))
+            {
+                _logger.LogError("Message must contain a 'type' property.");
+                throw new InvalidOperationException("Message must contain a 'type' property.");
+            }
+            return type;
         }
     }
 }

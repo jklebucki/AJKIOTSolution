@@ -2,6 +2,7 @@ using AJKIOT.Api.Data;
 using AJKIOT.Api.Middleware;
 using AJKIOT.Api.Models;
 using AJKIOT.Api.Services;
+using AJKIOT.Api.Workers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -127,6 +128,7 @@ builder.Services.AddCors(options =>
 //     //     listenOptions.UseHttps("testCert.pfx", "testPassword");
 //     // });
 // });
+builder.Services.AddHostedService<MessageProcessingWorker>();
 
 var app = builder.Build();
 
