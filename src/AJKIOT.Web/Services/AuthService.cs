@@ -87,7 +87,7 @@ namespace AJKIOT.Web.Services
 
                 var resetPasswordResponse = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
                 if (resetPasswordResponse == null) return await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
-                
+
                 return resetPasswordResponse;
             }
             catch (Exception ex)

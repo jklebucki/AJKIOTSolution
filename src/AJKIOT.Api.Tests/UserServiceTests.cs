@@ -25,7 +25,7 @@ namespace AJKIOT.Api.Tests
 
             _tokenServiceMock = new Mock<ITokenService>();
             _loggerMock = new Mock<ILogger<UserService>>();
-            _emailSenderMock = new Mock<IEmailSender>();_httpContextAccessor = new Mock<IHttpContextAccessor>().Object;
+            _emailSenderMock = new Mock<IEmailSender>(); _httpContextAccessor = new Mock<IHttpContextAccessor>().Object;
             _userService = new UserService(_userManagerMock.Object, _tokenServiceMock.Object, _loggerMock.Object, _emailSenderMock.Object);
         }
 

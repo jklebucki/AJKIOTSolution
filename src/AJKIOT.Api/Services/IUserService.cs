@@ -1,5 +1,4 @@
 ﻿using AJKIOT.Shared.Models;
-using Microsoft.AspNetCore.Identity.Data;
 
 namespace AJKIOT.Api.Services
 {

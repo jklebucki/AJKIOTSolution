@@ -1,6 +1,5 @@
 ﻿using AJKIOT.Api.Services;
 using AJKIOT.Shared.Models;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AJKIOT.Api.Controllers
