@@ -1,4 +1,5 @@
 using AJKIOT.Api.Data;
+using AJKIOT.Api.Middleware;
 using AJKIOT.Api.Models;
 using AJKIOT.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -16,6 +17,7 @@ builder.Services.AddScoped<IDeviceStatusService, DeviceStatusService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddSingleton<ITemplateService, TemplateService>();
+builder.Services.AddSingleton<IMessageBus, MessageBus>();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(opt => opt.UseNpgsql(connectionString));
 
@@ -136,11 +138,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseWebSockets();
 app.UseAuthentication();
-
 app.UseAuthorization();
-
+app.UseMiddleware<WebSocketMiddleware>();
 app.MapControllers();
 
 app.Run();

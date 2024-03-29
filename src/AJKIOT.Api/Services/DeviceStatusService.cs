@@ -7,6 +7,12 @@ namespace AJKIOT.Api.Services
     public class DeviceStatusService : IDeviceStatusService
     {
         private IList<IotDevice> devices = new List<IotDevice>();
+        private readonly ILogger<DeviceStatusService> _logger;
+
+        public DeviceStatusService(ILogger<DeviceStatusService> logger)
+        {
+            _logger = logger;
+        }
 
         public void ChangePinStatus(int deviceId, int pinStatus)
         {
@@ -42,39 +48,52 @@ namespace AJKIOT.Api.Services
             devices.Add(deviceStatus);
         }
 
-        public async Task MessageClient(WebSocket webSocket, IDeviceStatusService _statusService)
+        public async Task MessageClient(WebSocket webSocket, IDeviceStatusService _statusService, CancellationToken cancellationToken)
         {
-            var isConnected = true;
-            while (isConnected)
+            var buffer = new byte[1024 * 4];
+            try
             {
-                var buffer = new byte[1024 * 4];
-                var receiveResult = await webSocket.ReceiveAsync(
-                new ArraySegment<byte>(buffer), CancellationToken.None);
-                isConnected = !receiveResult.CloseStatus.HasValue;
-                if (isConnected)
+                while (webSocket.State == WebSocketState.Open)
                 {
-                    var message = Encoding.UTF8.GetString(buffer);
-                    if (int.Parse(message.Split(":")[2]) == 2)
-                        _statusService.ChangePinStatus(int.Parse(message.Split(":")[1]), 0);
-                    _statusService.SetDeviceStatus(MessageToDeviceStatus(message));
-                    var setPin = _statusService.GetDeviceStatus(int.Parse(message.Split(":")[1]));
-                    var respBuffer = Encoding.UTF8.GetBytes($"{setPin!.DeviceName}:{setPin.DeviceId}:{setPin.SetPinStatus}:");
-                    await webSocket.SendAsync(
-                        new ArraySegment<byte>(respBuffer, 0, receiveResult.Count),
-                        receiveResult.MessageType,
-                        receiveResult.EndOfMessage,
-                        CancellationToken.None);
-                    _statusService.ChangePinStatus(int.Parse(message.Split(":")[1]), 0);
+                    var receiveResult = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
+
+                    if (receiveResult.MessageType == WebSocketMessageType.Close)
+                    {
+                        await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", cancellationToken);
+                        break;
+                    }
+
+                    var message = Encoding.UTF8.GetString(buffer, 0, receiveResult.Count);
+                    var parts = message.Split(':');
+                    if (parts.Length >= 3 && int.TryParse(parts[1], out int deviceId) && int.TryParse(parts[2], out int pinStatus))
+                    {
+                        if (pinStatus == 2)
+                        {
+                            _statusService.ChangePinStatus(deviceId, 0);
+                        }
+                        var deviceStatus = new IotDevice
+                        {
+                            DeviceId = deviceId,
+                            DeviceName = parts[0],
+                            PinStatus = pinStatus,
+                        };
+                        _statusService.SetDeviceStatus(deviceStatus);
+                        var setPin = _statusService.GetDeviceStatus(deviceId);
+                        var respBuffer = Encoding.UTF8.GetBytes($"{setPin!.DeviceName}:{setPin.DeviceId}:{setPin.SetPinStatus}:");
+                        await webSocket.SendAsync(new ArraySegment<byte>(respBuffer, 0, respBuffer.Length), receiveResult.MessageType, receiveResult.EndOfMessage, cancellationToken);
+                    }
                 }
-                else
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while processing WebSocket message");
+                if (webSocket.State != WebSocketState.Closed)
                 {
-                    await webSocket.CloseAsync(
-                    receiveResult.CloseStatus!.Value,
-                    receiveResult.CloseStatusDescription,
-                    CancellationToken.None);
+                    await webSocket.CloseAsync(WebSocketCloseStatus.InternalServerError, "An error occurred", cancellationToken);
                 }
             }
         }
+
 
         public IotDevice MessageToDeviceStatus(string message)
         {

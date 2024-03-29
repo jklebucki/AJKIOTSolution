@@ -9,7 +9,7 @@ namespace AJKIOT.Api.Services
         IEnumerable<IotDevice> GetAllDevices();
         void SetDeviceStatus(IotDevice deviceStatus);
         void ChangePinStatus(int deviceId, int status);
-        Task MessageClient(WebSocket webSocket, IDeviceStatusService _statusService);
         IotDevice MessageToDeviceStatus(string message);
+        Task MessageClient(WebSocket webSocket, IDeviceStatusService _statusService, CancellationToken cancellationToken);
     }
 }

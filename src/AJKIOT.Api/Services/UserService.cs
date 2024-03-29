@@ -93,8 +93,8 @@ namespace AJKIOT.Api.Services
             try
             {
                 var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-                var resetLink = $"{request.ApplicationAddress}?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email)}";
-                await _emailSenderService.SendResetPasswordEmailAsync(user.Email, user.UserName, resetLink);
+                var resetLink = $"{request.ApplicationAddress}?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email!)}";
+                await _emailSenderService.SendResetPasswordEmailAsync(user.Email!, user.UserName, resetLink);
                 _logger.LogInformation($"Password reset email sent: {request.Email}");
             }
             catch (Exception ex)

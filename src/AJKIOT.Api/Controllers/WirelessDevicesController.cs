@@ -22,7 +22,7 @@ namespace AJKIoTServer.Controllers
             if (HttpContext.WebSockets.IsWebSocketRequest)
             {
                 using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-                await _statusService.MessageClient(webSocket, _statusService);
+                await _statusService.MessageClient(webSocket, _statusService, CancellationToken.None);
             }
             else
             {

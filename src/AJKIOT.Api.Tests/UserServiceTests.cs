@@ -21,7 +21,7 @@ namespace AJKIOT.Api.Tests
         {
             _userManagerMock = new Mock<UserManager<ApplicationUser>>(
                 Mock.Of<IUserStore<ApplicationUser>>(),
-                null, null, null, null, null, null, null, null);
+                null!, null!, null!, null!, null!, null!, null!, null!);
 
             _tokenServiceMock = new Mock<ITokenService>();
             _loggerMock = new Mock<ILogger<UserService>>();
@@ -34,7 +34,7 @@ namespace AJKIOT.Api.Tests
         {
             // Arrange
             _userManagerMock.Setup(x => x.FindByEmailAsync(It.IsAny<string>()))
-                .ReturnsAsync((ApplicationUser)null);
+                .ReturnsAsync((ApplicationUser)null!);
 
             var request = new AuthRequest { Email = "nonexisting@example.com", Password = "Test1234!" };
 
@@ -63,7 +63,7 @@ namespace AJKIOT.Api.Tests
             Assert.Empty(response.Errors);
             Assert.NotNull(response.Data);
             Assert.Equal(user.Email, response.Data.Email);
-            Assert.Contains("token", response.Data.Tokens);
+            Assert.Contains("token", response.Data.Tokens!);
         }
 
         [Fact]
@@ -83,7 +83,7 @@ namespace AJKIOT.Api.Tests
             Assert.Empty(response.Errors);
             Assert.NotNull(response.Data);
             Assert.Equal(request.Email, response.Data.Email);
-            Assert.Contains("token", response.Data.Tokens);
+            Assert.Contains("token", response.Data.Tokens!);
         }
 
         [Fact]
