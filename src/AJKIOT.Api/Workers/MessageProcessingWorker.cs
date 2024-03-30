@@ -1,5 +1,7 @@
-﻿using AJKIOT.Api.Repositories;
+﻿using AJKIOT.Api.Middleware;
+using AJKIOT.Api.Repositories;
 using AJKIOT.Api.Services;
+using MongoDB.Bson;
 using System.Text.Json;
 
 namespace AJKIOT.Api.Workers
@@ -9,12 +11,14 @@ namespace AJKIOT.Api.Workers
         private readonly IMessageBus _messageBus;
         private readonly ILogger<MessageProcessingWorker> _logger;
         private readonly IDocumentRepositoryFactory _documentRepositoryFactory;
+        private readonly IWebSocketManager _webSocketManager;
 
-        public MessageProcessingWorker(IMessageBus messageBus, ILogger<MessageProcessingWorker> logger, IDocumentRepositoryFactory documentRepositoryFactory)
+        public MessageProcessingWorker(IMessageBus messageBus, ILogger<MessageProcessingWorker> logger, IDocumentRepositoryFactory documentRepositoryFactory, IWebSocketManager webSocketManager)
         {
             _messageBus = messageBus;
             _logger = logger;
             _documentRepositoryFactory = documentRepositoryFactory;
+            _webSocketManager = webSocketManager;
         }
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 
@@ -28,10 +32,14 @@ namespace AJKIOT.Api.Workers
                     string incomingMessage = await _messageBus.GetNextIncomingMessageAsync();
                     if (!string.IsNullOrEmpty(incomingMessage))
                     {
-                        string processedMessage = ProcessIncomingMessage(incomingMessage);
-                        _messageBus.EnqueueMessage(processedMessage);
-
-                        _logger.LogInformation($"Processed and enqueued message: {processedMessage}");
+                        string processedMessage = await ProcessIncomingMessage(incomingMessage);
+                        if (!string.IsNullOrEmpty(processedMessage))
+                        {
+                            var messageJson = JsonDocument.Parse(processedMessage).RootElement;
+                            var id = messageJson.GetProperty("_id").GetString();
+                            await _webSocketManager.SendMessageToClientAsync(id, processedMessage);
+                            _logger.LogInformation($"Processed and enqueued message: {processedMessage}");
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -39,31 +47,58 @@ namespace AJKIOT.Api.Workers
                     _logger.LogError(ex, "Error occurred while processing messages.");
                 }
 
-                await Task.Delay(10, stoppingToken);
+                await Task.Delay(5, stoppingToken);
             }
         }
 
-        private string ProcessIncomingMessage(string incomingMessage)
+        private async Task<string> ProcessIncomingMessage(string incomingMessage)
         {
             var messageJson = JsonDocument.Parse(incomingMessage).RootElement;
-            var id = messageJson.GetProperty("id").GetString();
+            var id = messageJson.GetProperty("_id").GetString();
+            var content = messageJson.GetProperty("content").GetString();
+            var direction = messageJson.GetProperty("direction").GetString();
+            var type = messageJson.GetProperty("type").GetString();
 
-            // Zmiana typu wiadomości na "out" i zwrócenie jej w formacie JSON.
-            var outgoingMessage = new
-            {
-                id = id,
-                type = "out",
-                content = "Processed content" 
-            };
             var documentRepository = _documentRepositoryFactory.CreateDocumentRepository();
-            documentRepository.CreateAsync(new MongoDB.Bson.BsonDocument
+            if (type == "set")
             {
-                { "id", id },
-                { "type", "out" },
-                { "content", "Processed content" }
-
-            });
-            return JsonSerializer.Serialize(outgoingMessage);
+                var deviceProperties = messageJson.GetProperty("device_properties").ToString();
+                await documentRepository.CreateOrUpdateAsync(new BsonDocument
+                {
+                    { "_id", id },
+                    { "content", content },
+                    { "device_properties", deviceProperties }
+                });
+                var outgoingMessage = new
+                {
+                    _id = id,
+                    direction = "out",
+                    type = "set",
+                    content = $"Processed content: {content}",
+                    deviceProperties
+                };
+                return JsonSerializer.Serialize(outgoingMessage);
+            }
+            else if (type == "query")
+            {
+                var document = await documentRepository.GetByIdAsync(id!);
+                document.Add("direction", "out");
+                if (document == null)
+                    return string.Empty;
+                var outgoingMessage = document.ToJson();
+                return outgoingMessage;
+            }
+            else
+            {
+                var outgoingMessage = new
+                {
+                    _id = id,
+                    direction = "out",
+                    type = "info",
+                    content = $"Echo",
+                };
+                return JsonSerializer.Serialize(outgoingMessage);
+            }
         }
     }
 }

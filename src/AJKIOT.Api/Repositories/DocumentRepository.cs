@@ -21,22 +21,19 @@ namespace AJKIOT.Api.Repositories
 
         public async Task<BsonDocument> GetByIdAsync(string id)
         {
-            return await _collection.Find(Builders<BsonDocument>.Filter.Eq("_id", new ObjectId(id))).FirstOrDefaultAsync();
+            return await _collection.Find(Builders<BsonDocument>.Filter.Eq("_id", id)).FirstOrDefaultAsync();
         }
 
-        public async Task CreateAsync(BsonDocument document)
+        public async Task CreateOrUpdateAsync(BsonDocument document)
         {
-            await _collection.InsertOneAsync(document);
-        }
-
-        public async Task UpdateAsync(string id, BsonDocument document)
-        {
-            await _collection.ReplaceOneAsync(Builders<BsonDocument>.Filter.Eq("_id", new ObjectId(id)), document);
+            var idValue = document["_id"];
+            var filter = Builders<BsonDocument>.Filter.Eq("_id", idValue);
+            await _collection.UpdateOneAsync(filter, new BsonDocument("$set", document), new UpdateOptions { IsUpsert = true });
         }
 
         public async Task DeleteAsync(string id)
         {
-            await _collection.DeleteOneAsync(Builders<BsonDocument>.Filter.Eq("_id", new ObjectId(id)));
+            await _collection.DeleteOneAsync(Builders<BsonDocument>.Filter.Eq("_id", id));
         }
     }
 

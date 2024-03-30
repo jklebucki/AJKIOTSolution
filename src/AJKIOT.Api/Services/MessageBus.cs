@@ -5,6 +5,7 @@ namespace AJKIOT.Api.Services
 {
     public class MessageBus : IMessageBus
     {
+
         private readonly ConcurrentDictionary<string, ConcurrentQueue<string>> _incomingMessages = new ConcurrentDictionary<string, ConcurrentQueue<string>>();
         private readonly ConcurrentDictionary<string, ConcurrentQueue<string>> _outgoingMessages = new ConcurrentDictionary<string, ConcurrentQueue<string>>();
         private readonly ILogger<MessageBus> _logger;
@@ -18,15 +19,15 @@ namespace AJKIOT.Api.Services
         {
             var messageObj = JsonSerializer.Deserialize<JsonElement>(message);
             var id = GetIdFromMessage(messageObj);
-            var type = GetTypeFromMessage(messageObj);
+            var direction = GetDirectionFromMessage(messageObj);
 
-            if (type == "in")
+            if (direction == "in")
             {
                 var queue = _incomingMessages.GetOrAdd(id, _ => new ConcurrentQueue<string>());
                 queue.Enqueue(message);
                 _logger.LogInformation($"Enqueued an incoming message for id {id}.");
             }
-            else if (type == "out")
+            else if (direction == "out")
             {
                 var queue = _outgoingMessages.GetOrAdd(id, _ => new ConcurrentQueue<string>());
                 queue.Enqueue(message);
@@ -34,27 +35,30 @@ namespace AJKIOT.Api.Services
             }
             else
             {
-                _logger.LogError($"Message type {type} is not recognized.");
+                _logger.LogError($"Message direction {direction} is not recognized.");
             }
         }
 
-        public async Task<string> GetNextMessageAsync(string message, string type)
+        public async Task<string> GetNextMessageAsync(string message, string direction)
         {
-            var messageRequest = JsonSerializer.Deserialize<JsonElement>(message);
-            var id = GetIdFromMessage(messageRequest);
-
-            if (type == "in" && _incomingMessages.TryGetValue(id, out var inQueue) && inQueue.TryDequeue(out var inMessage))
+            if (!string.IsNullOrEmpty(message) && !string.IsNullOrEmpty(direction))
             {
-                _logger.LogInformation($"Delivering an incoming message for id {id}.");
-                return inMessage;
-            }
-            else if (type == "out" && _outgoingMessages.TryGetValue(id, out var outQueue) && outQueue.TryDequeue(out var outMessage))
-            {
-                _logger.LogInformation($"Delivering an outgoing message for id {id}.");
-                return outMessage;
-            }
+                var messageRequest = JsonSerializer.Deserialize<JsonElement>(message);
+                var id = GetIdFromMessage(messageRequest);
 
-            _logger.LogWarning($"No messages found for id {id} and type {type}.");
+                if (direction == "in" && _incomingMessages.TryGetValue(id, out var inQueue) && inQueue.TryDequeue(out var inMessage))
+                {
+                    _logger.LogInformation($"Delivering an incoming message for id {id}.");
+                    return inMessage;
+                }
+                else if (direction == "out" && _outgoingMessages.TryGetValue(id, out var outQueue) && outQueue.TryDequeue(out var outMessage))
+                {
+                    _logger.LogInformation($"Delivering an outgoing message for id {id}.");
+                    return outMessage;
+                }
+
+                _logger.LogWarning($"No messages found for id {id} and direction {direction}.");
+            }
             return await Task.FromResult<string>(string.Empty);
         }
 
@@ -74,7 +78,7 @@ namespace AJKIOT.Api.Services
 
         private string GetIdFromMessage(JsonElement messageObj)
         {
-            if (!messageObj.TryGetProperty("id", out var idProperty) || idProperty.GetString() is not string id || string.IsNullOrWhiteSpace(id))
+            if (!messageObj.TryGetProperty("_id", out var idProperty) || idProperty.GetString() is not string id || string.IsNullOrWhiteSpace(id))
             {
                 _logger.LogError("Message must contain a non-empty 'id' property.");
                 throw new InvalidOperationException("Message must contain a non-empty 'id' property.");
@@ -82,14 +86,14 @@ namespace AJKIOT.Api.Services
             return id;
         }
 
-        private string GetTypeFromMessage(JsonElement messageObj)
+        private string GetDirectionFromMessage(JsonElement messageObj)
         {
-            if (!messageObj.TryGetProperty("type", out var typeProperty) || typeProperty.GetString() is not string type || string.IsNullOrWhiteSpace(type))
+            if (!messageObj.TryGetProperty("direction", out var typeProperty) || typeProperty.GetString() is not string direction || string.IsNullOrWhiteSpace(direction))
             {
-                _logger.LogError("Message must contain a 'type' property.");
+                _logger.LogError("Message must contain a 'direction' property.");
                 throw new InvalidOperationException("Message must contain a 'type' property.");
             }
-            return type;
+            return direction;
         }
     }
 }

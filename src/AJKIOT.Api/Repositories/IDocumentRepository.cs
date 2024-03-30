@@ -6,8 +6,7 @@ namespace AJKIOT.Api.Repositories
     {
         Task<List<BsonDocument>> GetAllAsync();
         Task<BsonDocument> GetByIdAsync(string id);
-        Task CreateAsync(BsonDocument document);
-        Task UpdateAsync(string id, BsonDocument document);
+        Task CreateOrUpdateAsync(BsonDocument document);
         Task DeleteAsync(string id);
     }
 }

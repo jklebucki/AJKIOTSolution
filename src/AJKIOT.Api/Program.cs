@@ -16,7 +16,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Services.AddSingleton<IWebSocketManager, AJKIOT.Api.Middleware.WebSocketManager>();
 builder.Services.AddScoped<IDeviceStatusService, DeviceStatusService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -157,7 +157,7 @@ app.UseHttpsRedirection();
 app.UseWebSockets();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseMiddleware<WebSocketMiddleware>();
+app.UseMiddleware<MyWebSocketMiddleware>();
 app.MapControllers();
 
 app.Run();
