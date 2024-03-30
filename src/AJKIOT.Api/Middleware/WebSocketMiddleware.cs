@@ -1,12 +1,6 @@
 ﻿using AJKIOT.Api.Services;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using System;
-using System.IO;
 using System.Net.WebSockets;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace AJKIOT.Api.Middleware
 {

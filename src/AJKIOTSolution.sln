@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AJKIOT.Api", "AJKIOT.Api\AJ
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AJKIOT.Shared", "AJKIOT.Shared\AJKIOT.Shared.csproj", "{F54F0658-85D4-44D2-81A2-A39A401615F0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AJKIOT.Api.Tests", "AJKIOT.Api.Tests\AJKIOT.Api.Tests.csproj", "{2A509220-595E-4C1B-B14F-39494C967445}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AJKIOT.Api.Tests", "AJKIOT.Api.Tests\AJKIOT.Api.Tests.csproj", "{2A509220-595E-4C1B-B14F-39494C967445}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

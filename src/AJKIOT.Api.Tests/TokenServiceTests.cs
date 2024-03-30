@@ -100,7 +100,7 @@ namespace AJKIOT.Api.Tests
             // Arrange
             var invalidConfig = new Mock<IConfiguration>();
             var configSectionMock = new Mock<IConfigurationSection>();
-            configSectionMock.Setup(x => x["SymmetricSecurityKey"]).Returns((string)null); // No key provided
+            configSectionMock.Setup(x => x["SymmetricSecurityKey"]).Returns((string)null!); // No key provided
             invalidConfig.Setup(x => x.GetSection("JwtTokenSettings")).Returns(configSectionMock.Object);
 
             // Assert

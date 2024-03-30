@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-
-namespace AJKIOT.Api.Services
+﻿namespace AJKIOT.Api.Services
 {
     public interface IMessageBus
     {
