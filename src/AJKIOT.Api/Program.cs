@@ -35,7 +35,7 @@ builder.Services.AddSingleton<IMongoClient>(sp =>
 builder.Services.AddScoped(sp => sp.GetRequiredService<IMongoClient>().GetDatabase(sp.GetRequiredService<IOptions<MongoDBSettings>>().Value.DatabaseName));
 
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
-
+builder.Services.AddSingleton<IDocumentRepositoryFactory, DocumentRepositoryFactory>();
 builder.Services.AddControllers().AddJsonOptions(opt =>
 {
     opt.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());

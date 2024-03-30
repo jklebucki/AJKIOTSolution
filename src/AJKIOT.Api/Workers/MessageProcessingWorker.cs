@@ -1,4 +1,5 @@
-﻿using AJKIOT.Api.Services;
+﻿using AJKIOT.Api.Repositories;
+using AJKIOT.Api.Services;
 using System.Text.Json;
 
 namespace AJKIOT.Api.Workers
@@ -7,14 +8,16 @@ namespace AJKIOT.Api.Workers
     {
         private readonly IMessageBus _messageBus;
         private readonly ILogger<MessageProcessingWorker> _logger;
+        private readonly IDocumentRepositoryFactory _documentRepositoryFactory;
 
-        public MessageProcessingWorker(IMessageBus messageBus, ILogger<MessageProcessingWorker> logger)
+        public MessageProcessingWorker(IMessageBus messageBus, ILogger<MessageProcessingWorker> logger, IDocumentRepositoryFactory documentRepositoryFactory)
         {
             _messageBus = messageBus;
             _logger = logger;
+            _documentRepositoryFactory = documentRepositoryFactory;
         }
-
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+
         {
             _logger.LogInformation("Message Processing Worker running at: {time}", DateTimeOffset.Now);
 
@@ -25,10 +28,7 @@ namespace AJKIOT.Api.Workers
                     string incomingMessage = await _messageBus.GetNextIncomingMessageAsync();
                     if (!string.IsNullOrEmpty(incomingMessage))
                     {
-                        // Przetwarzanie przychodzącej wiadomości i zmiana jej stanu
                         string processedMessage = ProcessIncomingMessage(incomingMessage);
-
-                        // Zapisanie przetworzonej wiadomości jako typu "out"
                         _messageBus.EnqueueMessage(processedMessage);
 
                         _logger.LogInformation($"Processed and enqueued message: {processedMessage}");
@@ -39,14 +39,12 @@ namespace AJKIOT.Api.Workers
                     _logger.LogError(ex, "Error occurred while processing messages.");
                 }
 
-                // Oczekiwanie na kolejną wiadomość
                 await Task.Delay(10, stoppingToken);
             }
         }
 
         private string ProcessIncomingMessage(string incomingMessage)
         {
-            // Tutaj umieść logikę przetwarzania wiadomości. Poniżej przykład zmiany typu na "out".
             var messageJson = JsonDocument.Parse(incomingMessage).RootElement;
             var id = messageJson.GetProperty("id").GetString();
 
@@ -55,9 +53,16 @@ namespace AJKIOT.Api.Workers
             {
                 id = id,
                 type = "out",
-                content = "Processed content" // Przykładowa zmiana treści
+                content = "Processed content" 
             };
+            var documentRepository = _documentRepositoryFactory.CreateDocumentRepository();
+            documentRepository.CreateAsync(new MongoDB.Bson.BsonDocument
+            {
+                { "id", id },
+                { "type", "out" },
+                { "content", "Processed content" }
 
+            });
             return JsonSerializer.Serialize(outgoingMessage);
         }
     }
