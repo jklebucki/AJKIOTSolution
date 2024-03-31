@@ -10,7 +10,7 @@ class AuthProvider with ChangeNotifier {
   final _storage = const FlutterSecureStorage();
   Map<String, dynamic> _userInfo = {};
 
-  bool get isAuthenticated => _token != null;
+  bool get isAuthenticated => _token != "";
   Map<String, dynamic> get userInfo => _userInfo;
 
   Future<bool> login(String email, String password) async {
