@@ -7,7 +7,7 @@
 
 @code {
     private string dialId = $"dial-{Guid.NewGuid()}";
-    private DotNetObjectReference<Dial> objRef;
+    private DotNetObjectReference<Dial>? objRef;
 
     [Parameter]
     public double Rotation { get; set; }
