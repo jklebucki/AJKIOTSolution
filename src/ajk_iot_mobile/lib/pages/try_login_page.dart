@@ -33,6 +33,10 @@ class _TryLoginPageState extends State<TryLoginPage> {
       if (success) {
         Navigator.pushReplacementNamed(context, '/home');
       }
+    } else {
+      setState(() {
+        Navigator.pushReplacementNamed(context, '/login');
+      });
     }
   }
 
