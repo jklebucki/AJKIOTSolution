@@ -1,0 +1,22 @@
+﻿<div class="rotary-switch" @onclick="NextPosition">
+    <div class="position-indicator" style="@PositionStyle"></div>
+</div>
+
+@code {
+    [Parameter]
+    public int Position { get; set; }
+
+    [Parameter]
+    public int Positions { get; set; } = 3;
+
+    [Parameter]
+    public EventCallback<int> PositionChanged { get; set; }
+
+    private string PositionStyle => $"--positions: {Positions}; --current-position: {Position};";
+
+    private async Task NextPosition()
+    {
+        Position = (Position + 1) % Positions;
+        await PositionChanged.InvokeAsync(Position);
+    }
+}

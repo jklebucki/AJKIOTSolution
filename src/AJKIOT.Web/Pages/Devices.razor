@@ -1,5 +1,6 @@
 ﻿@page "/devices"
 @using AJKIOT.Shared.Models
+@using AJKIOT.Web.Pages.Device
 @using AJKIOT.Web.Services
 @inject IApiService api
 
@@ -8,6 +9,13 @@
 <h1>Devices</h1>
 
 <p>Your devices</p>
+
+<div class="device-tile">
+    <Switch @bind-IsOn="@SwitchState" />
+    <Dial Rotation="@rotation" RotationChanged="@((newRotation) => rotation = newRotation)"></Dial>
+    <h3>Aktualna rotacja: @rotation stopni</h3>
+    <RotarySwitch @bind-Position="@RotarySwitchPosition" Positions="5" />
+</div>
 
 @if (devices == null)
 {
@@ -37,6 +45,11 @@ else
 }
 
 @code {
+    private double rotation;
+    private bool SwitchState = false;
+    private int DialValue = 90;
+    private int RotarySwitchPosition = 4;
+
     private IEnumerable<IotDevice> devices = null;
 
     protected override async Task OnInitializedAsync()
@@ -44,5 +57,9 @@ else
         devices = await api.GetDeviceStatusAsync(0);
     }
 
+    private void ResetRotation()
+    {
+        rotation = 33; // Resetuj obrót do pozycji początkowej
+    }
     
 }

@@ -1,0 +1,37 @@
+﻿.switch {
+    width: 60px;
+    height: 30px;
+    border-radius: 15px;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.switch-on, .switch-off {
+    background-color: #ccc;
+    transition: background-color 0.3s; /* Dodano przejście dla płynnej zmiany koloru */
+}
+
+    .switch-on::before, .switch-off::before {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background-color: white;
+        transition: left 0.3s; /* Zapewnia płynne przesunięcie guzika */
+    }
+
+.switch-on {
+    background-color: #4CAF50; /* Zielone tło dla stanu włączonego */
+}
+
+    .switch-on::before {
+        left: 32px; /* Przesuwa guzik na prawo w stanie włączonym */
+    }
+
+.switch-off {
+    background-color: #ff6b6b; /* Łagodne czerwone tło dla stanu wyłączonego */
+}

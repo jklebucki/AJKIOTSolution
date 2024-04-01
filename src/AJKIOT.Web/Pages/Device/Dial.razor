@@ -1,0 +1,38 @@
+﻿@inject IJSRuntime JS
+@implements IDisposable
+
+<div id="@dialId" class="dial">
+    <div class="knob"></div>
+</div>
+
+@code {
+    private string dialId = $"dial-{Guid.NewGuid()}";
+    private DotNetObjectReference<Dial> objRef;
+
+    [Parameter]
+    public double Rotation { get; set; }
+
+    [Parameter]
+    public EventCallback<double> RotationChanged { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            objRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("initializeDial", dialId, objRef);
+        }
+    }
+
+    [JSInvokable]
+    public async Task SetRotation(double rotation)
+    {
+        Rotation = rotation;
+        await RotationChanged.InvokeAsync(rotation);
+    }
+
+    public void Dispose()
+    {
+        objRef?.Dispose();
+    }
+}
