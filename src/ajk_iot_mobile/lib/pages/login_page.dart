@@ -1,3 +1,4 @@
+import 'package:ajk_iot_mobile/pages/create_account_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
@@ -7,10 +8,10 @@ class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
-  _LoginPageState createState() => _LoginPageState();
+  LoginPageState createState() => LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _storage = const FlutterSecureStorage();
   final TextEditingController _emailController = TextEditingController();
@@ -44,16 +45,23 @@ class _LoginPageState extends State<LoginPage> {
     if (_formKey.currentState!.validate()) {
       await _saveCredentials();
 
-      final provider = Provider.of<AuthProvider>(context, listen: false);
-      final loginSuccessful =
-          await provider.login(_emailController.text, _passwordController.text);
-
-      if (loginSuccessful) {
-        Navigator.of(context).pushReplacementNamed('/home');
+      if (mounted) {
+        final provider = Provider.of<AuthProvider>(context, listen: false);
+        final loginSuccessful = await provider.login(
+            _emailController.text, _passwordController.text);
+        if (mounted) {
+          // Check if the widget is still in the tree
+          if (loginSuccessful) {
+            Navigator.of(context).pushReplacementNamed('/home');
+          } else {
+            setState(() {
+              _loginError = provider.errorMessage;
+            });
+          }
+        }
       } else {
         setState(() {
-          _loginError = provider
-              .errorMessage; 
+          _loginError = "Application error";
         });
       }
     }
@@ -94,6 +102,19 @@ class _LoginPageState extends State<LoginPage> {
               ElevatedButton(
                 onPressed: _attemptLogin,
                 child: const Text('Login'),
+              ),
+              const SizedBox(
+                  height:
+                      20), // Provides spacing between the login form and the create account button.
+              TextButton(
+                onPressed: () {
+                  // Navigate to the CreateAccountPage
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (context) => const CreateAccountPage()),
+                  );
+                },
+                child: const Text('Don\'t have an account? Create one'),
               ),
               if (_loginError.isNotEmpty) // Display login error message if any
                 Padding(

@@ -7,10 +7,10 @@ class TryLoginPage extends StatefulWidget {
   const TryLoginPage({super.key});
 
   @override
-  _TryLoginPageState createState() => _TryLoginPageState();
+  TryLoginPageState createState() => TryLoginPageState();
 }
 
-class _TryLoginPageState extends State<TryLoginPage> {
+class TryLoginPageState extends State<TryLoginPage> {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   @override
@@ -19,26 +19,25 @@ class _TryLoginPageState extends State<TryLoginPage> {
     _tryAutoLogin();
   }
 
-  Future<void> _tryAutoLogin() async {
-    final email = await _storage.read(key: 'email');
-    final password = await _storage.read(key: 'password');
-    if (email != null && password != null) {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      bool success = await authProvider.login(email, password);
+Future<void> _tryAutoLogin() async {
+  final email = await _storage.read(key: 'email');
+  final password = await _storage.read(key: 'password');
+  if (email != null && password != null && mounted) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    bool success = await authProvider.login(email, password);
+    if (mounted) { // Check if the widget is still in the tree
       if (!success) {
-        setState(() {
-          Navigator.pushReplacementNamed(context, '/login');
-        });
-      }
-      if (success) {
+        Navigator.pushReplacementNamed(context, '/login');
+      } else {
         Navigator.pushReplacementNamed(context, '/home');
       }
-    } else {
-      setState(() {
-        Navigator.pushReplacementNamed(context, '/login');
-      });
+    }
+  } else {
+    if (mounted) { // Check if the widget is still in the tree
+      Navigator.pushReplacementNamed(context, '/login');
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {

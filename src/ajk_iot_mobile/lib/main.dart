@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:ajk_iot_mobile/pages/create_account_page.dart';
 import 'package:ajk_iot_mobile/pages/home_page.dart';
 import 'package:ajk_iot_mobile/pages/try_login_page.dart';
 import 'package:flutter/material.dart';
@@ -36,7 +37,8 @@ class AjkIotApp extends StatelessWidget {
           routes: {
             '/trylogin': (context) => const TryLoginPage(),
             '/login': (context) => const LoginPage(),
-            '/home': (context) => HomePage(),
+            '/home': (context) => const HomePage(),
+            '/register': (context) => const CreateAccountPage(),
           },
         ));
   }
