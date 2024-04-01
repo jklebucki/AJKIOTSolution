@@ -40,7 +40,8 @@ namespace AJKIOT.Api.Services
 
             var result = await _userManager.CreateAsync(new ApplicationUser
             {
-                UserName = request.Username,
+                FullName = request.Username!,
+                UserName = request.Email,
                 Email = request.Email,
                 Role = Role.User
             }, request.Password!);
@@ -72,7 +73,7 @@ namespace AJKIOT.Api.Services
             {
                 Data = new AuthResponse
                 {
-                    Username = user!.UserName,
+                    Username = user!.FullName,
                     Email = user.Email,
                     Tokens = tokens
                 },
@@ -94,7 +95,7 @@ namespace AJKIOT.Api.Services
             {
                 var token = await _userManager.GeneratePasswordResetTokenAsync(user);
                 var resetLink = $"{request.ApplicationAddress}?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(user.Email!)}";
-                await _emailSenderService.SendResetPasswordEmailAsync(user.Email!, user.UserName, resetLink);
+                await _emailSenderService.SendResetPasswordEmailAsync(user.Email!, user.FullName, resetLink);
                 _logger.LogInformation($"Password reset email sent: {request.Email}");
             }
             catch (Exception ex)
@@ -130,7 +131,7 @@ namespace AJKIOT.Api.Services
 
             _logger.LogInformation($"Password has been successfully reset for {request.Email}");
 
-            await _emailSenderService.SendResetPasswordConfirmationEmailAsync(user.Email, user.UserName, request.ApplicationAddress);
+            await _emailSenderService.SendResetPasswordConfirmationEmailAsync(user.Email, user.FullName, request.ApplicationAddress);
             return response;
         }
 

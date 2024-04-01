@@ -82,12 +82,14 @@
     {
         if (editContext.Validate())
         {
+            var loginPage = $"{NavigationManager.BaseUri}Account/Login";
             var registrationRequest = new RegistrationRequest
                 {
                     Username = Input.Username,
                     Email = Input.Email,
                     Password = Input.Password,
-                    Role = Role.User
+                    Role = Role.User,
+                    ApplicationAddress = loginPage
                 };
             var registerResponse = await AuthService.RegisterAsync(registrationRequest);
             if (registerResponse.IsSuccess)

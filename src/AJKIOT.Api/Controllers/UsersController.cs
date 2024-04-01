@@ -16,8 +16,17 @@ namespace AJKIOT.Api.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register(RegistrationRequest request)
+        public async Task<IActionResult> Register([FromBody] RegistrationRequest request)
         {
+            if (!ModelState.IsValid)
+            {
+                var apiResponse = new ApiResponse<RegistrationRequest>
+                {
+                    Data = request
+                };
+                apiResponse.Errors.AddRange(ModelState.Values.SelectMany(x => x.Errors.Select(y => y.ErrorMessage)));
+                return BadRequest(apiResponse);
+            }
             var result = await _userService.RegisterUserAsync(request);
             if (result.IsSuccess)
             {
@@ -29,6 +38,15 @@ namespace AJKIOT.Api.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<AuthResponse>> Authenticate([FromBody] AuthRequest request)
         {
+            if (!ModelState.IsValid)
+            {
+                var apiResponse = new ApiResponse<AuthRequest>
+                {
+                    Data = request
+                };
+                apiResponse.Errors.AddRange(ModelState.Values.SelectMany(x => x.Errors.Select(y => y.ErrorMessage)));
+                return BadRequest(apiResponse);
+            }
             var result = await _userService.AuthenticateUserAsync(request);
             if (result.IsSuccess)
             {
@@ -43,7 +61,12 @@ namespace AJKIOT.Api.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                var apiResponse = new ApiResponse<bool>
+                {
+                    Data = false
+                };
+                apiResponse.Errors.AddRange(ModelState.Values.SelectMany(x => x.Errors.Select(y => y.ErrorMessage)));
+                return BadRequest(apiResponse);
             }
             var result = await _userService.SendPasswordResetLinkAsync(model);
             return Ok(result);
@@ -55,7 +78,12 @@ namespace AJKIOT.Api.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                var apiResponse = new ApiResponse<bool>
+                {
+                    Data = false
+                };
+                apiResponse.Errors.AddRange(ModelState.Values.SelectMany(x => x.Errors.Select(y => y.ErrorMessage)));
+                return BadRequest(apiResponse);
             }
 
             var response = await _userService.ResetPasswordConfirmAsync(model);
