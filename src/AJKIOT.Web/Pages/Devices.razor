@@ -5,7 +5,19 @@
 @inject IApiService api
 
 <PageTitle>Devices</PageTitle>
+<div class="container">
+    <div class="row">
+        @foreach (var device in IotDevices)
+        {
+            <div class="col-md-4 mb-4">
+                <IotDeviceTile IotDevice="device" OnPinStatusChanged="HandlePinStatusChanged"></IotDeviceTile>
+            </div>
+        }
+    </div>
+</div>
 
+
+@*
 <h1>Devices</h1>
 
 <p>Your devices</p>
@@ -42,9 +54,19 @@ else
             }
         </tbody>
     </table>
-}
+} *@
 
 @code {
+    private List<IotDevice> IotDevices = new List<IotDevice>
+    {
+        // Przykładowe dane urządzeń
+    };
+
+    private void HandlePinStatusChanged(int newStatus)
+    {
+        // Logika obsługująca zmianę statusu pinu
+    }
+
     private double rotation;
     private bool SwitchState = false;
     private int DialValue = 90;
@@ -54,12 +76,37 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        devices = await api.GetDeviceStatusAsync(0);
+        IotDevices = new List<IotDevice>
+        {
+            new IotDevice { OwnerId = "Owner1", DeviceId = 1, DeviceName = "Device1", PinStatus = 1, SetPinStatus = 0, DeviceFeaturesJson = "{\"FeatureA\": \"Value1\", \"FeatureB\": \"Value2\"}" },
+            new IotDevice { OwnerId = "Owner2", DeviceId = 2, DeviceName = "Device2", PinStatus = 0, SetPinStatus = 1, DeviceFeaturesJson = "{\"FeatureA\": \"Value2\", \"FeatureB\": \"Value3\"}" },
+            new IotDevice { OwnerId = "Owner3", DeviceId = 3, DeviceName = "Device3", PinStatus = 1, SetPinStatus = 0, DeviceFeaturesJson = "{\"FeatureA\": \"Value3\", \"FeatureB\": \"Value4\"}" },
+            new IotDevice { OwnerId = "Owner4", DeviceId = 4, DeviceName = "Device4", PinStatus = 0, SetPinStatus = 1, DeviceFeaturesJson = "{\"FeatureA\": \"Value4\", \"FeatureB\": \"Value5\"}" },
+            new IotDevice { OwnerId = "Owner5", DeviceId = 5, DeviceName = "Device5", PinStatus = 1, SetPinStatus = 0, DeviceFeaturesJson = "{\"FeatureA\": \"Value5\", \"FeatureB\": \"Value6\"}" },
+            new IotDevice { OwnerId = "Owner6", DeviceId = 6, DeviceName = "Device6", PinStatus = 0, SetPinStatus = 1, DeviceFeaturesJson = "{\"FeatureA\": \"Value6\", \"FeatureB\": \"Value7\"}" },
+            new IotDevice { OwnerId = "Owner7", DeviceId = 7, DeviceName = "Device7", PinStatus = 1, SetPinStatus = 0, DeviceFeaturesJson = "{\"FeatureA\": \"Value7\", \"FeatureB\": \"Value8\"}" },
+            new IotDevice { OwnerId = "Owner8", DeviceId = 8, DeviceName = "Device8", PinStatus = 0, SetPinStatus = 1, DeviceFeaturesJson = "{\"FeatureA\": \"Value8\", \"FeatureB\": \"Value9\"}" },
+            new IotDevice { OwnerId = "Owner9", DeviceId = 9, DeviceName = "Device9", PinStatus = 1, SetPinStatus = 0, DeviceFeaturesJson = "{\"FeatureA\": \"Value9\", \"FeatureB\": \"Value10\"}" },
+            new IotDevice { OwnerId = "Owner10", DeviceId = 10, DeviceName = "Device10", PinStatus = 0, SetPinStatus = 1, DeviceFeaturesJson = "{\"FeatureA\": \"Value10\", \"FeatureB\": \"Value11\"}" },
+            new IotDevice { OwnerId = "Owner11", DeviceId = 11, DeviceName = "Device11", PinStatus = 1, SetPinStatus = 0, DeviceFeaturesJson = "{\"FeatureA\": \"Value11\", \"FeatureB\": \"Value12\"}" },
+            new IotDevice { OwnerId = "Owner12", DeviceId = 12, DeviceName = "Device12", PinStatus = 0, SetPinStatus = 1, DeviceFeaturesJson = "{\"FeatureA\": \"Value12\", \"FeatureB\": \"Value13\"}" },
+            new IotDevice { OwnerId = "Owner13", DeviceId = 13, DeviceName = "Device13", PinStatus = 1, SetPinStatus = 0, DeviceFeaturesJson = "{\"FeatureA\": \"Value13\", \"FeatureB\": \"Value14\"}" },
+            new IotDevice { OwnerId = "Owner14", DeviceId = 14, DeviceName = "Device14", PinStatus = 0, SetPinStatus = 1, DeviceFeaturesJson = "{\"FeatureA\": \"Value14\", \"FeatureB\": \"Value15\"}" },
+            new IotDevice { OwnerId = "Owner15", DeviceId = 15, DeviceName = "Device15", PinStatus = 1, SetPinStatus = 0, DeviceFeaturesJson = "{\"FeatureA\": \"Value15\", \"FeatureB\": \"Value16\"}" },
+            new IotDevice { OwnerId = "Owner16", DeviceId = 16, DeviceName = "Device16", PinStatus = 0, SetPinStatus = 1, DeviceFeaturesJson = "{\"FeatureA\": \"Value16\", \"FeatureB\": \"Value17\"}" },
+            new IotDevice { OwnerId = "Owner17", DeviceId = 17, DeviceName = "Device17", PinStatus = 1, SetPinStatus = 0, DeviceFeaturesJson = "{\"FeatureA\": \"Value17\", \"FeatureB\": \"Value18\"}" },
+            new IotDevice { OwnerId = "Owner18", DeviceId = 18, DeviceName = "Device18", PinStatus = 0, SetPinStatus = 1, DeviceFeaturesJson = "{\"FeatureA\": \"Value18\", \"FeatureB\": \"Value19\"}" },
+            new IotDevice { OwnerId = "Owner19", DeviceId = 19, DeviceName = "Device19", PinStatus = 1, SetPinStatus = 0, DeviceFeaturesJson = "{\"FeatureA\": \"Value19\", \"FeatureB\": \"Value20\"}" },
+            new IotDevice { OwnerId = "Owner20", DeviceId = 20, DeviceName = "Device20", PinStatus = 0, SetPinStatus = 1, DeviceFeaturesJson = "{\"FeatureA\": \"Value20\", \"FeatureB\": \"Value21\"}" },
+            new IotDevice { OwnerId = "Owner21", DeviceId = 21, DeviceName = "Device21", PinStatus = 1, SetPinStatus = 0, DeviceFeaturesJson = "{\"FeatureA\": \"Value21\", \"FeatureB\": \"Value22\"}" },
+            new IotDevice { OwnerId = "Owner22", DeviceId = 22, DeviceName = "Device22", PinStatus = 0, SetPinStatus = 1, DeviceFeaturesJson = "{\"FeatureA\": \"Value22\", \"FeatureB\": \"Value23\"}" },
+            new IotDevice { OwnerId = "Owner23", DeviceId = 23, DeviceName = "Device23", PinStatus = 1, SetPinStatus = 0, DeviceFeaturesJson = "{\"FeatureA\": \"Value23\", \"FeatureB\": \"Value24\"}" }
+        };
     }
 
     private void ResetRotation()
     {
         rotation = 33; // Resetuj obrót do pozycji początkowej
     }
-    
+
 }

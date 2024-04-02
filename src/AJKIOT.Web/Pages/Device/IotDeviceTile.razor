@@ -1,0 +1,33 @@
+﻿@using AJKIOT.Shared.Models
+@inject IJSRuntime JSRuntime
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">@IotDevice.DeviceName</h5>
+        <p class="card-text">ID: @IotDevice.DeviceId</p>
+        <p class="card-text">Owner: @IotDevice.OwnerId</p>
+        <p class="card-text">Pin Status: @IotDevice.PinStatus</p>
+        <p class="card-text">Set Pin Status: @IotDevice.SetPinStatus</p>
+        <p class="card-text">Features: @IotDevice.DeviceFeaturesJson</p>
+        <button class="btn btn-primary" @onclick="TogglePinStatus">Toggle Pin Status</button>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public IotDevice IotDevice { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnPinStatusChanged { get; set; }
+
+    private async Task TogglePinStatus()
+    {
+        // Przykład zmiany statusu pinu (tu można dodać logikę odpowiedzialną za faktyczną zmianę)
+        IotDevice.PinStatus = IotDevice.PinStatus == 0 ? 1 : 0;
+
+        await OnPinStatusChanged.InvokeAsync(IotDevice.PinStatus);
+
+        // Opcjonalnie, odśwież komponent
+        StateHasChanged();
+    }
+}

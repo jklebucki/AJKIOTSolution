@@ -1,0 +1,15 @@
+﻿.card {
+    width: 100%; /* Zajmie całą dostępną szerokość kontenera kolumny */
+}
+
+@media (min-width: 992px) { /* Dla ekranów średnich i większych, typowych dla Full HD */
+    .card {
+        width: 75%; /* Szerokość karty na ekranach poziomych */
+    }
+}
+
+@media (max-width: 991px) { /* Dla ekranów mniejszych niż średnie */
+    .card {
+        width: 100%; /* Szerokość karty na ekranach pionowych */
+    }
+}
