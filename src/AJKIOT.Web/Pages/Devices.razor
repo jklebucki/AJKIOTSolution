@@ -2,6 +2,8 @@
 @using AJKIOT.Shared.Models
 @using AJKIOT.Web.Pages.Device
 @using AJKIOT.Web.Services
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
 @inject IApiService api
 
 <PageTitle>Devices</PageTitle>
