@@ -135,5 +135,12 @@ namespace AJKIOT.Api.Services
             return response;
         }
 
+        public async Task<string> GetUserIdAsync(string username)
+        {
+            var user = await _userManager.FindByEmailAsync(username);
+            if (user != null)
+                return user.Id;
+            return string.Empty;
+        }
     }
 }

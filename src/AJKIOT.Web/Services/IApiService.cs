@@ -4,7 +4,7 @@ namespace AJKIOT.Web.Services
 {
     public interface IApiService
     {
-        Task<IEnumerable<IotDevice>> GetDeviceStatusAsync(int userId);
+        Task<IEnumerable<IotDevice>> GetDeviceStatusAsync(string username);
 
     }
 }

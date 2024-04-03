@@ -17,8 +17,6 @@ namespace AJKIOT.Api.Services
         public void ChangePinStatus(int deviceId, int pinStatus)
         {
             var status = devices.FirstOrDefault(d => d.DeviceId == deviceId);
-            if (status != null)
-                status.SetPinStatus = pinStatus;
         }
 
         public IEnumerable<IotDevice> GetAllDevices()
@@ -37,10 +35,7 @@ namespace AJKIOT.Api.Services
             var status = devices.FirstOrDefault(d => d.DeviceId == deviceStatus.DeviceId);
             if (status == null)
                 AddDeviceStatus(deviceStatus);
-            else
-            {
-                status.PinStatus = deviceStatus.PinStatus;
-            }
+            
         }
 
         private void AddDeviceStatus(IotDevice deviceStatus)
@@ -75,11 +70,10 @@ namespace AJKIOT.Api.Services
                         {
                             DeviceId = deviceId,
                             DeviceName = parts[0],
-                            PinStatus = pinStatus,
                         };
                         _statusService.SetDeviceStatus(deviceStatus);
                         var setPin = _statusService.GetDeviceStatus(deviceId);
-                        var respBuffer = Encoding.UTF8.GetBytes($"{setPin!.DeviceName}:{setPin.DeviceId}:{setPin.SetPinStatus}:");
+                        var respBuffer = Encoding.UTF8.GetBytes($"{setPin!.DeviceName}:{setPin.DeviceId}:");
                         await webSocket.SendAsync(new ArraySegment<byte>(respBuffer, 0, respBuffer.Length), receiveResult.MessageType, receiveResult.EndOfMessage, cancellationToken);
                     }
                 }
@@ -101,7 +95,6 @@ namespace AJKIOT.Api.Services
             {
                 DeviceId = int.Parse(message.Split(":")[1]),
                 DeviceName = message.Split(":")[0],
-                PinStatus = int.Parse(message.Split(":")[2]),
             };
         }
     }

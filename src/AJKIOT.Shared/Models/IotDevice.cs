@@ -4,10 +4,8 @@ namespace AJKIOT.Shared.Models
     {
         public string? OwnerId { get; set; }
         public int DeviceId { get; set; }
-        public string? DeviceName { get; set; }
-        public int PinStatus { get; set; }
-        public int SetPinStatus { get; set; }
-        public string? DeviceFeaturesJson { get; set; }
-
+        public string DeviceName { get; set; } = "";
+        public string DeviceFeaturesJson { get; set; } = "{}";
+        public string CurrentSettingsJson { get; set; } = "{}";
     }
 }
