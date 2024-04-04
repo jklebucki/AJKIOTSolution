@@ -9,37 +9,35 @@
         <p class="card-text">ID: @IotDevice.DeviceId</p>
         @foreach (var feature in features)
         {
-            <p class="card-text">@feature.Name</p>
-            <p class="card-text">@feature.Type</p>
+            <p class="card-text">@feature.Name : @feature.Value</p>
+            <Switch Feature="feature" IsOnChanged="ToggleDeviceStatus"></Switch>
         }
-        <button class="btn btn-primary" @onclick="TogglePinStatus">Toggle Pin Status</button>
+
     </div>
 </div>
 
 @code {
-        [Parameter]
-        public IotDevice IotDevice { get; set; }
+    [Parameter]
+    public IotDevice IotDevice { get; set; }
 
     private List<DeviceFeature> features;
 
+    private bool IsOn { get; set; }
+
     [Parameter]
-    public EventCallback<string> OnPinStatusChanged { get; set; }
+    public EventCallback<IotDevice> OnPinDeviceChanged { get; set; }
 
-    private async Task TogglePinStatus()
+
+    private async Task ToggleDeviceStatus(DeviceFeature feature)
     {
-
-        await OnPinStatusChanged.InvokeAsync(IotDevice.CurrentSettingsJson);
-
+        IotDevice.DeviceFeaturesJson = JsonSerializer.Serialize(features);
+        await OnPinDeviceChanged.InvokeAsync(IotDevice);
         StateHasChanged();
     }
 
     protected override void OnInitialized()
     {
         features = JsonSerializer.Deserialize<List<DeviceFeature>>(IotDevice.DeviceFeaturesJson);
-        foreach (var feature in features)
-        {
-            Console.WriteLine(feature.Name);
-        }
     }
 
     protected override void OnAfterRender(bool firstRender)

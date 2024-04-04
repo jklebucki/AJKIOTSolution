@@ -1,28 +1,22 @@
-﻿<div class="switch @CssClass" @onclick="ToggleSwitch"></div>
+﻿@using AJKIOT.Shared.Models.DeviceFeatures
+<div class="switch @CssClass" @onclick="ToggleSwitch"></div>
 
 @code {
     private bool _isOn;
 
     [Parameter]
-    public bool IsOn
-    {
-        get => _isOn;
-        set
-        {
-            if (_isOn == value) return;
-            _isOn = value;
-            IsOnChanged.InvokeAsync(value);
-        }
-    }
+    public DeviceFeature Feature { get; set; }
 
     [Parameter]
-    public EventCallback<bool> IsOnChanged { get; set; }
+    public EventCallback<DeviceFeature> IsOnChanged { get; set; }
 
-    private string CssClass => IsOn ? "switch-on" : "switch-off";
+    private string CssClass => _isOn ? "switch-on" : "switch-off";
 
-    private void ToggleSwitch()
+    private async void ToggleSwitch()
     {
-        IsOn = !IsOn;
-        StateHasChanged(); // Zasygnalizuj zmianę stanu, aby odświeżyć widok.
+        _isOn = !_isOn;
+        Feature.Value = _isOn ? 1 : 0; 
+        await IsOnChanged.InvokeAsync(Feature);
+        StateHasChanged();
     }
 }

@@ -1,5 +1,6 @@
 ﻿@page "/devices"
 @using AJKIOT.Shared.Models
+@using AJKIOT.Shared.Models.DeviceFeatures
 @using AJKIOT.Web.Pages.Device
 @using AJKIOT.Web.Services
 @using Microsoft.AspNetCore.Authorization
@@ -17,7 +18,7 @@
             @foreach (var device in devices)
             {
                 <div class="col-md-4 mb-4">
-                    <IotDeviceTile IotDevice="device" OnPinStatusChanged="HandlePinStatusChanged"></IotDeviceTile>
+                    <IotDeviceTile IotDevice="device" OnPinDeviceChanged="HandleDeviceChanged"></IotDeviceTile>
                 </div>
             }
         </div>
@@ -33,9 +34,9 @@ else
 
     private string errorMessage = string.Empty;
 
-    private void HandlePinStatusChanged(string newStatus)
+    private void HandleDeviceChanged(IotDevice iotDevice)
     {
-        // Logika obsługująca zmianę statusu pinu
+        Console.WriteLine($"Pin status changed id: {iotDevice.DeviceFeaturesJson}");
     }
 
     private IEnumerable<IotDevice> devices = null;
@@ -51,8 +52,11 @@ else
             try
             {
                 devices = await api.GetDeviceStatusAsync(userData.Email);
-            } catch (UnauthorizedAccessException)
+            }
+            catch (UnauthorizedAccessException)
             {
+                var customProvider = AuthenticationStateProvider as CustomAuthenticationStateProvider;
+                customProvider.NotifyUserLogout();
                 NavigationManager.NavigateTo("/Account/Login");
             }
 
@@ -60,9 +64,6 @@ else
             {
                 errorMessage = ex.Message;
             }
-
         }
-
     }
-
 }

@@ -1,5 +1,4 @@
 ﻿using AJKIOT.Api.Services;
-using Microsoft.AspNetCore.Http;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;

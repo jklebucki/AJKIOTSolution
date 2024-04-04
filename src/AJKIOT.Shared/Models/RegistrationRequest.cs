@@ -1,6 +1,6 @@
 ﻿
-using System.ComponentModel.DataAnnotations;
 using AJKIOT.Shared.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace AJKIOT.Shared.Models
 {

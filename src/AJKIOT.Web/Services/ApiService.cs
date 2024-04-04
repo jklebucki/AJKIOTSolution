@@ -26,7 +26,8 @@ namespace AJKIOT.Web.Services
             {
                 var result = await response.Content.ReadFromJsonAsync<IEnumerable<IotDevice>>();
                 return result ?? new List<IotDevice>();
-            } else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             {
                 throw new UnauthorizedAccessException();
             }

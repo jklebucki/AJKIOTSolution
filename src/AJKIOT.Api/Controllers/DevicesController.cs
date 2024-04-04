@@ -1,11 +1,9 @@
 ﻿using AJKIOT.Api.Data;
-using AJKIOT.Api.Middleware;
 using AJKIOT.Api.Repositories;
 using AJKIOT.Api.Services;
 using AJKIOT.Shared.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Bson;
 using System.Text.Json;
 
 namespace AJKIOT.Api.Controllers
@@ -46,10 +44,10 @@ namespace AJKIOT.Api.Controllers
 
         }
 
-        [HttpPost("send")]
-        public async Task<IActionResult> SendMessageToClient([FromBody] JsonElement message)
+        [HttpPost("setdevice")]
+        public async Task<IActionResult> SetDeviceAsync([FromBody] IotDevice device)
         {
-            var content = JsonSerializer.Deserialize<JsonElement>(message).ToString();
+            var content = JsonSerializer.Serialize(device);
             try
             {
                 _messageBus.EnqueueMessage(content);

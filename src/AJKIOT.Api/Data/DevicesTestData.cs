@@ -1,33 +1,32 @@
-using System;
-using System.Text.Json;
 using AJKIOT.Shared.Models;
 using AJKIOT.Shared.Models.DeviceFeatures;
+using System.Text.Json;
 
 namespace AJKIOT.Api.Data
 {
     public static class DevicesTestData
     {
-        public static List<IotDevice> Devices ()
+        public static List<IotDevice> Devices()
         {
             var features = JsonSerializer.Serialize(new List<DeviceFeature>{
-                                new DeviceFeature { Id = 1, Name = "DigitalOutput0", Type = "DigitalOutput" }, 
+                                new DeviceFeature { Id = 1, Name = "DigitalOutput0", Type = "DigitalOutput" },
                                 new DeviceFeature { Id = 2, Name = "DigitalOutput1", Type = "DigitalOutput" }});
             return new List<IotDevice>
-                    {                       
-                        new IotDevice { 
-                            OwnerId = "62ad23c4-20a2-4c14-893c-7d7abd3e468b", 
-                            DeviceId = 1, DeviceName = "Water Leak Sensor #1", 
-                            CurrentSettingsJson="{\"DigitalOutput0\":\"1\",\"DigitalOutput1\":\"0\"}", 
+                    {
+                        new IotDevice {
+                            OwnerId = "62ad23c4-20a2-4c14-893c-7d7abd3e468b",
+                            DeviceId = 1, DeviceName = "Water Leak Sensor #1",
+                            CurrentSettingsJson="{\"DigitalOutput0\":\"1\",\"DigitalOutput1\":\"0\"}",
                             DeviceFeaturesJson = features},
-                        new IotDevice { 
-                            OwnerId = "62ad23c4-20a2-4c14-893c-7d7abd3e468b", 
-                            DeviceId = 2, DeviceName = "Security Camera #2", 
+                        new IotDevice {
+                            OwnerId = "62ad23c4-20a2-4c14-893c-7d7abd3e468b",
+                            DeviceId = 2, DeviceName = "Security Camera #2",
                             CurrentSettingsJson="{\"DigitalOutput0\":\"0\",\"DigitalOutput1\":\"1\"}",
                             DeviceFeaturesJson = features},
-                        new IotDevice { 
-                            OwnerId = "62ad23c4-20a2-4c14-893c-7d7abd3e468b", 
-                            DeviceId = 3, DeviceName = "Security Camera #3", 
-                            CurrentSettingsJson="{\"DigitalOutput0\":\"1\",\"DigitalOutput1\":\"0\"}", 
+                        new IotDevice {
+                            OwnerId = "62ad23c4-20a2-4c14-893c-7d7abd3e468b",
+                            DeviceId = 3, DeviceName = "Security Camera #3",
+                            CurrentSettingsJson="{\"DigitalOutput0\":\"1\",\"DigitalOutput1\":\"0\"}",
                             DeviceFeaturesJson = features},
                         new IotDevice { OwnerId = "62ad23c4-20a2-4c14-893c-7d7abd3e468b", DeviceId = 4, DeviceName = "Smoke Detector #4", CurrentSettingsJson="{\"DigitalOutput0\":\"1\",\"DigitalOutput1\":\"0\"}", DeviceFeaturesJson = features},
                         new IotDevice { OwnerId = "62ad23c4-20a2-4c14-893c-7d7abd3e468b", DeviceId = 5, DeviceName = "Smoke Detector #5", CurrentSettingsJson="{\"DigitalOutput0\":\"0\",\"DigitalOutput1\":\"1\"}", DeviceFeaturesJson = features},

@@ -35,7 +35,7 @@ namespace AJKIOT.Api.Services
             var status = devices.FirstOrDefault(d => d.DeviceId == deviceStatus.DeviceId);
             if (status == null)
                 AddDeviceStatus(deviceStatus);
-            
+
         }
 
         private void AddDeviceStatus(IotDevice deviceStatus)
