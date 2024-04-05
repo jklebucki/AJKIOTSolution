@@ -19,6 +19,71 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
 char daysOfTheWeek[7][12] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
 int PIN_P = 0;
 
+class DataBlock {
+public:
+    int int1, int2;
+    double double1, double2;
+
+    DataBlock(int i1, int i2, double d1, double d2) : int1(i1), int2(i2), double1(d1), double2(d2) {}
+};
+
+class Serializer {
+private:
+    std::vector<DataBlock> blocks;
+
+public:
+    void AddBlock(int int1, int int2, double double1, double double2) {
+        blocks.push_back(DataBlock(int1, int2, double1, double2));
+    }
+
+    void RemoveBlock(size_t index) {
+        if (index < blocks.size()) {
+            blocks.erase(blocks.begin() + index);
+        }
+    }
+
+    std::string Serialize() const {
+        std::ostringstream oss;
+        for (const auto& block : blocks) {
+            oss << block.int1 << ":" << block.int2 << ":" << block.double1 << ":" << block.double2 << "|";
+        }
+        std::string result = oss.str();
+        if (!result.empty()) result.pop_back(); // Usuń ostatni znak '|'
+        return result;
+    }
+
+    void Deserialize(const std::string& data) {
+        std::istringstream iss(data);
+        std::string segment;
+        blocks.clear(); // Usuń bieżące bloki przed deserializacją
+
+        while (std::getline(iss, segment, '|')) {
+            std::istringstream segmentStream(segment);
+            std::string element;
+            std::vector<std::string> elements;
+
+            while (std::getline(segmentStream, element, ':')) {
+                elements.push_back(element);
+            }
+
+            if (elements.size() == 4) { // Upewnij się, że segment zawiera 4 elementy
+                int int1 = std::stoi(elements[0]);
+                int int2 = std::stoi(elements[1]);
+                double double1 = std::stod(elements[2]);
+                double double2 = std::stod(elements[3]);
+                AddBlock(int1, int2, double1, double2);
+            }
+        }
+    }
+
+    void Print() const {
+        for (const auto& block : blocks) {
+            std::cout << "Block: " << block.int1 << ", " << block.int2 << ", " << block.double1 << ", " << block.double2 << std::endl;
+        }
+    }
+};
+
+
 void setup() {
   device["name"] = "Door";
   device["id"] = "100002";
