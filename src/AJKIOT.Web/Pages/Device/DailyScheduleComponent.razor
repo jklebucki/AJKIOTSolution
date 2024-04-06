@@ -1,22 +1,37 @@
 ﻿@using AJKIOT.Shared.Models.DeviceFeatures
+@using AJKIOT.Web.Translations
 @using Blazorise
 
 @if (Schedule != null)
 {
-    <div>
-        @foreach (var entry in Schedule.Entries.OrderBy(e => e.EntryNumber))
-        {
+    <div class="card">
+        <div class="card-header" style="text-align:center; background-color: seagreen">
+            @Weekday.GetDayOfWeek(Schedule.DayNumber,"EN")!.Name
+        </div>
+        <div class="card-body">
+            @foreach (var entry in Schedule.Entries.OrderBy(e => e.EntryNumber))
+            {
+                <div>
+                    Entry #@entry.EntryNumber: @entry.StartTime.ToString(@"HH\:mm") - @entry.EndTime.ToString(@"HH\:mm")
+                    <Button Color="Color.Primary" Size="Size.Small" Outline @onclick="() => RemoveScheduleEntry(entry)"><Icon Name="IconName.MinusCircle" /></Button>
+                </div>
+            }
+        </div>
+        <div class="card-footer">
             <div>
-                Wpis #@entry.EntryNumber: @entry.StartTime.ToString(@"HH\:mm") - @entry.EndTime.ToString(@"HH\:mm")
-                <Button Color="Color.Primary" Size="Size.Small" Outline @onclick="() => RemoveScheduleEntry(entry)"><Icon Name="IconName.MinusCircle" /></Button>
+                <div class="row">
+                    <div class="col-5">
+                        <TimePicker TValue="TimeSpan?" @bind-Time="@newStartDateTime" TimeAs24hr="true" />
+                    </div>
+                    <div class="col-5">
+                        <TimePicker TValue="TimeSpan?" @bind-Time="@newEndDateTime" TimeAs24hr="true" />
+                    </div>
+                    <div class="col-2">
+                        <Button Color="Color.Primary" Outline @onclick="AddScheduleEntry"><Icon Name="IconName.PlusCircle" /></Button>
+                    </div>
+                </div>
+
             </div>
-        }
-        <div>
-
-            <TimeEdit TValue="TimeSpan?" @bind-Time="@newStartDateTime" TimeAs24hr="true" Inline />
-            <TimeEdit TValue="TimeSpan?" @bind-Time="@newEndDateTime" TimeAs24hr="true" Inline />
-            <Button Color="Color.Primary" Outline @onclick="AddScheduleEntry" Size="Size.Small"><Icon Name="IconName.PlusCircle" /></Button>
-
         </div>
     </div>
 }

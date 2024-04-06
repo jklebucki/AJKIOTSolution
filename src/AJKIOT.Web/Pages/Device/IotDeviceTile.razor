@@ -1,7 +1,7 @@
 ﻿@using AJKIOT.Shared.Models
 @using System.Text.Json
 @using AJKIOT.Shared.Models.DeviceFeatures
-@inject NavigationManager NavigationManager 
+@inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
 
 <div class="card">
@@ -15,7 +15,7 @@
         }
 
     </div>
-@*     <button type="button" class="btn btn-primary" onclick="@OnScheduleButton()">Schedule</button> *@
+    <button type="button" class="btn btn-primary" onclick="@OnScheduleButton">Schedule</button>
 </div>
 
 @code {
@@ -49,6 +49,6 @@
 
     private async Task OnScheduleButton()
     {
-        //NavigationManager.NavigateTo($"/schedule/{IotDevice.DeviceId}");
+        NavigationManager.NavigateTo($"/schedule/{IotDevice.DeviceId}");
     }
 }

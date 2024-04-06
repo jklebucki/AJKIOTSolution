@@ -1,0 +1,11 @@
+﻿h1 {
+    font-family: 'Roboto', sans-serif; /* Używamy Roboto dla eleganckiego tekstu */
+    text-align: center; /* Wyśrodkowanie tekstu */
+    border: 1px solid #ccc; /* Cienka, szara ramka */
+    border-radius: 10px; /* Lekko zaokrąglone rogi */
+    padding: 10px; /* Dodanie trochę paddingu, aby tekst nie dotykał bezpośrednio ramki */
+    width: 100%; /* Aby h1 wypełniał nadrzędny kontener */
+    box-sizing: border-box; /* Zapewnia, że padding i border są wliczane do szerokości */
+    margin: 0 auto; /* Centrowanie w poziomie, jeśli nadrzędny kontener ma określoną szerokość */
+    background-color: #f9f9f9; /* Lekkie tło dla kontrastu */
+}

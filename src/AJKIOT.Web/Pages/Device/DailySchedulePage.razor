@@ -1,18 +1,35 @@
-﻿@page "/schedule"
+﻿@page "/schedule/{DeviceId}"
 @using AJKIOT.Shared.Models.DeviceFeatures
 
-<div style="display: flex; flex-direction: row; justify-content: space-between;">
-    @for (int i = 0; i < 7; i++)
-    {
-        <div style="flex-grow: 1;">
-            <DailyScheduleComponent Schedule="@weekSchedules[i]" OnScheduleChanged="HandleScheduleChanged" />
-        </div>
-    }
+<h1 class="mb-2">Weekly schedule</h1>
+<div class="mb-2">
+    <div class="row">
+        @for (int i = 0; i < 4; i++)
+        {
+            <div class="col-3">
+                <DailyScheduleComponent Schedule="@weekSchedules[i]" OnScheduleChanged="HandleScheduleChanged" />
+            </div>
+        }
+    </div>
+
+</div>
+<div class="mb-2">
+    <div class="row">
+        @for (int i = 4; i < 7; i++)
+        {
+            <div class="col-3">
+                <DailyScheduleComponent Schedule="@weekSchedules[i]" OnScheduleChanged="HandleScheduleChanged" />
+            </div>
+        }
+    </div>
 </div>
 
-<button @onclick="SaveSchedules">Zapisz</button>
+
+<button class="btn btn-outline-primary" @onclick="SaveSchedules">Save schedule</button>
 
 @code {
+    [Parameter]
+    public string DeviceId { get; set; }
 
     private List<DailySchedule> weekSchedules;
 
