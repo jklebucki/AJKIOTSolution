@@ -1,0 +1,69 @@
+﻿@using AJKIOT.Shared.Models.DeviceFeatures
+@using Blazorise
+
+@if (Schedule != null)
+{
+    <div>
+        @foreach (var entry in Schedule.Entries.OrderBy(e => e.EntryNumber))
+        {
+            <div>
+                Wpis #@entry.EntryNumber: @entry.StartTime.ToString(@"HH\:mm") - @entry.EndTime.ToString(@"HH\:mm")
+                <Button Color="Color.Primary" Size="Size.Small" Outline @onclick="() => RemoveScheduleEntry(entry)"><Icon Name="IconName.MinusCircle" /></Button>
+            </div>
+        }
+        <div>
+
+            <TimeEdit TValue="TimeSpan?" @bind-Time="@newStartDateTime" TimeAs24hr="true" Inline />
+            <TimeEdit TValue="TimeSpan?" @bind-Time="@newEndDateTime" TimeAs24hr="true" Inline />
+            <Button Color="Color.Primary" Outline @onclick="AddScheduleEntry" Size="Size.Small"><Icon Name="IconName.PlusCircle" /></Button>
+
+        </div>
+    </div>
+}
+@code {
+    [Parameter]
+    public DailySchedule Schedule { get; set; } = new() { DayNumber = 1, Entries = new List<DailyScheduleEntry>() };
+
+    [Parameter]
+    public EventCallback<DailySchedule> OnScheduleChanged { get; set; }
+
+    private TimeSpan? newStartDateTime = TimeSpan.Parse("07:00");
+    private TimeSpan? newEndDateTime = TimeSpan.Parse("08:00");
+
+    private async Task AddScheduleEntry()
+    {
+        if (Schedule.Entries.Any())
+        {
+            var lastEntry = Schedule.Entries.LastOrDefault();
+            if (newStartDateTime <= lastEntry?.EndTime.ToTimeSpan())
+            {
+                // Logika obsługi błędów, np. wyświetlić komunikat
+                return;
+            }
+        }
+
+        var newEntryNumber = 1;
+        if (Schedule.Entries.Any())
+        {
+            newEntryNumber = Schedule.Entries.Max(entry => entry.EntryNumber) + 1;
+        }
+
+        Schedule.Entries.Add(new DailyScheduleEntry
+            {
+                DayNumber = Schedule.DayNumber,
+                EntryNumber = newEntryNumber,
+                StartTime = TimeOnly.FromTimeSpan((TimeSpan)newStartDateTime),
+                EndTime = TimeOnly.FromTimeSpan((TimeSpan)newEndDateTime),
+            });
+        newStartDateTime = newEndDateTime?.Add(TimeSpan.FromHours(1));
+        newEndDateTime = newStartDateTime?.Add(TimeSpan.FromHours(1));
+        await OnScheduleChanged.InvokeAsync(Schedule);
+    }
+
+    private async Task RemoveScheduleEntry(DailyScheduleEntry entry)
+    {
+        Schedule.Entries.Remove(entry);
+        await OnScheduleChanged.InvokeAsync(Schedule);
+    }
+}
+

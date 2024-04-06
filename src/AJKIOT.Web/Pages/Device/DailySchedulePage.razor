@@ -1,0 +1,43 @@
+﻿@page "/schedule"
+@using AJKIOT.Shared.Models.DeviceFeatures
+
+<div style="display: flex; flex-direction: row; justify-content: space-between;">
+    @for (int i = 0; i < 7; i++)
+    {
+        <div style="flex-grow: 1;">
+            <DailyScheduleComponent Schedule="@weekSchedules[i]" OnScheduleChanged="HandleScheduleChanged" />
+        </div>
+    }
+</div>
+
+<button @onclick="SaveSchedules">Zapisz</button>
+
+@code {
+
+    private List<DailySchedule> weekSchedules;
+
+    protected override void OnInitialized()
+    {
+        weekSchedules = Enumerable.Range(1, 7)
+            .Select(dayNumber => new DailySchedule { DayNumber = dayNumber })
+            .ToList();
+    }
+
+    private void HandleScheduleChanged(DailySchedule updatedSchedule)
+    {
+        // Tutaj można zaimplementować logikę aktualizacji harmonogramu, jeśli jest potrzebna
+    }
+
+    private void SaveSchedules()
+    {
+        // Tu implementujemy logikę zapisu. Na razie wypiszmy dane do konsoli.
+        Console.WriteLine("Zapisywanie harmonogramów...");
+        foreach (var schedule in weekSchedules)
+        {
+            foreach (var entry in schedule.Entries)
+            {
+                Console.WriteLine($"Dzień {schedule.DayNumber}, Wpis #{entry.EntryNumber}, Start: {entry.StartTime}, Koniec: {entry.EndTime}");
+            }
+        }
+    }
+}
