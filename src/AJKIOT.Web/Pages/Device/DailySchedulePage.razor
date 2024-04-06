@@ -1,13 +1,14 @@
 ﻿@page "/schedule/{DeviceId}"
 @using AJKIOT.Shared.Models.DeviceFeatures
+@inject NavigationManager NavigationManager
 
 <h1 class="mb-2">Weekly schedule</h1>
 <div class="mb-2">
     <div class="row">
-        @for (int i = 0; i < 4; i++)
+        @for (int i = 1; i < 5; i++)
         {
             <div class="col-3">
-                <DailyScheduleComponent Schedule="@weekSchedules[i]" OnScheduleChanged="HandleScheduleChanged" />
+                <DailyScheduleComponent DayNumber="@i" Schedule="@SelectSchedule(i)" OnScheduleChanged="HandleScheduleChanged" />
             </div>
         }
     </div>
@@ -15,10 +16,10 @@
 </div>
 <div class="mb-2">
     <div class="row">
-        @for (int i = 4; i < 7; i++)
+        @for (int i = 5; i < 8; i++)
         {
             <div class="col-3">
-                <DailyScheduleComponent Schedule="@weekSchedules[i]" OnScheduleChanged="HandleScheduleChanged" />
+                <DailyScheduleComponent DayNumber="@i" Schedule="@SelectSchedule(i)" OnScheduleChanged="HandleScheduleChanged" />
             </div>
         }
     </div>
@@ -31,18 +32,17 @@
     [Parameter]
     public string DeviceId { get; set; }
 
-    private List<DailySchedule> weekSchedules;
+    private List<DailyScheduleEntry> weekSchedules;
 
     protected override void OnInitialized()
     {
-        weekSchedules = Enumerable.Range(1, 7)
-            .Select(dayNumber => new DailySchedule { DayNumber = dayNumber })
-            .ToList();
+        weekSchedules = new List<DailyScheduleEntry>();
     }
 
-    private void HandleScheduleChanged(DailySchedule updatedSchedule)
+    private void HandleScheduleChanged(IEnumerable<DailyScheduleEntry> updatedSchedule)
     {
-        // Tutaj można zaimplementować logikę aktualizacji harmonogramu, jeśli jest potrzebna
+        weekSchedules.RemoveAll(s => updatedSchedule.Any(e => e.DayNumber == s.DayNumber && e.EntryNumber == s.EntryNumber));
+        weekSchedules.AddRange(updatedSchedule);
     }
 
     private void SaveSchedules()
@@ -51,10 +51,14 @@
         Console.WriteLine("Zapisywanie harmonogramów...");
         foreach (var schedule in weekSchedules)
         {
-            foreach (var entry in schedule.Entries)
-            {
-                Console.WriteLine($"Dzień {schedule.DayNumber}, Wpis #{entry.EntryNumber}, Start: {entry.StartTime}, Koniec: {entry.EndTime}");
-            }
+            Console.WriteLine($"Day {schedule.DayNumber}, Entry #{schedule.EntryNumber}, Start: {schedule.StartTime}, End: {schedule.EndTime}");
         }
+
+        NavigationManager.NavigateTo("/devices");
+    }
+
+    private List<DailyScheduleEntry> SelectSchedule(int dayNumber)
+    {
+        return weekSchedules.Where(s => s.DayNumber == dayNumber).ToList();
     }
 }

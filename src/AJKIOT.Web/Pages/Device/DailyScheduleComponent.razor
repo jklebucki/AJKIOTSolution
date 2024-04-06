@@ -6,10 +6,10 @@
 {
     <div class="card">
         <div class="card-header" style="text-align:center; background-color: seagreen">
-            @Weekday.GetDayOfWeek(Schedule.DayNumber,"EN")!.Name
+            @Weekday.GetDayOfWeek(DayNumber, "EN")!.Name
         </div>
         <div class="card-body">
-            @foreach (var entry in Schedule.Entries.OrderBy(e => e.EntryNumber))
+            @foreach (var entry in Schedule.OrderBy(e => e.EntryNumber))
             {
                 <div>
                     Entry #@entry.EntryNumber: @entry.StartTime.ToString(@"HH\:mm") - @entry.EndTime.ToString(@"HH\:mm")
@@ -37,19 +37,34 @@
 }
 @code {
     [Parameter]
-    public DailySchedule Schedule { get; set; } = new() { DayNumber = 1, Entries = new List<DailyScheduleEntry>() };
+    public int DayNumber { get; set; }
 
     [Parameter]
-    public EventCallback<DailySchedule> OnScheduleChanged { get; set; }
+    public List<DailyScheduleEntry> Schedule { get; set; }
+
+    [Parameter]
+    public EventCallback<List<DailyScheduleEntry>> OnScheduleChanged { get; set; }
 
     private TimeSpan? newStartDateTime = TimeSpan.Parse("07:00");
     private TimeSpan? newEndDateTime = TimeSpan.Parse("08:00");
 
+    protected override void OnInitialized()
+    {
+        if (Schedule == null)
+        {
+            Schedule = new List<DailyScheduleEntry>();
+        }
+        else
+        {
+            Schedule = Schedule.Where(d => d.DayNumber == DayNumber).OrderBy(e => e.EntryNumber).ToList();
+        }
+    }
+
     private async Task AddScheduleEntry()
     {
-        if (Schedule.Entries.Any())
+        if (Schedule.Any())
         {
-            var lastEntry = Schedule.Entries.LastOrDefault();
+            var lastEntry = Schedule.LastOrDefault();
             if (newStartDateTime <= lastEntry?.EndTime.ToTimeSpan())
             {
                 // Logika obsługi błędów, np. wyświetlić komunikat
@@ -58,14 +73,14 @@
         }
 
         var newEntryNumber = 1;
-        if (Schedule.Entries.Any())
+        if (Schedule.Any())
         {
-            newEntryNumber = Schedule.Entries.Max(entry => entry.EntryNumber) + 1;
+            newEntryNumber = Schedule.Max(entry => entry.EntryNumber) + 1;
         }
 
-        Schedule.Entries.Add(new DailyScheduleEntry
+        Schedule.Add(new DailyScheduleEntry
             {
-                DayNumber = Schedule.DayNumber,
+                DayNumber = DayNumber,
                 EntryNumber = newEntryNumber,
                 StartTime = TimeOnly.FromTimeSpan((TimeSpan)newStartDateTime),
                 EndTime = TimeOnly.FromTimeSpan((TimeSpan)newEndDateTime),
@@ -77,7 +92,7 @@
 
     private async Task RemoveScheduleEntry(DailyScheduleEntry entry)
     {
-        Schedule.Entries.Remove(entry);
+        Schedule.Remove(entry);
         await OnScheduleChanged.InvokeAsync(Schedule);
     }
 }
