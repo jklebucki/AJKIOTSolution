@@ -1,5 +1,4 @@
-﻿@page "/schedule/{DeviceId:int}"
-@using AJKIOT.Shared.Models.DeviceFeatures
+﻿@using AJKIOT.Shared.Models.DeviceFeatures
 @inject NavigationManager NavigationManager
 
 <h1 class="mb-2">Weekly schedule</h1>
@@ -32,6 +31,9 @@
     [Parameter]
     public int DeviceId { get; set; }
 
+    [Parameter]
+    public EventCallback<List<DailyScheduleEntry>> OnScheduleChanged { get; set; }
+
     private List<DailyScheduleEntry> weekSchedules = new List<DailyScheduleEntry>();
 
     protected override void OnInitialized()
@@ -47,14 +49,12 @@
 
     private void SaveSchedules()
     {
-        // Tu implementujemy logikę zapisu. Na razie wypiszmy dane do konsoli.
         Console.WriteLine("Zapisywanie harmonogramów...");
         foreach (var schedule in weekSchedules)
         {
             Console.WriteLine($"Day {schedule.DayNumber}, Entry #{schedule.EntryNumber}, Start: {schedule.StartTime}, End: {schedule.EndTime}");
         }
-
-        NavigationManager.NavigateTo("/devices");
+        OnScheduleChanged.InvokeAsync(weekSchedules);
     }
 
     private List<DailyScheduleEntry> SelectSchedule(int dayNumber)

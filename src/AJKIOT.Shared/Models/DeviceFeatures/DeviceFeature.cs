@@ -6,8 +6,10 @@
         public string Type { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public int Value { get; set; }
-        public int MaxRange { get; set; }
-        public int StepsNumber { get; set; }
+        public int MinValue { get; set; }
+        public int MaxValue { get; set; }
+        public int NumberOfSteps { get; set; }
+        public IEnumerable<DailyScheduleEntry> DailyScheduleEntries { get; set; } = new List<DailyScheduleEntry>();
 
     }
 }

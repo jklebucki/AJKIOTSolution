@@ -4,6 +4,8 @@
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
 
+@if(!ScheduleMode)
+{
 <div class="card">
     <div class="card-body">
         <h5 class="card-title">@IotDevice!.DeviceName</h5>
@@ -19,11 +21,14 @@
         <button type="button" class="btn btn-primary" onclick="@(() => OnScheduleButton())">Schedule</button>
     </div>
 </div>
-
+} else
+{
+    <DailySchedule OnScheduleChanged="@OnScheduleChanged" DeviceId="IotDevice!.DeviceId"></DailySchedule>
+}
 @code {
     [Parameter]
     public IotDevice? IotDevice { get; set; }
-
+    private bool ScheduleMode { get; set; }
     private List<DeviceFeature> features = new List<DeviceFeature>();
 
     private bool IsOn { get; set; }
@@ -31,6 +36,12 @@
     [Parameter]
     public EventCallback<IotDevice> OnPinDeviceChanged { get; set; }
 
+
+    private async Task OnScheduleChanged(List<DailyScheduleEntry> dailyScheduleEntries)
+    {
+        ScheduleMode = false;
+        await Task.CompletedTask;
+    }
 
     private async Task ToggleDeviceStatus(DeviceFeature feature)
     {
@@ -51,7 +62,7 @@
 
     private async Task OnScheduleButton()
     {
-        NavigationManager.NavigateTo($"/schedule/{IotDevice!.DeviceId}");
+        ScheduleMode = true;
         await Task.CompletedTask;
     }
 }

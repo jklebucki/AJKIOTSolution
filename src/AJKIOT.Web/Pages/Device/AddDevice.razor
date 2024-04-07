@@ -1,0 +1,42 @@
+﻿@using AJKIOT.Shared.Models
+@using AJKIOT.Shared.Models.DeviceFeatures
+@using System.Text.Json
+@using AJKIOT.Web.Templates
+@using Blazorise
+
+
+<h3>Add New IoT Device</h3>
+
+@foreach (var deviceType in DeviceTypes)
+{
+    <Grid Class="mb-1">
+        <Column ColumnSize="ColumnSize.Is6">
+            <Button Class="form-control" Color="Color.Primary" Clicked="@(() => AddNewDevice(deviceType))">Add @deviceType.Name</Button>
+        </Column>
+    </Grid>
+
+}
+
+@code {
+
+    [Parameter]
+    public EventCallback<IotDevice> OnDeviceAdded { get; set; }
+    private List<DeviceType> DeviceTypes = new List<DeviceType>();
+    private IotDevice iotDevice = new IotDevice();
+
+    protected override void OnInitialized()
+    {
+        DeviceTypes = new List<DeviceType>()
+        {
+            new DeviceType { Id = 1, Name = "Switch" },
+            new DeviceType { Id = 2, Name = "Open timer" }
+        };
+    }
+
+    private async Task AddNewDevice(DeviceType deviceType)
+    {
+        var iotDevice = IotDeviceTemplate.CreateDevice(deviceType);
+        await OnDeviceAdded.InvokeAsync(iotDevice);
+    }
+
+}

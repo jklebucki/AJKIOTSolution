@@ -4,6 +4,7 @@
 @using AJKIOT.Web.Pages.Device
 @using AJKIOT.Web.Services
 @using Microsoft.AspNetCore.Authorization
+@using Blazorise
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject LocalStorageService LocalStorage
 @inject NavigationManager NavigationManager
@@ -11,7 +12,17 @@
 @inject IApiService api
 
 <PageTitle>Devices</PageTitle>
-@if (devices != null)
+@if (!AddMode)
+{
+    <div class="container">
+        <div class="row">
+            <div class="col-4">
+                <Button Color="Color.Primary" Clicked="@(()=> AddMode = !AddMode)">Add Device</Button>
+            </div>
+        </div>
+    </div>
+}
+@if (devices != null && !AddMode)
 {
     <div class="container">
         <div class="row">
@@ -24,13 +35,16 @@
         </div>
     </div>
 }
-else
+
+@if (AddMode)
 {
-    <p>Loading...</p>
+    <AddDevice OnDeviceAdded="HandleDeviceAdded" />
 }
 
-
 @code {
+
+    private bool AddMode = false;
+    private bool ScheduleMode = false;
 
     private string errorMessage = string.Empty;
 
@@ -39,7 +53,14 @@ else
         Console.WriteLine($"Pin status changed id: {iotDevice.DeviceFeaturesJson}");
     }
 
-    private IEnumerable<IotDevice> devices = new List<IotDevice>();
+    private void HandleDeviceAdded(IotDevice iotDevice)
+    {
+        Console.WriteLine($"Added device: {iotDevice.DeviceName}");
+        devices.Add(iotDevice);
+        AddMode = false;
+    }
+
+    private List<IotDevice> devices = new List<IotDevice>();
 
     protected override async Task OnInitializedAsync()
     {
@@ -51,7 +72,7 @@ else
             var userData = await LocalStorage.GetApplicationUserAsync();
             try
             {
-                devices = await api.GetDeviceStatusAsync(userData.Email);
+                devices.AddRange((await api.GetDeviceStatusAsync(userData.Email)).ToList());
             }
             catch (UnauthorizedAccessException)
             {
