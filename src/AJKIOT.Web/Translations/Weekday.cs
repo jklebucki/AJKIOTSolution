@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace AJKIOT.Web.Translations
+﻿namespace AJKIOT.Web.Translations
 {
     public class Weekday
     {

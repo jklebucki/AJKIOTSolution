@@ -6,7 +6,7 @@
 
 <div class="card">
     <div class="card-body">
-        <h5 class="card-title">@IotDevice.DeviceName</h5>
+        <h5 class="card-title">@IotDevice!.DeviceName</h5>
         <p class="card-text">ID: @IotDevice.DeviceId</p>
         @foreach (var feature in features)
         {
@@ -16,15 +16,15 @@
 
     </div>
     <div class="card-footer">
-        <button type="button" class="btn btn-primary" onclick="@OnScheduleButton">Schedule</button>
+        <button type="button" class="btn btn-primary" onclick="@(() => OnScheduleButton())">Schedule</button>
     </div>
 </div>
 
 @code {
     [Parameter]
-    public IotDevice IotDevice { get; set; }
+    public IotDevice? IotDevice { get; set; }
 
-    private List<DeviceFeature> features;
+    private List<DeviceFeature> features = new List<DeviceFeature>();
 
     private bool IsOn { get; set; }
 
@@ -34,14 +34,14 @@
 
     private async Task ToggleDeviceStatus(DeviceFeature feature)
     {
-        IotDevice.DeviceFeaturesJson = JsonSerializer.Serialize(features);
+        IotDevice!.DeviceFeaturesJson = JsonSerializer.Serialize(features);
         await OnPinDeviceChanged.InvokeAsync(IotDevice);
         StateHasChanged();
     }
 
     protected override void OnInitialized()
     {
-        features = JsonSerializer.Deserialize<List<DeviceFeature>>(IotDevice.DeviceFeaturesJson);
+        features = JsonSerializer.Deserialize<List<DeviceFeature>>(IotDevice!.DeviceFeaturesJson)!;
     }
 
     protected override void OnAfterRender(bool firstRender)
@@ -51,6 +51,7 @@
 
     private async Task OnScheduleButton()
     {
-        NavigationManager.NavigateTo($"/schedule/{IotDevice.DeviceId}");
+        NavigationManager.NavigateTo($"/schedule/{IotDevice!.DeviceId}");
+        await Task.CompletedTask;
     }
 }

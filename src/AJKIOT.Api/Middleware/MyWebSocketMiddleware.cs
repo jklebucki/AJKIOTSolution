@@ -63,14 +63,14 @@ namespace AJKIOT.Api.Middleware
                 {
                     var message = JsonDocument.Parse(messageJson).RootElement;
                     var id = message.GetProperty("_id").GetString();
-                    return id;
+                    return id!;
                 }
                 catch (JsonException ex)
                 {
                     _logger.LogError($"Error deserializing clientId: {ex}");
                 }
             }
-            return null;
+            return string.Empty;
         }
 
         private async Task HandleWebSocketCommunication(string clientId, WebSocket webSocket, CancellationToken cancellationToken)

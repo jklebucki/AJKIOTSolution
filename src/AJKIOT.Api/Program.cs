@@ -1,7 +1,6 @@
 using AJKIOT.Api.Data;
 using AJKIOT.Api.Middleware;
 using AJKIOT.Api.Models;
-using AJKIOT.Api.Repositories;
 using AJKIOT.Api.Services;
 using AJKIOT.Api.Settings;
 using AJKIOT.Api.Workers;
@@ -12,7 +11,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using MongoDB.Driver;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -30,13 +28,6 @@ var mongoDBSettings = builder.Configuration.GetSection(nameof(MongoDBSettings));
 builder.Services.Configure<MongoDBSettings>(mongoDBSettings);
 builder.Services.AddSingleton(sp => (IMongoDBSettings)sp.GetRequiredService<IOptions<MongoDBSettings>>().Value);
 
-builder.Services.AddSingleton<IMongoClient>(sp =>
-    new MongoClient(sp.GetRequiredService<IOptions<MongoDBSettings>>().Value.ConnectionString));
-
-builder.Services.AddScoped(sp => sp.GetRequiredService<IMongoClient>().GetDatabase(sp.GetRequiredService<IOptions<MongoDBSettings>>().Value.DatabaseName));
-
-builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
-builder.Services.AddSingleton<IDocumentRepositoryFactory, DocumentRepositoryFactory>();
 builder.Services.AddControllers().AddJsonOptions(opt =>
 {
     opt.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());

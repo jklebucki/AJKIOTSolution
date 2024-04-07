@@ -36,11 +36,11 @@ namespace AJKIOT.Web.Services
                         Email = loginResponse.Data.Email!,
                         Credentials = new UserCredentials()
                         {
-                            AccessToken = loginResponse.Data.Tokens[0],
+                            AccessToken = loginResponse.Data.Tokens![0],
                             RefreshToken = loginResponse.Data.Tokens[1]
                         }
                     });
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResponse.Data.Tokens[0]);
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResponse!.Data!.Tokens![0]);
                 return loginResponse;
             }
             catch (Exception ex)
@@ -59,12 +59,17 @@ namespace AJKIOT.Web.Services
                 var response = await _httpClient.PostAsJsonAsync("api/Users/register", registrationRequest);
                 if (!response.IsSuccessStatusCode)
                 {
-                    return await response.Content.ReadFromJsonAsync<ApiResponse<AuthResponse>>();
+                    return (await response.Content.ReadFromJsonAsync<ApiResponse<AuthResponse>>())!;
                 }
 
                 var registerResponse = await response.Content.ReadFromJsonAsync<ApiResponse<AuthResponse>>();
-                if (registerResponse == null) return await response.Content.ReadFromJsonAsync<ApiResponse<AuthResponse>>();
-                await _tokenService.SaveToken(new ApplicationUser { Username = registerResponse.Data.Username!, Email = registerResponse.Data.Email!, Credentials = new UserCredentials() { AccessToken = registerResponse.Data.Tokens[0], RefreshToken = registerResponse.Data.Tokens[1] } });
+                if (registerResponse == null) return (await response.Content.ReadFromJsonAsync<ApiResponse<AuthResponse>>())!;
+                await _tokenService.SaveToken(new ApplicationUser
+                {
+                    Username = registerResponse.Data!.Username!,
+                    Email = registerResponse.Data.Email!,
+                    Credentials = new UserCredentials() { AccessToken = registerResponse.Data.Tokens![0], RefreshToken = registerResponse.Data.Tokens[1] }
+                });
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", registerResponse.Data.Tokens[0]);
                 return registerResponse;
             }
@@ -82,11 +87,11 @@ namespace AJKIOT.Web.Services
                 var response = await _httpClient.PostAsJsonAsync("api/Users/reset-password-request", resetPasswordCustomRequest);
                 if (!response.IsSuccessStatusCode)
                 {
-                    return await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+                    return (await response.Content.ReadFromJsonAsync<ApiResponse<bool>>())!;
                 }
 
                 var resetPasswordResponse = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
-                if (resetPasswordResponse == null) return await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+                if (resetPasswordResponse == null) return (await response.Content.ReadFromJsonAsync<ApiResponse<bool>>())!;
 
                 return resetPasswordResponse;
             }
@@ -104,11 +109,11 @@ namespace AJKIOT.Web.Services
                 var response = await _httpClient.PostAsJsonAsync("api/Users/reset-password-confirm", resetPasswordRequest);
                 if (!response.IsSuccessStatusCode)
                 {
-                    return await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+                    return (await response.Content.ReadFromJsonAsync<ApiResponse<bool>>())!;
                 }
 
                 var resetPasswordResponse = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
-                if (resetPasswordResponse == null) return await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+                if (resetPasswordResponse == null) return (await response.Content.ReadFromJsonAsync<ApiResponse<bool>>())!;
 
                 return resetPasswordResponse;
             }

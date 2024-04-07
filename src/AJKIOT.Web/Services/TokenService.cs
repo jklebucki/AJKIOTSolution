@@ -32,7 +32,7 @@ namespace AJKIOT.Web.Services
         public async Task AddTokenToHeader(HttpClient httpClient)
         {
             var token = await GetSavedToken();
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Credentials.AccessToken);
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Credentials!.AccessToken);
         }
     }
 }

@@ -1,7 +1,5 @@
 ﻿using AJKIOT.Api.Middleware;
-using AJKIOT.Api.Repositories;
 using AJKIOT.Api.Services;
-using MongoDB.Bson;
 using System.Text.Json;
 
 namespace AJKIOT.Api.Workers
@@ -10,14 +8,12 @@ namespace AJKIOT.Api.Workers
     {
         private readonly IMessageBus _messageBus;
         private readonly ILogger<MessageProcessingWorker> _logger;
-        private readonly IDocumentRepositoryFactory _documentRepositoryFactory;
         private readonly IWebSocketManager _webSocketManager;
 
-        public MessageProcessingWorker(IMessageBus messageBus, ILogger<MessageProcessingWorker> logger, IDocumentRepositoryFactory documentRepositoryFactory, IWebSocketManager webSocketManager)
+        public MessageProcessingWorker(IMessageBus messageBus, ILogger<MessageProcessingWorker> logger, IWebSocketManager webSocketManager)
         {
             _messageBus = messageBus;
             _logger = logger;
-            _documentRepositoryFactory = documentRepositoryFactory;
             _webSocketManager = webSocketManager;
         }
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -37,7 +33,7 @@ namespace AJKIOT.Api.Workers
                         {
                             var messageJson = JsonDocument.Parse(processedMessage).RootElement;
                             var id = messageJson.GetProperty("_id").GetString();
-                            await _webSocketManager.SendMessageToClientAsync(id, processedMessage);
+                            await _webSocketManager.SendMessageToClientAsync(id!, processedMessage);
                             _logger.LogInformation($"Processed and enqueued message: {processedMessage}");
                         }
                     }
@@ -59,16 +55,9 @@ namespace AJKIOT.Api.Workers
             var direction = messageJson.GetProperty("direction").GetString();
             var type = messageJson.GetProperty("type").GetString();
 
-            var documentRepository = _documentRepositoryFactory.CreateDocumentRepository();
             if (type == "set")
             {
                 var deviceProperties = messageJson.GetProperty("device_properties").ToString();
-                await documentRepository.CreateOrUpdateAsync(new BsonDocument
-                {
-                    { "_id", id },
-                    { "content", content },
-                    { "device_properties", deviceProperties }
-                });
                 var outgoingMessage = new
                 {
                     _id = id,
@@ -77,16 +66,20 @@ namespace AJKIOT.Api.Workers
                     content = $"Processed content: {content}",
                     deviceProperties
                 };
-                return JsonSerializer.Serialize(outgoingMessage);
+                return await Task.FromResult(JsonSerializer.Serialize(outgoingMessage));
             }
             else if (type == "query")
             {
-                var document = await documentRepository.GetByIdAsync(id!);
-                document.Add("direction", "out");
-                if (document == null)
-                    return string.Empty;
-                var outgoingMessage = document.ToJson();
-                return outgoingMessage;
+                var deviceProperties = messageJson.GetProperty("device_properties").ToString();
+                var outgoingMessage = new
+                {
+                    _id = id,
+                    direction = "out",
+                    type = "set",
+                    content = $"Processed content: {content}",
+                    deviceProperties
+                };
+                return await Task.FromResult(JsonSerializer.Serialize(outgoingMessage));
             }
             else
             {
@@ -97,7 +90,7 @@ namespace AJKIOT.Api.Workers
                     type = "info",
                     content = $"Echo",
                 };
-                return JsonSerializer.Serialize(outgoingMessage);
+                return await Task.FromResult(JsonSerializer.Serialize(outgoingMessage));
             }
         }
     }

@@ -66,7 +66,7 @@ namespace AJKIOT.Web.Services
                 {
                     foreach (var keyValuePair in keyValuePairs)
                     {
-                        claims.Add(new Claim(keyValuePair.Key, keyValuePair.Value.ToString()));
+                        claims.Add(new Claim(keyValuePair.Key, keyValuePair.Value.ToString()!));
                     }
                 }
             }

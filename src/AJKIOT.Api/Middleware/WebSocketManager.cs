@@ -15,7 +15,7 @@ namespace AJKIOT.Api.Middleware
 
         public async Task RemoveSocket(string clientId)
         {
-            if (_sockets.TryRemove(clientId, out WebSocket socket))
+            if (_sockets.TryRemove(clientId, out WebSocket? socket))
             {
                 await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "The connection is closed by the server", CancellationToken.None);
             }
@@ -23,7 +23,7 @@ namespace AJKIOT.Api.Middleware
 
         public async Task SendMessageToClientAsync(string clientId, string message)
         {
-            if (_sockets.TryGetValue(clientId, out WebSocket socket))
+            if (_sockets.TryGetValue(clientId, out WebSocket? socket))
             {
                 if (socket.State == WebSocketState.Open)
                 {

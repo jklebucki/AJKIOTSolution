@@ -43,7 +43,7 @@
     public int DeviceId { get; set; }
 
     [Parameter]
-    public List<DailyScheduleEntry> Schedule { get; set; }
+    public List<DailyScheduleEntry> Schedule { get; set; } = new List<DailyScheduleEntry>();
 
     [Parameter]
     public EventCallback<KeyValuePair<int, List<DailyScheduleEntry>>> OnScheduleChanged { get; set; }
@@ -122,8 +122,8 @@
                 DeviceId = DeviceId,
                 DayNumber = DayNumber,
                 EntryNumber = newEntryNumber,
-                StartTime = TimeOnly.FromTimeSpan((TimeSpan)newStartDateTime),
-                EndTime = TimeOnly.FromTimeSpan((TimeSpan)newEndDateTime),
+                StartTime = TimeOnly.FromTimeSpan((TimeSpan)newStartDateTime!),
+                EndTime = TimeOnly.FromTimeSpan((TimeSpan)newEndDateTime!),
             };
     }
 }

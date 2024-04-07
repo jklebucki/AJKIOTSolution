@@ -32,7 +32,7 @@
     [Parameter]
     public int DeviceId { get; set; }
 
-    private List<DailyScheduleEntry> weekSchedules;
+    private List<DailyScheduleEntry> weekSchedules = new List<DailyScheduleEntry>();
 
     protected override void OnInitialized()
     {

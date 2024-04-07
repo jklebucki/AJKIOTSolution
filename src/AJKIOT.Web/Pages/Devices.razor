@@ -39,14 +39,14 @@ else
         Console.WriteLine($"Pin status changed id: {iotDevice.DeviceFeaturesJson}");
     }
 
-    private IEnumerable<IotDevice> devices = null;
+    private IEnumerable<IotDevice> devices = new List<IotDevice>();
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
-        if (user.Identity.IsAuthenticated)
+        if (user.Identity!.IsAuthenticated)
         {
             var userData = await LocalStorage.GetApplicationUserAsync();
             try
@@ -56,7 +56,7 @@ else
             catch (UnauthorizedAccessException)
             {
                 var customProvider = AuthenticationStateProvider as CustomAuthenticationStateProvider;
-                customProvider.NotifyUserLogout();
+                customProvider!.NotifyUserLogout();
                 NavigationManager.NavigateTo("/Account/Login");
             }
 

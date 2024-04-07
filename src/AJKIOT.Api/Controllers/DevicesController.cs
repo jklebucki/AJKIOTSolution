@@ -1,5 +1,4 @@
 ﻿using AJKIOT.Api.Data;
-using AJKIOT.Api.Repositories;
 using AJKIOT.Api.Services;
 using AJKIOT.Shared.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -14,13 +13,11 @@ namespace AJKIOT.Api.Controllers
     public class DevicesController : ControllerBase
     {
         private readonly ILogger<DevicesController> _logger;
-        private readonly IDocumentRepository _documentRepository;
         private readonly IMessageBus _messageBus;
         private readonly IUserService _userService;
 
-        public DevicesController(IDocumentRepository documentRepository, ILogger<DevicesController> logger, IMessageBus messageBus, IUserService userService)
+        public DevicesController(ILogger<DevicesController> logger, IMessageBus messageBus, IUserService userService)
         {
-            _documentRepository = documentRepository;
             _logger = logger;
             _messageBus = messageBus;
             _userService = userService;
@@ -56,7 +53,7 @@ namespace AJKIOT.Api.Controllers
             {
                 _logger.LogError($"Something went wrong: {ex}");
             }
-            return Ok();
+            return await Task.FromResult<IActionResult>(Ok()).ConfigureAwait(false);
         }
     }
 }

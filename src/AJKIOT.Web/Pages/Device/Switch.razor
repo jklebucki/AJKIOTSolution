@@ -5,7 +5,7 @@
     private bool _isOn;
 
     [Parameter]
-    public DeviceFeature Feature { get; set; }
+    public DeviceFeature? Feature { get; set; }
 
     [Parameter]
     public EventCallback<DeviceFeature> IsOnChanged { get; set; }
@@ -15,7 +15,7 @@
     private async void ToggleSwitch()
     {
         _isOn = !_isOn;
-        Feature.Value = _isOn ? 1 : 0; 
+        Feature!.Value = _isOn ? 1 : 0; 
         await IsOnChanged.InvokeAsync(Feature);
         StateHasChanged();
     }
