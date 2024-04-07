@@ -1,4 +1,4 @@
-﻿@page "/schedule/{DeviceId}"
+﻿@page "/schedule/{DeviceId:int}"
 @using AJKIOT.Shared.Models.DeviceFeatures
 @inject NavigationManager NavigationManager
 
@@ -8,7 +8,7 @@
         @for (int i = 1; i < 5; i++)
         {
             <div class="col-3">
-                <DailyScheduleComponent DayNumber="@i" Schedule="@SelectSchedule(i)" OnScheduleChanged="HandleScheduleChanged" />
+                <DailyScheduleComponent DeviceId="@DeviceId" DayNumber="@i" Schedule="@SelectSchedule(i)" OnScheduleChanged="HandleScheduleChanged" />
             </div>
         }
     </div>
@@ -19,7 +19,7 @@
         @for (int i = 5; i < 8; i++)
         {
             <div class="col-3">
-                <DailyScheduleComponent DayNumber="@i" Schedule="@SelectSchedule(i)" OnScheduleChanged="HandleScheduleChanged" />
+                <DailyScheduleComponent DeviceId="@DeviceId" DayNumber="@i" Schedule="@SelectSchedule(i)" OnScheduleChanged="HandleScheduleChanged" />
             </div>
         }
     </div>
@@ -30,7 +30,7 @@
 
 @code {
     [Parameter]
-    public string DeviceId { get; set; }
+    public int DeviceId { get; set; }
 
     private List<DailyScheduleEntry> weekSchedules;
 
@@ -39,10 +39,10 @@
         weekSchedules = new List<DailyScheduleEntry>();
     }
 
-    private void HandleScheduleChanged(IEnumerable<DailyScheduleEntry> updatedSchedule)
+    private void HandleScheduleChanged(KeyValuePair<int, List<DailyScheduleEntry>> updatedSchedule)
     {
-        weekSchedules.RemoveAll(s => updatedSchedule.Any(e => e.DayNumber == s.DayNumber && e.EntryNumber == s.EntryNumber));
-        weekSchedules.AddRange(updatedSchedule);
+        weekSchedules.RemoveAll(s=>s.DayNumber == updatedSchedule.Key);
+        weekSchedules.AddRange(updatedSchedule.Value);
     }
 
     private void SaveSchedules()

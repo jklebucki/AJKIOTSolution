@@ -21,10 +21,10 @@
             <div>
                 <div class="row">
                     <div class="col-5">
-                        <TimePicker TValue="TimeSpan?" @bind-Time="@newStartDateTime" TimeAs24hr="true" />
+                        <TimePicker TValue="TimeSpan?" Time="@newStartDateTime" TimeAs24hr="true" TimeChanged="@((TimeSpan? value) => StartDateTimeChanged(value))" />
                     </div>
                     <div class="col-5">
-                        <TimePicker TValue="TimeSpan?" @bind-Time="@newEndDateTime" TimeAs24hr="true" />
+                        <TimePicker TValue="TimeSpan?" Time="@newEndDateTime" TimeAs24hr="true" TimeChanged="@((TimeSpan? value) => EndDateTimeChanged(value))" />
                     </div>
                     <div class="col-2">
                         <Button Color="Color.Primary" Outline @onclick="AddScheduleEntry"><Icon Name="IconName.PlusCircle" /></Button>
@@ -40,10 +40,13 @@
     public int DayNumber { get; set; }
 
     [Parameter]
+    public int DeviceId { get; set; }
+
+    [Parameter]
     public List<DailyScheduleEntry> Schedule { get; set; }
 
     [Parameter]
-    public EventCallback<List<DailyScheduleEntry>> OnScheduleChanged { get; set; }
+    public EventCallback<KeyValuePair<int, List<DailyScheduleEntry>>> OnScheduleChanged { get; set; }
 
     private TimeSpan? newStartDateTime = TimeSpan.Parse("07:00");
     private TimeSpan? newEndDateTime = TimeSpan.Parse("08:00");
@@ -60,15 +63,51 @@
         }
     }
 
+    private void StartDateTimeChanged(TimeSpan? value)
+    {
+        newStartDateTime = value;
+        if (newStartDateTime >= newEndDateTime)
+            newEndDateTime = newStartDateTime.Value.Add(TimeSpan.FromHours(1));
+        var lastEntry = Schedule.LastOrDefault();
+        if (lastEntry != null && newStartDateTime <= lastEntry.EndTime.ToTimeSpan())
+            newStartDateTime = lastEntry.EndTime.ToTimeSpan().Add(TimeSpan.FromMinutes(5));
+    }
+
+    private void EndDateTimeChanged(TimeSpan? value)
+    {
+        newEndDateTime = value;
+        if (newEndDateTime <= newStartDateTime)
+            newEndDateTime = newStartDateTime.Value.Add(TimeSpan.FromMinutes(5));
+    }
+
     private async Task AddScheduleEntry()
+    {
+        var newEntry = AddEntryLogic();
+        if (newEntry != null)
+        {
+            Schedule.Add(newEntry);
+            newStartDateTime = newEndDateTime?.Add(TimeSpan.FromHours(1));
+            newEndDateTime = newStartDateTime?.Add(TimeSpan.FromHours(1));
+            var data = new KeyValuePair<int, List<DailyScheduleEntry>>(DayNumber, Schedule);
+            await OnScheduleChanged.InvokeAsync(data);
+        }
+    }
+
+    private async Task RemoveScheduleEntry(DailyScheduleEntry entry)
+    {
+        Schedule.Remove(entry);
+        var data = new KeyValuePair<int, List<DailyScheduleEntry>>(DayNumber, Schedule);
+        await OnScheduleChanged.InvokeAsync(data);
+    }
+
+    private DailyScheduleEntry? AddEntryLogic()
     {
         if (Schedule.Any())
         {
             var lastEntry = Schedule.LastOrDefault();
-            if (newStartDateTime <= lastEntry?.EndTime.ToTimeSpan())
+            if (lastEntry != null && (newStartDateTime <= lastEntry.EndTime.ToTimeSpan() || newStartDateTime == newEndDateTime))
             {
-                // Logika obsługi błędów, np. wyświetlić komunikat
-                return;
+                return null;
             }
         }
 
@@ -78,22 +117,14 @@
             newEntryNumber = Schedule.Max(entry => entry.EntryNumber) + 1;
         }
 
-        Schedule.Add(new DailyScheduleEntry
+        return new DailyScheduleEntry
             {
+                DeviceId = DeviceId,
                 DayNumber = DayNumber,
                 EntryNumber = newEntryNumber,
                 StartTime = TimeOnly.FromTimeSpan((TimeSpan)newStartDateTime),
                 EndTime = TimeOnly.FromTimeSpan((TimeSpan)newEndDateTime),
-            });
-        newStartDateTime = newEndDateTime?.Add(TimeSpan.FromHours(1));
-        newEndDateTime = newStartDateTime?.Add(TimeSpan.FromHours(1));
-        await OnScheduleChanged.InvokeAsync(Schedule);
-    }
-
-    private async Task RemoveScheduleEntry(DailyScheduleEntry entry)
-    {
-        Schedule.Remove(entry);
-        await OnScheduleChanged.InvokeAsync(Schedule);
+            };
     }
 }
 
