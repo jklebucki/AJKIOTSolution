@@ -24,7 +24,7 @@ namespace AJKIOT.Api.Controllers
         }
 
         [HttpGet("{username}")]
-        public async Task<IActionResult> GetDevices(string username)
+        public async Task<IActionResult> GetUserDevicesAsync(string username)
         {
             try
             {
@@ -41,13 +41,13 @@ namespace AJKIOT.Api.Controllers
 
         }
 
-        [HttpPost("setdevice")]
+        [HttpPost("adddevice")]
         public async Task<IActionResult> SetDeviceAsync([FromBody] IotDevice device)
         {
             var content = JsonSerializer.Serialize(device);
             try
             {
-                _messageBus.EnqueueMessage(content);
+
             }
             catch (Exception ex)
             {

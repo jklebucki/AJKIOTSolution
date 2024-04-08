@@ -9,7 +9,7 @@
 <div class="card">
     <div class="card-body">
         <h5 class="card-title">@IotDevice!.DeviceName</h5>
-        <p class="card-text">ID: @IotDevice.DeviceId</p>
+        <p class="card-text">ID: @IotDevice.Id</p>
         @foreach (var feature in features)
         {
             <p class="card-text">@feature.Name : @feature.Value</p>
@@ -23,7 +23,7 @@
 </div>
 } else
 {
-    <DailySchedule OnScheduleChanged="@OnScheduleChanged" DeviceId="IotDevice!.DeviceId"></DailySchedule>
+    <DailySchedule OnScheduleChanged="@OnScheduleChanged" DeviceId="IotDevice!.Id"></DailySchedule>
 }
 @code {
     [Parameter]

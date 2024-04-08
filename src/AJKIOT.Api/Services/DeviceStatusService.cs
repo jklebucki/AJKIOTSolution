@@ -16,7 +16,7 @@ namespace AJKIOT.Api.Services
 
         public void ChangePinStatus(int deviceId, int pinStatus)
         {
-            var status = devices.FirstOrDefault(d => d.DeviceId == deviceId);
+            var status = devices.FirstOrDefault(d => d.Id == deviceId);
         }
 
         public IEnumerable<IotDevice> GetAllDevices()
@@ -26,13 +26,13 @@ namespace AJKIOT.Api.Services
 
         public IotDevice? GetDeviceStatus(int? deviceId)
         {
-            var deviceStatus = devices.FirstOrDefault(d => d.DeviceId == deviceId);
-            return devices.FirstOrDefault(d => d.DeviceId == deviceId);
+            var deviceStatus = devices.FirstOrDefault(d => d.Id == deviceId);
+            return devices.FirstOrDefault(d => d.Id == deviceId);
         }
 
         public void SetDeviceStatus(IotDevice deviceStatus)
         {
-            var status = devices.FirstOrDefault(d => d.DeviceId == deviceStatus.DeviceId);
+            var status = devices.FirstOrDefault(d => d.Id == deviceStatus.Id);
             if (status == null)
                 AddDeviceStatus(deviceStatus);
 
@@ -68,12 +68,12 @@ namespace AJKIOT.Api.Services
                         }
                         var deviceStatus = new IotDevice
                         {
-                            DeviceId = deviceId,
+                            Id = deviceId,
                             DeviceName = parts[0],
                         };
                         _statusService.SetDeviceStatus(deviceStatus);
                         var setPin = _statusService.GetDeviceStatus(deviceId);
-                        var respBuffer = Encoding.UTF8.GetBytes($"{setPin!.DeviceName}:{setPin.DeviceId}:");
+                        var respBuffer = Encoding.UTF8.GetBytes($"{setPin!.DeviceName}:{setPin.Id}:");
                         await webSocket.SendAsync(new ArraySegment<byte>(respBuffer, 0, respBuffer.Length), receiveResult.MessageType, receiveResult.EndOfMessage, cancellationToken);
                     }
                 }
@@ -93,7 +93,7 @@ namespace AJKIOT.Api.Services
         {
             return new IotDevice
             {
-                DeviceId = int.Parse(message.Split(":")[1]),
+                Id = int.Parse(message.Split(":")[1]),
                 DeviceName = message.Split(":")[0],
             };
         }

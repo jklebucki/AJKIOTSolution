@@ -23,8 +23,4 @@
     <ProjectReference Include="..\AJKIOT.Shared\AJKIOT.Shared.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Repositories\" />
-  </ItemGroup>
-
 </Project>
