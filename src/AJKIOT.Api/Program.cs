@@ -1,6 +1,7 @@
 using AJKIOT.Api.Data;
 using AJKIOT.Api.Middleware;
 using AJKIOT.Api.Models;
+using AJKIOT.Api.Repositories;
 using AJKIOT.Api.Services;
 using AJKIOT.Api.Settings;
 using AJKIOT.Api.Workers;
@@ -19,6 +20,8 @@ builder.Services.AddSingleton<IWebSocketManager, AJKIOT.Api.Middleware.WebSocket
 builder.Services.AddScoped<IDeviceStatusService, DeviceStatusService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IIotDeviceRepository, IotDeviceRepository>();
+builder.Services.AddScoped<IIotDeviceService, IotDeviceService>();
 builder.Services.AddSingleton<ITemplateService, TemplateService>();
 builder.Services.AddSingleton<IMessageBus, MessageBus>();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");

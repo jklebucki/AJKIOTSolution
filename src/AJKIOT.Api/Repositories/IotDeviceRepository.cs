@@ -1,5 +1,6 @@
 ﻿using AJKIOT.Api.Data;
 using AJKIOT.Shared.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace AJKIOT.Api.Repositories
 {
@@ -18,14 +19,16 @@ namespace AJKIOT.Api.Repositories
             return data.Entity.Id;
         }
 
-        public Task<IotDevice> GetDeviceAsync(string userId, string deviceId)
+        public async Task<IotDevice> GetDeviceAsync(string userId, int deviceId)
         {
-            throw new NotImplementedException();
+            var device = await _context.IotDevices.FirstOrDefaultAsync(x => x.OwnerId == userId && x.Id == deviceId);
+            return device!;
         }
 
-        public Task<IEnumerable<IotDevice>> GetUserDevicesAsync(string userId)
+        public async Task<IEnumerable<IotDevice>> GetUserDevicesAsync(string userId)
         {
-            throw new NotImplementedException();
+            var devices = await _context.IotDevices.Where(x => x.OwnerId == userId).ToListAsync();
+            return devices;
         }
 
         public Task<IotDevice> UpdateDeviceAsync(IotDevice device)

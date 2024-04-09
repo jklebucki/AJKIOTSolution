@@ -6,7 +6,7 @@ namespace AJKIOT.Api.Repositories
     {
         Task<int> AddDeviceAsync(IotDevice device);
         Task<IEnumerable<IotDevice>> GetUserDevicesAsync(string userId);
-        Task<IotDevice> GetDeviceAsync(string userId, string deviceId);
+        Task<IotDevice> GetDeviceAsync(string userId, int deviceId);
         Task<IotDevice> UpdateDeviceAsync(IotDevice device);
 
     }

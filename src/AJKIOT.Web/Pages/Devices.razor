@@ -12,10 +12,14 @@
 @inject IApiService api
 
 <PageTitle>Devices</PageTitle>
+@if(!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" role="alert">@errorMessage</div>
+}
 @if (!AddMode)
 {
     <div class="container">
-        <div class="row">
+        <div class="row mb-4">
             <div class="col-4">
                 <Button Color="Color.Primary" Clicked="@(()=> AddMode = !AddMode)">Add Device</Button>
             </div>
@@ -53,10 +57,22 @@
         Console.WriteLine($"Pin status changed id: {iotDevice.DeviceFeaturesJson}");
     }
 
-    private void HandleDeviceAdded(IotDevice iotDevice)
+    private async Task HandleDeviceAdded(IotDevice iotDevice)
     {
-        Console.WriteLine($"Added device: {iotDevice.DeviceName}");
-        devices.Add(iotDevice);
+        try
+        {
+            iotDevice.OwnerId = (await LocalStorage.GetApplicationUserAsync()).Email;
+            var deviceData = await api.CreateUserDeviceAsync(iotDevice);
+            if (deviceData != null && deviceData.Data != null && deviceData.IsSuccess)
+            {
+                devices.Add(deviceData.Data);
+            }
+            errorMessage = string.Join("; ", deviceData.Errors);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
         AddMode = false;
     }
 
@@ -72,7 +88,8 @@
             var userData = await LocalStorage.GetApplicationUserAsync();
             try
             {
-                devices.AddRange((await api.GetDeviceStatusAsync(userData.Email)).ToList());
+                var apiResponse = await api.GetUserDevicesAsync(userData.Email);
+                devices.AddRange(apiResponse.Data!);
             }
             catch (UnauthorizedAccessException)
             {
@@ -80,7 +97,6 @@
                 customProvider!.NotifyUserLogout();
                 NavigationManager.NavigateTo("/Account/Login");
             }
-
             catch (Exception ex)
             {
                 errorMessage = ex.Message;

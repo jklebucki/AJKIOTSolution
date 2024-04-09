@@ -1,9 +1,7 @@
-﻿using AJKIOT.Api.Data;
-using AJKIOT.Api.Services;
+﻿using AJKIOT.Api.Services;
 using AJKIOT.Shared.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Text.Json;
 
 namespace AJKIOT.Api.Controllers
 {
@@ -13,14 +11,14 @@ namespace AJKIOT.Api.Controllers
     public class DevicesController : ControllerBase
     {
         private readonly ILogger<DevicesController> _logger;
-        private readonly IMessageBus _messageBus;
         private readonly IUserService _userService;
+        private readonly IIotDeviceService _iotDeviceService;
 
-        public DevicesController(ILogger<DevicesController> logger, IMessageBus messageBus, IUserService userService)
+        public DevicesController(ILogger<DevicesController> logger, IUserService userService, IIotDeviceService iotDeviceService)
         {
             _logger = logger;
-            _messageBus = messageBus;
             _userService = userService;
+            _iotDeviceService = iotDeviceService;
         }
 
         [HttpGet("{username}")]
@@ -29,31 +27,36 @@ namespace AJKIOT.Api.Controllers
             try
             {
                 string ownerId = await _userService.GetUserIdAsync(username);
-                var userDevices = DevicesTestData.Devices().Where(x => x.OwnerId == ownerId).ToList();
-                return Ok(userDevices);
+                var apiResponse = await _iotDeviceService.GetUserDevicesAsync(ownerId);
+                return Ok(apiResponse);
             }
             catch (Exception ex)
             {
-
                 _logger.LogError($"Something went wrong: {ex}");
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                return BadRequest(new ApiResponse<List<IotDevice>> { Data = new List<IotDevice>(), Errors = new List<string> { ex.Message } });
             }
 
         }
 
-        [HttpPost("adddevice")]
-        public async Task<IActionResult> SetDeviceAsync([FromBody] IotDevice device)
+        [HttpPost("createDevice")]
+        public async Task<IActionResult> AddUserDeviceAsync([FromBody] IotDevice device)
         {
-            var content = JsonSerializer.Serialize(device);
             try
             {
-
+                string ownerId = await _userService.GetUserIdAsync(device.OwnerId);
+                if (ownerId == null)
+                    throw new Exception("User not found");
+                device.OwnerId = ownerId;
+                var apiResponse = await _iotDeviceService.AddDeviceAsync(device);
+                return Created($"/api/Devices/{apiResponse.Data!.Id}", apiResponse);
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Something went wrong: {ex}");
+                var apiResponse = new ApiResponse<IotDevice> { Data = device, Errors = new List<string> { ex.Message } };
+                return BadRequest(apiResponse);
             }
-            return await Task.FromResult<IActionResult>(Ok()).ConfigureAwait(false);
+
         }
     }
 }

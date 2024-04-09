@@ -16,16 +16,16 @@ namespace AJKIOT.Web.Services
             _logger = logger;
         }
 
-        public async Task<IEnumerable<IotDevice>> GetDeviceStatusAsync(string userId)
+        public async Task<ApiResponse<IotDevice>> CreateUserDeviceAsync(IotDevice device)
         {
             await _tokenService.AddTokenToHeader(_httpClient);
-            var request = new HttpRequestMessage(HttpMethod.Get, $"api/Devices/{userId}");
+            var request = new HttpRequestMessage(HttpMethod.Post, $"api/Devices/createDevice");
+            request.Content = JsonContent.Create(device);
             var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
-
             if (response.IsSuccessStatusCode)
             {
-                var result = await response.Content.ReadFromJsonAsync<IEnumerable<IotDevice>>();
-                return result ?? new List<IotDevice>();
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<IotDevice>>();
+                return result!;
             }
             else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             {
@@ -33,8 +33,32 @@ namespace AJKIOT.Web.Services
             }
             else
             {
-                _logger.LogError($"Request failed with status code: {response.StatusCode}");
-                return new List<IotDevice>();
+                _logger.LogError($"Request failed with status code: {response.StatusCode} - {response.ReasonPhrase}");
+                return new ApiResponse<IotDevice>() { Data = device, Errors = new List<string>() { response.ReasonPhrase } };
+            }
+
+        }
+
+        public async Task<ApiResponse<IEnumerable<IotDevice>>> GetUserDevicesAsync(string userId)
+        {
+            await _tokenService.AddTokenToHeader(_httpClient);
+            var request = new HttpRequestMessage(HttpMethod.Get, $"api/Devices/{userId}");
+            var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<IEnumerable<IotDevice>>>();
+                return result!;
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                throw new UnauthorizedAccessException();
+            }
+            else
+            {
+                _logger.LogError($"Request failed with status code: {response.StatusCode} - {response.ReasonPhrase}");
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<IEnumerable<IotDevice>>>();
+                return result!;
             }
 
         }
