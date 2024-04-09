@@ -13,9 +13,9 @@ namespace AJKIOT.Api.Repositories
 
         public async Task<int> AddDeviceAsync(IotDevice device)
         {
-            var id = _context.IotDevices.Add(device);
+            var data = _context.IotDevices.Add(device);
             await _context.SaveChangesAsync();
-            return id.Entity.Id;
+            return data.Entity.Id;
         }
 
         public Task<IotDevice> GetDeviceAsync(string userId, string deviceId)
