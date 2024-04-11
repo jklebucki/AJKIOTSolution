@@ -1,0 +1,30 @@
+﻿@using AJKIOT.Shared.Models.DeviceFeatures
+<div>
+    <button @onclick="ButtonPressed" class="button-round">OPEN</button>
+</div>
+
+@code {
+    [Parameter]
+    public DeviceFeature? Feature { get; set; }
+
+    [Parameter]
+    public EventCallback<DeviceFeature> IsOnChanged { get; set; }
+
+
+
+    private async Task ButtonPressed()
+    {
+        Feature.Value = 1;
+        await IsOnChanged.InvokeAsync(Feature);
+        StateHasChanged();
+        ButtonReleased();
+    }
+
+    private async void ButtonReleased()
+    {
+        await Task.Delay(Feature.MaxValue * 1000);
+        Feature.Value = 0;
+        await IsOnChanged.InvokeAsync(Feature);
+        StateHasChanged();
+    }
+}

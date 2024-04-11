@@ -4,24 +4,33 @@
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
 
-@if(!ScheduleMode)
+@if (!ScheduleMode)
 {
-<div class="card">
-    <div class="card-body">
-        <h5 class="card-title">@IotDevice!.DeviceName</h5>
-        <p class="card-text">ID: @IotDevice.Id</p>
-        @foreach (var feature in features)
-        {
-            <p class="card-text">@feature.Name : @feature.Value</p>
-            <Switch Feature="feature" IsOnChanged="ToggleDeviceStatus"></Switch>
-        }
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">@IotDevice!.DeviceName</h5>
+            <p class="card-text">ID: @IotDevice.Id</p>
+            @foreach (var feature in features)
+            {
+                <p class="card-text">@feature.Name : @feature.Value</p>
+                switch(feature.Type)
+                {
+                    case "Switch":
+                        <Switch Feature="feature" IsOnChanged="ToggleDeviceStatus"></Switch>
+                        break;
+                    case "OpenTimer":
+                        <OpenTimer Feature="feature" IsOnChanged="ToggleDeviceStatus"></OpenTimer>
+                        break;
+                }
+            }
 
+        </div>
+        <div class="card-footer">
+            <button type="button" class="btn btn-primary" onclick="@(() => OnScheduleButton())">Schedule</button>
+        </div>
     </div>
-    <div class="card-footer">
-        <button type="button" class="btn btn-primary" onclick="@(() => OnScheduleButton())">Schedule</button>
-    </div>
-</div>
-} else
+}
+else
 {
     <DailySchedule OnScheduleChanged="@OnScheduleChanged" DeviceId="IotDevice!.Id"></DailySchedule>
 }

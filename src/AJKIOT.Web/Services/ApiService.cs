@@ -1,4 +1,5 @@
 ﻿using AJKIOT.Shared.Models;
+using AJKIOT.Shared.Requests;
 using System.Net.Http.Json;
 
 namespace AJKIOT.Web.Services
@@ -16,11 +17,11 @@ namespace AJKIOT.Web.Services
             _logger = logger;
         }
 
-        public async Task<ApiResponse<IotDevice>> CreateUserDeviceAsync(IotDevice device)
+        public async Task<ApiResponse<IotDevice>> CreateUserDeviceAsync(CreateDeviceRequest createDeviceRequest)
         {
             await _tokenService.AddTokenToHeader(_httpClient);
             var request = new HttpRequestMessage(HttpMethod.Post, $"api/Devices/createDevice");
-            request.Content = JsonContent.Create(device);
+            request.Content = JsonContent.Create(createDeviceRequest);
             var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
@@ -34,7 +35,7 @@ namespace AJKIOT.Web.Services
             else
             {
                 _logger.LogError($"Request failed with status code: {response.StatusCode} - {response.ReasonPhrase}");
-                return new ApiResponse<IotDevice>() { Data = device, Errors = new List<string>() { response.ReasonPhrase } };
+                return new ApiResponse<IotDevice>() { Data = createDeviceRequest.Device, Errors = new List<string>() { response.ReasonPhrase } };
             }
 
         }

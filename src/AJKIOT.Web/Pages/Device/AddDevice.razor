@@ -11,7 +11,7 @@
 {
     <Grid Class="mb-1">
         <Column ColumnSize="ColumnSize.Is6">
-            <Button Class="form-control" Color="Color.Primary" Clicked="@(() => AddNewDevice(deviceType))">Add @deviceType.Name</Button>
+            <Button Class="form-control" Color="Color.Primary" Clicked="@(() => AddNewDevice(deviceType))">Add @deviceType.Type</Button>
         </Column>
     </Grid>
 
@@ -21,19 +21,19 @@
 
     [Parameter]
     public EventCallback<IotDevice> OnDeviceAdded { get; set; }
-    private List<DeviceType> DeviceTypes = new List<DeviceType>();
+    private List<DeviceTypeSelect> DeviceTypes = new List<DeviceTypeSelect>();
     private IotDevice iotDevice = new IotDevice();
 
     protected override void OnInitialized()
     {
-        DeviceTypes = new List<DeviceType>()
+        DeviceTypes = new List<DeviceTypeSelect>()
         {
-            new DeviceType { Id = 1, Name = "Switch" },
-            new DeviceType { Id = 2, Name = "Open timer" }
+            new DeviceTypeSelect { Id = 1, Type = DeviceType.Switch },
+            new DeviceTypeSelect { Id = 2, Type = DeviceType.OpenTimer }
         };
     }
 
-    private async Task AddNewDevice(DeviceType deviceType)
+    private async Task AddNewDevice(DeviceTypeSelect deviceType)
     {
         var iotDevice = IotDeviceTemplate.CreateDevice(deviceType);
         await OnDeviceAdded.InvokeAsync(iotDevice);

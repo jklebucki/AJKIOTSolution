@@ -1,5 +1,6 @@
 ﻿using AJKIOT.Api.Services;
 using AJKIOT.Shared.Models;
+using AJKIOT.Shared.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -39,21 +40,21 @@ namespace AJKIOT.Api.Controllers
         }
 
         [HttpPost("createDevice")]
-        public async Task<IActionResult> AddUserDeviceAsync([FromBody] IotDevice device)
+        public async Task<IActionResult> AddUserDeviceAsync([FromBody] CreateDeviceRequest createDeviceRequest)
         {
             try
             {
-                string ownerId = await _userService.GetUserIdAsync(device.OwnerId);
+                string ownerId = await _userService.GetUserIdAsync(createDeviceRequest.UserEmail);
                 if (ownerId == null)
                     throw new Exception("User not found");
-                device.OwnerId = ownerId;
-                var apiResponse = await _iotDeviceService.AddDeviceAsync(device);
+                createDeviceRequest.Device.OwnerId = ownerId;
+                var apiResponse = await _iotDeviceService.AddDeviceAsync(createDeviceRequest.Device);
                 return Created($"/api/Devices/{apiResponse.Data!.Id}", apiResponse);
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Something went wrong: {ex}");
-                var apiResponse = new ApiResponse<IotDevice> { Data = device, Errors = new List<string> { ex.Message } };
+                var apiResponse = new ApiResponse<IotDevice> { Data = createDeviceRequest.Device, Errors = new List<string> { ex.Message } };
                 return BadRequest(apiResponse);
             }
 

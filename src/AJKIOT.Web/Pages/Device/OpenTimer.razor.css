@@ -1,0 +1,31 @@
+﻿.button-round {
+    width: 100px;
+    height: 100px;
+    background-color: #4CAF50; /* Zielony kolor tła */
+    border: none;
+    border-radius: 50%; /* Okrągły kształt */
+    box-shadow: 0 8px #666, 0 -4px #666 inset; /* Cienie dla efektu 3D */
+    outline: none;
+    cursor: pointer;
+    transition: box-shadow 0.3s, transform 0.3s; /* Płynne przejście dla cienia i transformacji */
+}
+
+    .button-round:active {
+        box-shadow: 0 4px #666, 0 -2px #666 inset; /* Zmniejszone cienie przy wciśnięciu */
+        transform: translateY(4px); /* Przesunięcie przycisku w dół */
+        animation: clickAnimation 1s ease 0s 1 normal forwards; /* Animacja wciśnięcia */
+    }
+
+@keyframes clickAnimation {
+    0% {
+        transform: translateY(0);
+    }
+
+    10% {
+        transform: translateY(4px);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
+}

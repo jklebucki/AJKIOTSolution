@@ -1,6 +1,7 @@
 ﻿@page "/devices"
 @using AJKIOT.Shared.Models
 @using AJKIOT.Shared.Models.DeviceFeatures
+@using AJKIOT.Shared.Requests
 @using AJKIOT.Web.Pages.Device
 @using AJKIOT.Web.Services
 @using Microsoft.AspNetCore.Authorization
@@ -61,8 +62,13 @@
     {
         try
         {
+            var createDeviceRequest = new CreateDeviceRequest()
+                {
+                    UserEmail = (await LocalStorage.GetApplicationUserAsync()).Email,
+                    Device = iotDevice
+                };
             iotDevice.OwnerId = (await LocalStorage.GetApplicationUserAsync()).Email;
-            var deviceData = await api.CreateUserDeviceAsync(iotDevice);
+            var deviceData = await api.CreateUserDeviceAsync(createDeviceRequest);
             if (deviceData != null && deviceData.Data != null && deviceData.IsSuccess)
             {
                 devices.Add(deviceData.Data);
