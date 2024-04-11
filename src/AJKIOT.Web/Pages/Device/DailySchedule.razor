@@ -1,64 +1,91 @@
 ﻿@using AJKIOT.Shared.Models.DeviceFeatures
+@using Blazorise
 @inject NavigationManager NavigationManager
 
-<h1 class="mb-2">Weekly schedule</h1>
-<div class="mb-2">
-    <div class="row">
-        @for (int i = 1; i < 5; i++)
-        {
-            <div class="col-3">
-                <DailyScheduleComponent DeviceId="@DeviceId" DayNumber="@i" Schedule="@SelectSchedule(i)" OnScheduleChanged="HandleScheduleChanged" />
+<Modal @ref="modalRef">
+    <ModalContent Size="ModalSize.ExtraLarge">
+        <ModalHeader>
+            <h1 class="mb-2">Weekly schedule</h1>
+        </ModalHeader>
+        <ModalBody>
+            <div class="row mb-2">
+                @for (int weekNumber = 1; weekNumber < 5; weekNumber++)
+                {
+                    <div class="col-md-3">
+                        <DailyScheduleComponent DeviceId="@DeviceId" DayNumber="@weekNumber" Schedule="@SelectSchedule(weekNumber)" OnScheduleChanged="HandleScheduleChanged" />
+                    </div>
+                }
             </div>
-        }
-    </div>
-
-</div>
-<div class="mb-2">
-    <div class="row">
-        @for (int i = 5; i < 8; i++)
-        {
-            <div class="col-3">
-                <DailyScheduleComponent DeviceId="@DeviceId" DayNumber="@i" Schedule="@SelectSchedule(i)" OnScheduleChanged="HandleScheduleChanged" />
+            <div class="row mb-2">
+                @for (int weekNumber = 5; weekNumber < 8; weekNumber++)
+                {
+                    <div class="col-md-3">
+                        <DailyScheduleComponent DeviceId="@DeviceId" DayNumber="@weekNumber" Schedule="@SelectSchedule(weekNumber)" OnScheduleChanged="HandleScheduleChanged" />
+                    </div>
+                }
             </div>
-        }
-    </div>
-</div>
-
-
-<button class="btn btn-outline-primary" @onclick="SaveSchedules">Save schedule</button>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Outline Clicked="@HideModal">Close</Button>
+            <Button Color="Color.Primary" Outline Clicked="@SaveSchedules">Save Changes</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
 
 @code {
     [Parameter]
     public int DeviceId { get; set; }
-
     [Parameter]
     public EventCallback<List<DailyScheduleEntry>> OnScheduleChanged { get; set; }
+    [Parameter]
+    public List<DailyScheduleEntry> WeekSchedules { get; set; } = new List<DailyScheduleEntry>();
 
-    private List<DailyScheduleEntry> weekSchedules = new List<DailyScheduleEntry>();
+    private Modal modalRef;
 
-    protected override void OnInitialized()
+    private Task ShowModal()
     {
-        weekSchedules = new List<DailyScheduleEntry>();
+        return modalRef.Show();
+    }
+
+    private Task HideModal()
+    {
+        OnScheduleChanged.InvokeAsync(null);
+        return modalRef.Hide();
+    }
+
+
+    protected override void OnParametersSet()
+    {
+        WeekSchedules = new List<DailyScheduleEntry>();
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            ShowModal();
+        }
     }
 
     private void HandleScheduleChanged(KeyValuePair<int, List<DailyScheduleEntry>> updatedSchedule)
     {
-        weekSchedules.RemoveAll(s=>s.DayNumber == updatedSchedule.Key);
-        weekSchedules.AddRange(updatedSchedule.Value);
+        WeekSchedules.RemoveAll(s => s.DayNumber == updatedSchedule.Key);
+        WeekSchedules.AddRange(updatedSchedule.Value);
     }
 
     private void SaveSchedules()
     {
         Console.WriteLine("Zapisywanie harmonogramów...");
-        foreach (var schedule in weekSchedules)
+        foreach (var schedule in WeekSchedules)
         {
             Console.WriteLine($"Day {schedule.DayNumber}, Entry #{schedule.EntryNumber}, Start: {schedule.StartTime}, End: {schedule.EndTime}");
         }
-        OnScheduleChanged.InvokeAsync(weekSchedules);
+        OnScheduleChanged.InvokeAsync(WeekSchedules);
+        HideModal();
     }
 
     private List<DailyScheduleEntry> SelectSchedule(int dayNumber)
     {
-        return weekSchedules.Where(s => s.DayNumber == dayNumber).ToList();
+        return WeekSchedules.Where(s => s.DayNumber == dayNumber).ToList();
     }
 }

@@ -1,22 +1,40 @@
 ﻿@using AJKIOT.Shared.Models
 @using System.Text.Json
 @using AJKIOT.Shared.Models.DeviceFeatures
+@using Blazorise
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
 
-@if (!ScheduleMode)
+@if (!scheduleMode)
 {
     <div class="card">
+        <div class="card-header d-flex justify-content-center">
+            @if (editing)
+            {
+                <TextEdit @bind-Text="@IotDevice!.DeviceName" OnValueChanged="OnEditDeviceName" />
+                <Button Class="btn btn-outline-primary" @onclick="@OnSaveButton"><Icon Name="IconName.Save" /></Button>
+            } else
+            {
+                <h4 class="card-title">@IotDevice!.DeviceName</h4>
+            }
+        </div>
         <div class="card-body">
-            <h5 class="card-title">@IotDevice!.DeviceName</h5>
-            <p class="card-text">ID: @IotDevice.Id</p>
+            <Alert Color="Color.Info" Visible>
+                <AlertMessage>
+                    Device ID: @IotDevice.Id
+                </AlertMessage>
+            </Alert>
             @foreach (var feature in features)
             {
-                <p class="card-text">@feature.Name : @feature.Value</p>
-                switch(feature.Type)
+                <Alert Color="@(feature.Value == 1 ? Color.Success : Color.Default)" Visible>
+                    <AlertMessage>
+                        Status : @(feature.Value == 1 ? "ON" : "OFF")
+                    </AlertMessage>
+                </Alert>
+                switch (feature.Type)
                 {
                     case "Switch":
-                        <Switch Feature="feature" IsOnChanged="ToggleDeviceStatus"></Switch>
+                        <OnSwitch Feature="feature" IsOnChanged="ToggleDeviceStatus"></OnSwitch>
                         break;
                     case "OpenTimer":
                         <OpenTimer Feature="feature" IsOnChanged="ToggleDeviceStatus"></OpenTimer>
@@ -25,8 +43,22 @@
             }
 
         </div>
-        <div class="card-footer">
-            <button type="button" class="btn btn-primary" onclick="@(() => OnScheduleButton())">Schedule</button>
+        <div class="card-footer d-flex justify-content-end">
+            @if (IotDevice.IsScheduleAvailable())
+            {
+                <Tooltip Text="Add schedule">
+                    <Button Class="btn btn-outline-primary me-2" onclick="@(() => OnScheduleButton())"><Icon Name="IconName.Calendar" /></Button>
+                </Tooltip>
+            }
+            <Tooltip Text="Download firmware">
+                <Button Class="btn btn-outline-secondary me-2" onclick="@(() => OnDownloadButton())"><Icon Name="IconName.Download" /></Button>
+            </Tooltip>
+            <Tooltip Text="Edit">
+                <Button Class="btn btn-outline-success me-2" onclick="@(() => OnEditButton())"><Icon Name="IconName.Edit" /></Button>
+            </Tooltip>
+            <Tooltip Text="Delete">
+                <Button Class="btn btn-outline-danger" onclick="@(() => OnDeleteButton())"><Icon Name="IconName.Delete" /></Button>
+            </Tooltip>
         </div>
     </div>
 }
@@ -34,22 +66,50 @@ else
 {
     <DailySchedule OnScheduleChanged="@OnScheduleChanged" DeviceId="IotDevice!.Id"></DailySchedule>
 }
+@if(deleting)
+{
+    
+}
+
+
+
 @code {
     [Parameter]
     public IotDevice? IotDevice { get; set; }
-    private bool ScheduleMode { get; set; }
-    private List<DeviceFeature> features = new List<DeviceFeature>();
 
-    private bool IsOn { get; set; }
+    private List<DeviceFeature> features = new List<DeviceFeature>();
+    private bool scheduleMode { get; set; }
+    private bool isOn { get; set; }
+    private bool editing { get; set; } = false;
+    private bool deleting { get; set; } = false;
 
     [Parameter]
     public EventCallback<IotDevice> OnPinDeviceChanged { get; set; }
 
-
     private async Task OnScheduleChanged(List<DailyScheduleEntry> dailyScheduleEntries)
     {
-        ScheduleMode = false;
+        //if(dailyScheduleEntries != null)
+        // Add logic here for scheduling
+        scheduleMode = false;
         await Task.CompletedTask;
+    }
+
+    void OnEditButton()
+    {
+        editing = true;
+    }
+    void OnSaveButton()
+    {
+        editing = false;
+    }
+    void OnDeleteButton()
+    {
+        // Add logic here for deleting
+    }
+
+    void OnDownloadButton()
+    {
+        // Add logic here for downloading
     }
 
     private async Task ToggleDeviceStatus(DeviceFeature feature)
@@ -71,7 +131,7 @@ else
 
     private async Task OnScheduleButton()
     {
-        ScheduleMode = true;
+        scheduleMode = true;
         await Task.CompletedTask;
     }
 }

@@ -12,6 +12,11 @@
 
     private string CssClass => _isOn ? "switch-on" : "switch-off";
 
+    protected override void OnParametersSet()
+    {
+        _isOn = Feature!.Value == 1;
+    }
+
     private async void ToggleSwitch()
     {
         _isOn = !_isOn;

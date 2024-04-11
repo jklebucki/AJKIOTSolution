@@ -39,7 +39,7 @@ namespace AJKIOT.Web.Templates
                 DeviceType = DeviceType.OpenTimer.ToString(),
                 DeviceName = "Open timer",
                 DeviceFeaturesJson = JsonSerializer.Serialize(new List<DeviceFeature> {
-                    new DeviceFeature { Id = 1, Name = "Open timer", Type = "Open timer", Value = 0, MaxValue = 1000 }
+                    new DeviceFeature { Id = 1, Name = "Open timer", Type = DeviceType.OpenTimer.ToString(), Value = 0, MaxValue = 1000 }
                 })
             };
         }

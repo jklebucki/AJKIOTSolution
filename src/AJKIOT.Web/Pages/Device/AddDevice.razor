@@ -6,7 +6,15 @@
 
 
 <h3>Add New IoT Device</h3>
-
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p class="text-danger">@errorMessage</p>
+}
+<Grid Class="mb-1">
+    <Column ColumnSize="ColumnSize.Is6">
+        <TextEdit Class="form-control" @bind-Text="@deviceName" Placeholder="Device Name" />
+    </Column>
+</Grid>
 @foreach (var deviceType in DeviceTypes)
 {
     <Grid Class="mb-1">
@@ -14,16 +22,20 @@
             <Button Class="form-control" Color="Color.Primary" Clicked="@(() => AddNewDevice(deviceType))">Add @deviceType.Type</Button>
         </Column>
     </Grid>
-
 }
-
+<Grid Class="mb-1">
+    <Column ColumnSize="ColumnSize.Is6">
+        <Button Class="form-control" Color="Color.Secondary" Clicked="@Cancel">Cancel</Button>
+    </Column>
+</Grid>
 @code {
 
     [Parameter]
     public EventCallback<IotDevice> OnDeviceAdded { get; set; }
     private List<DeviceTypeSelect> DeviceTypes = new List<DeviceTypeSelect>();
     private IotDevice iotDevice = new IotDevice();
-
+    private string deviceName = string.Empty;
+    private string errorMessage = string.Empty;
     protected override void OnInitialized()
     {
         DeviceTypes = new List<DeviceTypeSelect>()
@@ -33,10 +45,23 @@
         };
     }
 
-    private async Task AddNewDevice(DeviceTypeSelect deviceType)
+    private async Task Cancel()
     {
-        var iotDevice = IotDeviceTemplate.CreateDevice(deviceType);
-        await OnDeviceAdded.InvokeAsync(iotDevice);
+        await OnDeviceAdded.InvokeAsync(null);
     }
 
+    private async Task AddNewDevice(DeviceTypeSelect deviceType)
+    {
+
+        if (deviceName != string.Empty)
+        {
+            var iotDevice = IotDeviceTemplate.CreateDevice(deviceType);
+            iotDevice.DeviceName = deviceName;
+            await OnDeviceAdded.InvokeAsync(iotDevice);
+        }
+        else
+        {
+            errorMessage = "Device name is required";
+        }
+    }
 }

@@ -1,6 +1,6 @@
 ﻿@using AJKIOT.Shared.Models.DeviceFeatures
 <div>
-    <button @onclick="ButtonPressed" class="button-round">OPEN</button>
+    <button @onclick="ButtonPressed" class="button-3d @ButtonClass">OPEN</button>
 </div>
 
 @code {
@@ -10,10 +10,11 @@
     [Parameter]
     public EventCallback<DeviceFeature> IsOnChanged { get; set; }
 
-
+    private string ButtonClass = "";
 
     private async Task ButtonPressed()
     {
+        ButtonClass = "button-3d-pressed";
         Feature.Value = 1;
         await IsOnChanged.InvokeAsync(Feature);
         StateHasChanged();
@@ -22,9 +23,10 @@
 
     private async void ButtonReleased()
     {
-        await Task.Delay(Feature.MaxValue * 1000);
+        await Task.Delay(5000);
         Feature.Value = 0;
         await IsOnChanged.InvokeAsync(Feature);
+        ButtonClass = "";
         StateHasChanged();
     }
 }
