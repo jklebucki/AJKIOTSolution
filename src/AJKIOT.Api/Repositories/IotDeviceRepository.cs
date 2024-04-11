@@ -25,6 +25,11 @@ namespace AJKIOT.Api.Repositories
             return device!;
         }
 
+        public Task<IotDevice> GetDeviceAsync(string userId, string deviceId)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<IEnumerable<IotDevice>> GetUserDevicesAsync(string userId)
         {
             var devices = await _context.IotDevices.Where(x => x.OwnerId == userId).ToListAsync();
