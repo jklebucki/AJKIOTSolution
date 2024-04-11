@@ -1,9 +1,21 @@
 ﻿@using AJKIOT.Shared.Models
 @using System.Text.Json
 @using AJKIOT.Shared.Models.DeviceFeatures
+@using AJKIOT.Shared.Requests
+@using AJKIOT.Web.Services
 @using Blazorise
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
+@inject IApiService Api
+
+@if(errorMessage != string.Empty)
+{
+    <Alert Color="Color.Danger" Visible>
+        <AlertMessage>
+            @errorMessage
+        </AlertMessage>
+    </Alert>
+}
 
 @if (!scheduleMode)
 {
@@ -13,7 +25,8 @@
             {
                 <TextEdit @bind-Text="@IotDevice!.DeviceName" OnValueChanged="OnEditDeviceName" />
                 <Button Class="btn btn-outline-primary" @onclick="@OnSaveButton"><Icon Name="IconName.Save" /></Button>
-            } else
+            }
+            else
             {
                 <h4 class="card-title">@IotDevice!.DeviceName</h4>
             }
@@ -64,11 +77,11 @@
 }
 else
 {
-    <DailySchedule OnScheduleChanged="@OnScheduleChanged" DeviceId="IotDevice!.Id"></DailySchedule>
+    <DailySchedule WeekSchedules="@deviceSchedule" OnScheduleChanged="@OnScheduleChanged" DeviceId="IotDevice!.Id"></DailySchedule>
 }
-@if(deleting)
+@if (deleting)
 {
-    
+
 }
 
 
@@ -82,34 +95,49 @@ else
     private bool isOn { get; set; }
     private bool editing { get; set; } = false;
     private bool deleting { get; set; } = false;
+    private List<DailyScheduleEntry>? deviceSchedule { get; set; }
+    private string errorMessage { get; set; } = string.Empty;
 
     [Parameter]
     public EventCallback<IotDevice> OnPinDeviceChanged { get; set; }
 
     private async Task OnScheduleChanged(List<DailyScheduleEntry> dailyScheduleEntries)
     {
-        //if(dailyScheduleEntries != null)
-        // Add logic here for scheduling
+        if (dailyScheduleEntries != null)
+        {
+            IotDevice!.DeviceScheduleJson = JsonSerializer.Serialize(dailyScheduleEntries);
+
+        }
         scheduleMode = false;
         await Task.CompletedTask;
     }
 
-    void OnEditButton()
+    private void OnEditButton()
     {
         editing = true;
     }
-    void OnSaveButton()
+    private async Task OnSaveButton()
     {
+        await SaveDeviceData();
         editing = false;
     }
-    void OnDeleteButton()
+    private void OnDeleteButton()
     {
         // Add logic here for deleting
     }
 
-    void OnDownloadButton()
+    private void OnDownloadButton()
     {
         // Add logic here for downloading
+    }
+
+    private async Task SaveDeviceData()
+    {
+        var apiResponse = await Api.UpdateDeviceAsync(new UpdateDeviceRequest { Device = IotDevice! });
+        if (!apiResponse.IsSuccess)
+        {
+            errorMessage = string.Join(", ", apiResponse.Errors);
+        }
     }
 
     private async Task ToggleDeviceStatus(DeviceFeature feature)
@@ -122,11 +150,7 @@ else
     protected override void OnInitialized()
     {
         features = JsonSerializer.Deserialize<List<DeviceFeature>>(IotDevice!.DeviceFeaturesJson)!;
-    }
-
-    protected override void OnAfterRender(bool firstRender)
-    {
-
+        deviceSchedule = JsonSerializer.Deserialize<List<DailyScheduleEntry>>(IotDevice!.DeviceScheduleJson)!;
     }
 
     private async Task OnScheduleButton()
