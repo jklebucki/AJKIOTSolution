@@ -1,6 +1,5 @@
 ﻿using AJKIOT.Shared.Models;
 using AJKIOT.Shared.Requests;
-using AJKIOT.Web.Pages;
 using System.Net.Http.Json;
 
 namespace AJKIOT.Web.Services
@@ -36,9 +35,32 @@ namespace AJKIOT.Web.Services
             else
             {
                 _logger.LogError($"Request failed with status code: {response.StatusCode} - {response.ReasonPhrase}");
-                return new ApiResponse<IotDevice>() { Data = device.Device, Errors = new List<string>() { response.ReasonPhrase } };
+                return new ApiResponse<IotDevice>() { Data = device.Device, Errors = new List<string>() { response.ReasonPhrase! } };
             }
 
+        }
+
+        public async Task<ApiResponse<bool>> DeleteDeviceAsync(int deviceId)
+        {
+            await _tokenService.AddTokenToHeader(_httpClient);
+            var request = new HttpRequestMessage(HttpMethod.Delete, $"api/Devices/deleteDevice/{deviceId}");
+            var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+                return result!;
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                throw new UnauthorizedAccessException();
+            }
+            else
+            {
+                _logger.LogError($"Request failed with status code: {response.StatusCode} - {response.ReasonPhrase}");
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+                return result!;
+            }
         }
 
         public async Task<ApiResponse<IEnumerable<IotDevice>>> GetUserDevicesAsync(string userId)
@@ -83,7 +105,7 @@ namespace AJKIOT.Web.Services
             else
             {
                 _logger.LogError($"Request failed with status code: {response.StatusCode} - {response.ReasonPhrase}");
-                return new ApiResponse<IotDevice>() { Data = updateDeviceRequest.Device, Errors = new List<string>() { response.ReasonPhrase } };
+                return new ApiResponse<IotDevice>() { Data = updateDeviceRequest.Device, Errors = new List<string>() { response.ReasonPhrase! } };
             }
         }
     }

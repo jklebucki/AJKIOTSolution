@@ -76,5 +76,22 @@ namespace AJKIOT.Api.Controllers
             }
 
         }
+
+        [HttpDelete("deleteDevice/{id:int}")]
+        public async Task<IActionResult> DeleteUserDeviceAsync(int id)
+        {
+            try
+            {
+                var apiResponse = await _iotDeviceService.DeleteDeviceAsync(id);
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Something went wrong: {ex}");
+                var apiResponse = new ApiResponse<bool> { Data = false, Errors = new List<string> { ex.Message } };
+                return BadRequest(apiResponse);
+            }
+
+        }
     }
 }

@@ -7,6 +7,7 @@
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
 @inject IApiService Api
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 @if (errorMessage != string.Empty)
 {
@@ -24,7 +25,12 @@
             @if (editing)
             {
                 <TextEdit @bind-Text="@IotDevice!.DeviceName" OnValueChanged="OnEditDeviceName" />
-                <Button Class="btn btn-outline-primary" @onclick="@OnSaveButton"><Icon Name="IconName.Save" /></Button>
+                <Tooltip Text="Save">
+                    <Button Class="btn btn-outline-primary" @onclick="@OnSaveButton"><Icon Name="IconName.Save" /></Button>
+                </Tooltip>
+                <Tooltip Text="Cancel">
+                    <Button Class="btn btn-outline-danger" @onclick="@OnCancelButton"><Icon Name="IconName.Times" /></Button>
+                </Tooltip>
             }
             else
             {
@@ -77,7 +83,7 @@
 }
 else
 {
-    <DailySchedule WeekSchedules="@deviceSchedule" OnScheduleChanged="@OnScheduleChanged" DeviceId="IotDevice!.Id"></DailySchedule>
+    <DailySchedule WeekSchedules="@IotDevice!.GetSchedule().ToList()" OnScheduleChanged="@OnScheduleChanged" DeviceId="IotDevice!.Id"></DailySchedule>
 }
 @if (deleting)
 {
@@ -95,18 +101,21 @@ else
     private bool isOn { get; set; }
     private bool editing { get; set; } = false;
     private bool deleting { get; set; } = false;
-    private List<DailyScheduleEntry>? deviceSchedule { get; set; }
+    private List<DailyScheduleEntry> deviceSchedule { get; set; } = new List<DailyScheduleEntry>();
     private string errorMessage { get; set; } = string.Empty;
 
     [Parameter]
-    public EventCallback<IotDevice> OnPinDeviceChanged { get; set; }
+    public EventCallback<IotDevice> OnDeviceChanged { get; set; }
+    [Parameter]
+    public EventCallback<int> OnDeviceDeleted { get; set; }
 
     private async Task OnScheduleChanged(List<DailyScheduleEntry> dailyScheduleEntries)
     {
-        if (dailyScheduleEntries != null)
+        if (dailyScheduleEntries != null && IotDevice != null)
         {
-            IotDevice!.DeviceScheduleJson = JsonSerializer.Serialize(dailyScheduleEntries);
-
+            IotDevice.SetSchedule(dailyScheduleEntries);
+            await SaveDeviceData();
+            deviceSchedule = dailyScheduleEntries;
         }
         scheduleMode = false;
         await Task.CompletedTask;
@@ -116,14 +125,39 @@ else
     {
         editing = true;
     }
+
     private async Task OnSaveButton()
     {
         await SaveDeviceData();
         editing = false;
     }
-    private void OnDeleteButton()
+
+    private void OnCancelButton()
     {
-        // Add logic here for deleting
+        editing = false;
+    }
+    private async Task OnDeleteButton()
+    {
+        try
+        {
+            var apiResponse = await Api.DeleteDeviceAsync(IotDevice!.Id);
+            if (apiResponse.IsSuccess)
+            {
+                await OnDeviceDeleted.InvokeAsync(IotDevice.Id);
+            }
+            else
+            {
+                errorMessage = string.Join(", ", apiResponse.Errors);
+            }
+        }
+        catch (UnauthorizedAccessException)
+        {
+            GoToLogIn();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
     }
 
     private void OnDownloadButton()
@@ -133,34 +167,53 @@ else
 
     private async Task SaveDeviceData()
     {
-        var apiResponse = await Api.UpdateDeviceAsync(new UpdateDeviceRequest { Device = IotDevice! });
-        if (!apiResponse.IsSuccess)
+        try
         {
-            errorMessage = string.Join(", ", apiResponse.Errors);
+            var apiResponse = await Api.UpdateDeviceAsync(new UpdateDeviceRequest { Device = IotDevice! });
+            if (!apiResponse.IsSuccess)
+            {
+                errorMessage = string.Join(", ", apiResponse.Errors);
+            }
+            else
+            {
+                IotDevice = apiResponse.Data;
+            }
         }
-        else
+        catch (UnauthorizedAccessException)
         {
-            IotDevice = apiResponse.Data;
+            GoToLogIn();
         }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+
     }
 
     private async Task ToggleDeviceStatus(DeviceFeature feature)
     {
         IotDevice!.DeviceFeaturesJson = JsonSerializer.Serialize(features);
-        await OnPinDeviceChanged.InvokeAsync(IotDevice);
+        await OnDeviceChanged.InvokeAsync(IotDevice);
         StateHasChanged();
     }
 
-    protected override void OnInitialized()
+    protected override void OnParametersSet()
     {
         features = JsonSerializer.Deserialize<List<DeviceFeature>>(IotDevice!.DeviceFeaturesJson)!;
         if (IotDevice.IsScheduleAvailable())
-            deviceSchedule = JsonSerializer.Deserialize<List<DailyScheduleEntry>>(IotDevice!.DeviceScheduleJson)!;
+            deviceSchedule = IotDevice.GetSchedule().ToList();
     }
 
     private async Task OnScheduleButton()
     {
         scheduleMode = true;
         await Task.CompletedTask;
+    }
+
+    private void GoToLogIn()
+    {
+        var customProvider = AuthenticationStateProvider as CustomAuthenticationStateProvider;
+        customProvider!.NotifyUserLogout();
+        NavigationManager.NavigateTo("/Account/Login");
     }
 }

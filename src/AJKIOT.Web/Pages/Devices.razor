@@ -34,7 +34,7 @@
             @foreach (var device in devices)
             {
                 <div class="col-md-4 mb-4">
-                    <IotDeviceTile IotDevice="device" OnPinDeviceChanged="HandleDeviceChanged"></IotDeviceTile>
+                    <IotDeviceTile IotDevice="device" OnDeviceChanged="HandleDeviceChanged"  OnDeviceDeleted="HandleDeviceDeleted"/>
                 </div>
             }
         </div>
@@ -74,13 +74,18 @@
                 {
                     devices.Add(deviceData.Data);
                 }
-                errorMessage = string.Join("; ", deviceData.Errors);
+                errorMessage = string.Join("; ", deviceData!.Errors);
             }
             catch (Exception ex)
             {
                 errorMessage = ex.Message;
             }
         AddMode = false;
+    }
+
+    private void HandleDeviceDeleted(int deviceId)
+    {
+        devices.Remove(devices.First(x => x.Id == deviceId));
     }
 
     private List<IotDevice> devices = new List<IotDevice>();
@@ -96,7 +101,7 @@
             try
             {
                 var apiResponse = await api.GetUserDevicesAsync(userData.Email);
-                devices.AddRange(apiResponse.Data!);
+                devices.AddRange(apiResponse.Data!.OrderBy(x => x.Id));
             }
             catch (UnauthorizedAccessException)
             {

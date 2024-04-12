@@ -15,7 +15,7 @@
     private async Task ButtonPressed()
     {
         ButtonClass = "button-3d-pressed";
-        Feature.Value = 1;
+        Feature!.Value = 1;
         await IsOnChanged.InvokeAsync(Feature);
         StateHasChanged();
         ButtonReleased();
@@ -24,7 +24,7 @@
     private async void ButtonReleased()
     {
         await Task.Delay(5000);
-        Feature.Value = 0;
+        Feature!.Value = 0;
         await IsOnChanged.InvokeAsync(Feature);
         ButtonClass = "";
         StateHasChanged();

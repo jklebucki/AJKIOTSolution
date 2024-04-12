@@ -22,9 +22,10 @@ namespace AJKIOT.Api.Services
                 return new ApiResponse<IotDevice>() { Data = iotDevice, Errors = new List<string>() };
         }
 
-        public Task<ApiResponse<IotDevice>> DeleteDeviceAsync(IotDevice iotDevice)
+        public async Task<ApiResponse<bool>> DeleteDeviceAsync(int id)
         {
-            throw new NotImplementedException();
+            bool deleted = await _repository.DeleteDeviceAsync(id);
+            return new ApiResponse<bool>() { Data = deleted };
         }
 
         public async Task<ApiResponse<IEnumerable<IotDevice>>> GetUserDevicesAsync(string userId)

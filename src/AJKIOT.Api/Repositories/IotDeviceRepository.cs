@@ -7,9 +7,11 @@ namespace AJKIOT.Api.Repositories
     public class IotDeviceRepository : IIotDeviceRepository
     {
         private readonly ApplicationDbContext _context;
-        public IotDeviceRepository(ApplicationDbContext context)
+        private readonly ILogger<IotDeviceRepository> _logger;
+        public IotDeviceRepository(ApplicationDbContext context, ILogger<IotDeviceRepository> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         public async Task<int> AddDeviceAsync(IotDevice device)
@@ -19,15 +21,30 @@ namespace AJKIOT.Api.Repositories
             return data.Entity.Id;
         }
 
+        public async Task<bool> DeleteDeviceAsync(int id)
+        {
+            try
+            {
+                var device = await _context.IotDevices.FirstOrDefaultAsync(x => x.Id == id);
+                if (device != null)
+                {
+                    _context.IotDevices.Remove(device);
+                    await _context.SaveChangesAsync();
+                    return true;
+                }
+                throw new Exception("Device not found");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return false;
+            }
+        }
+
         public async Task<IotDevice> GetDeviceAsync(string userId, int deviceId)
         {
             var device = await _context.IotDevices.FirstOrDefaultAsync(x => x.OwnerId == userId && x.Id == deviceId);
             return device!;
-        }
-
-        public Task<IotDevice> GetDeviceAsync(string userId, string deviceId)
-        {
-            throw new NotImplementedException();
         }
 
         public async Task<IEnumerable<IotDevice>> GetUserDevicesAsync(string userId)

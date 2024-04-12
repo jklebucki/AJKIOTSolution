@@ -139,7 +139,7 @@ namespace AJKIOT.Web.Services
                 return false;
             }
 
-            var refreshResponse = await _httpClient.PostAsJsonAsync("api/Users/refresh", new { RefreshToken = applicationUser.Credentials.RefreshToken });
+            var refreshResponse = await _httpClient.PostAsJsonAsync("api/Users/refresh", new { applicationUser.Credentials.RefreshToken });
 
             if (!refreshResponse.IsSuccessStatusCode)
             {
@@ -149,8 +149,8 @@ namespace AJKIOT.Web.Services
             var loginResponse = await refreshResponse.Content.ReadFromJsonAsync<AuthResponse>();
             if (loginResponse == null || loginResponse.Tokens == null)
                 return false;
-            var newUser = new ApplicationUser { Username = loginResponse.Username!, Email = loginResponse.Email!, Credentials = new UserCredentials { AccessToken = loginResponse.Tokens[0], RefreshToken = loginResponse.Tokens[1] } };
-            await _localStorageService.SaveApplicationUserAsync(newUser);
+            var refreshedUser = new ApplicationUser { Username = loginResponse.Username!, Email = loginResponse.Email!, Credentials = new UserCredentials { AccessToken = loginResponse.Tokens[0], RefreshToken = loginResponse.Tokens[1] } };
+            await _localStorageService.SaveApplicationUserAsync(refreshedUser);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResponse.Tokens[0]);
             return true;
         }

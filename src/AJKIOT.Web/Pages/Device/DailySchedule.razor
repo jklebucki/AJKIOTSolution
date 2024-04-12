@@ -33,6 +33,7 @@
 </Modal>
 
 @code {
+
     [Parameter]
     public int DeviceId { get; set; }
     [Parameter]
@@ -40,7 +41,7 @@
     [Parameter]
     public List<DailyScheduleEntry> WeekSchedules { get; set; } = new List<DailyScheduleEntry>();
 
-    private Modal modalRef;
+    private Modal modalRef = new Modal();
 
     private Task ShowModal()
     {
@@ -51,12 +52,6 @@
     {
         OnScheduleChanged.InvokeAsync(null);
         return modalRef.Hide();
-    }
-
-
-    protected override void OnParametersSet()
-    {
-        WeekSchedules = new List<DailyScheduleEntry>();
     }
 
     protected override void OnAfterRender(bool firstRender)
@@ -75,11 +70,6 @@
 
     private void SaveSchedules()
     {
-        Console.WriteLine("Zapisywanie harmonogramów...");
-        foreach (var schedule in WeekSchedules)
-        {
-            Console.WriteLine($"Day {schedule.DayNumber}, Entry #{schedule.EntryNumber}, Start: {schedule.StartTime}, End: {schedule.EndTime}");
-        }
         OnScheduleChanged.InvokeAsync(WeekSchedules);
         HideModal();
     }
