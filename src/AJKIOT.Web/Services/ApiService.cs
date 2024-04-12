@@ -63,5 +63,10 @@ namespace AJKIOT.Web.Services
             }
 
         }
+
+        public Task<ApiResponse<IotDevice>> UpdateDeviceAsync(UpdateDeviceRequest updateDeviceRequest)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
