@@ -59,5 +59,22 @@ namespace AJKIOT.Api.Controllers
             }
 
         }
+
+        [HttpPost("updateDevice")]
+        public async Task<IActionResult> UpdateUserDeviceAsync([FromBody] UpdateDeviceRequest updateDeviceRequest)
+        {
+            try
+            {
+                var apiResponse = await _iotDeviceService.UpdateDeviceAsync(updateDeviceRequest.Device);
+                return Ok(apiResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Something went wrong: {ex}");
+                var apiResponse = new ApiResponse<IotDevice> { Data = updateDeviceRequest.Device, Errors = new List<string> { ex.Message } };
+                return BadRequest(apiResponse);
+            }
+
+        }
     }
 }

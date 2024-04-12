@@ -1,5 +1,6 @@
 ﻿using AJKIOT.Shared.Models;
 using AJKIOT.Shared.Requests;
+using AJKIOT.Web.Pages;
 using System.Net.Http.Json;
 
 namespace AJKIOT.Web.Services
@@ -64,9 +65,26 @@ namespace AJKIOT.Web.Services
 
         }
 
-        public Task<ApiResponse<IotDevice>> UpdateDeviceAsync(UpdateDeviceRequest updateDeviceRequest)
+        public async Task<ApiResponse<IotDevice>> UpdateDeviceAsync(UpdateDeviceRequest updateDeviceRequest)
         {
-            throw new NotImplementedException();
+            await _tokenService.AddTokenToHeader(_httpClient);
+            var request = new HttpRequestMessage(HttpMethod.Post, $"api/Devices/updateDevice");
+            request.Content = JsonContent.Create(updateDeviceRequest);
+            var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<IotDevice>>();
+                return result!;
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                throw new UnauthorizedAccessException();
+            }
+            else
+            {
+                _logger.LogError($"Request failed with status code: {response.StatusCode} - {response.ReasonPhrase}");
+                return new ApiResponse<IotDevice>() { Data = updateDeviceRequest.Device, Errors = new List<string>() { response.ReasonPhrase } };
+            }
         }
     }
 }

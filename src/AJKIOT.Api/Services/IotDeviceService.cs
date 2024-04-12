@@ -33,9 +33,10 @@ namespace AJKIOT.Api.Services
             return new ApiResponse<IEnumerable<IotDevice>>() { Data = await devices };
         }
 
-        public Task<ApiResponse<IotDevice>> UpdateDeviceAsync(IotDevice iotDevice)
+        public async Task<ApiResponse<IotDevice>> UpdateDeviceAsync(IotDevice iotDevice)
         {
-            throw new NotImplementedException();
+            var device = await _repository.UpdateDeviceAsync(iotDevice);
+            return new ApiResponse<IotDevice>() { Data = device };
         }
     }
 }

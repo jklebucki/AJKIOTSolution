@@ -8,7 +8,7 @@
 @inject IJSRuntime JSRuntime
 @inject IApiService Api
 
-@if(errorMessage != string.Empty)
+@if (errorMessage != string.Empty)
 {
     <Alert Color="Color.Danger" Visible>
         <AlertMessage>
@@ -138,6 +138,10 @@ else
         {
             errorMessage = string.Join(", ", apiResponse.Errors);
         }
+        else
+        {
+            IotDevice = apiResponse.Data;
+        }
     }
 
     private async Task ToggleDeviceStatus(DeviceFeature feature)
@@ -150,7 +154,8 @@ else
     protected override void OnInitialized()
     {
         features = JsonSerializer.Deserialize<List<DeviceFeature>>(IotDevice!.DeviceFeaturesJson)!;
-        deviceSchedule = JsonSerializer.Deserialize<List<DailyScheduleEntry>>(IotDevice!.DeviceScheduleJson)!;
+        if (IotDevice.IsScheduleAvailable())
+            deviceSchedule = JsonSerializer.Deserialize<List<DailyScheduleEntry>>(IotDevice!.DeviceScheduleJson)!;
     }
 
     private async Task OnScheduleButton()

@@ -36,9 +36,11 @@ namespace AJKIOT.Api.Repositories
             return devices;
         }
 
-        public Task<IotDevice> UpdateDeviceAsync(IotDevice device)
+        public async Task<IotDevice> UpdateDeviceAsync(IotDevice device)
         {
-            throw new NotImplementedException();
+            _context.IotDevices.Update(device);
+            await _context.SaveChangesAsync();
+            return await Task.FromResult(device);
         }
     }
 }
