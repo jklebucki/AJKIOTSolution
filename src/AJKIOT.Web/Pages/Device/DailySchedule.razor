@@ -12,7 +12,7 @@
                 @for (int weekNumber = 1; weekNumber < 5; weekNumber++)
                 {
                     <div class="col-md-3">
-                        <DailyScheduleComponent DeviceId="@DeviceId" DayNumber="@weekNumber" Schedule="@SelectSchedule(weekNumber)" OnScheduleChanged="HandleScheduleChanged" />
+                        <DailyScheduleComponent FeatureId="@FeatureId" DayNumber="@weekNumber" Schedule="@SelectSchedule(weekNumber)" OnScheduleChanged="HandleScheduleChanged" />
                     </div>
                 }
             </div>
@@ -20,7 +20,7 @@
                 @for (int weekNumber = 5; weekNumber < 8; weekNumber++)
                 {
                     <div class="col-md-3">
-                        <DailyScheduleComponent DeviceId="@DeviceId" DayNumber="@weekNumber" Schedule="@SelectSchedule(weekNumber)" OnScheduleChanged="HandleScheduleChanged" />
+                        <DailyScheduleComponent FeatureId="@FeatureId" DayNumber="@weekNumber" Schedule="@SelectSchedule(weekNumber)" OnScheduleChanged="HandleScheduleChanged" />
                     </div>
                 }
             </div>
@@ -35,7 +35,7 @@
 @code {
 
     [Parameter]
-    public int DeviceId { get; set; }
+    public int FeatureId { get; set; }
     [Parameter]
     public EventCallback<List<DailyScheduleEntry>> OnScheduleChanged { get; set; }
     [Parameter]
@@ -64,7 +64,7 @@
 
     private void HandleScheduleChanged(KeyValuePair<int, List<DailyScheduleEntry>> updatedSchedule)
     {
-        WeekSchedules.RemoveAll(s => s.DayNumber == updatedSchedule.Key);
+        WeekSchedules.RemoveAll(s => s.DayNumber == updatedSchedule.Key && s.FeatureId == FeatureId);
         WeekSchedules.AddRange(updatedSchedule.Value);
     }
 
@@ -76,6 +76,6 @@
 
     private List<DailyScheduleEntry> SelectSchedule(int dayNumber)
     {
-        return WeekSchedules.Where(s => s.DayNumber == dayNumber).ToList();
+        return WeekSchedules.Where(s => s.DayNumber == dayNumber && s.FeatureId == FeatureId).ToList();
     }
 }

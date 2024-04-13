@@ -45,11 +45,23 @@
             </Alert>
             @foreach (var feature in features)
             {
-                <Alert Color="@(feature.Value == 1 ? Color.Success : Color.Default)" Visible>
-                    <AlertMessage>
-                        Status : @(feature.Value == 1 ? "ON" : "OFF")
-                    </AlertMessage>
-                </Alert>
+                <Grid>
+                    <Column ColumnSize="ColumnSize.IsHalf">
+                        <Alert Color="@(feature.Value == 1 ? Color.Success : Color.Secondary)" Visible>
+                            <AlertMessage>
+                                Status : @(feature.Value == 1 ? "ON" : "OFF")
+                            </AlertMessage>
+                        </Alert>
+                    </Column>
+                    <Column ColumnSize="ColumnSize.IsHalf">
+                        @if (IotDevice.IsScheduleAvailable())
+                        {
+                            <Tooltip Text="Add schedule">
+                                <Button Size="Size.Large" Class="btn btn-outline-primary me-2" onclick="@(() => OnScheduleButton(feature.Id))"><Icon Name="IconName.Calendar" /></Button>
+                            </Tooltip>
+                        }
+                    </Column>
+                </Grid>
                 switch (feature.Type)
                 {
                     case "Switch":
@@ -63,12 +75,7 @@
 
         </div>
         <div class="card-footer d-flex justify-content-end">
-            @if (IotDevice.IsScheduleAvailable())
-            {
-                <Tooltip Text="Add schedule">
-                    <Button Class="btn btn-outline-primary me-2" onclick="@(() => OnScheduleButton())"><Icon Name="IconName.Calendar" /></Button>
-                </Tooltip>
-            }
+
             <Tooltip Text="Download firmware">
                 <Button Class="btn btn-outline-secondary me-2" onclick="@(() => OnDownloadButton())"><Icon Name="IconName.Download" /></Button>
             </Tooltip>
@@ -83,18 +90,21 @@
 }
 else
 {
-    <DailySchedule WeekSchedules="@IotDevice!.GetSchedule().ToList()" OnScheduleChanged="@OnScheduleChanged" DeviceId="IotDevice!.Id"></DailySchedule>
+    <DailySchedule WeekSchedules="@IotDevice!.GetSchedule().ToList()" OnScheduleChanged="@OnScheduleChanged" FeatureId="featureId"></DailySchedule>
 }
 @if (deleting)
 {
-
+    //Modal here
 }
-
 
 
 @code {
     [Parameter]
     public IotDevice? IotDevice { get; set; }
+    [Parameter]
+    public EventCallback<IotDevice> OnDeviceChanged { get; set; }
+    [Parameter]
+    public EventCallback<int> OnDeviceDeleted { get; set; }
 
     private List<DeviceFeature> features = new List<DeviceFeature>();
     private bool scheduleMode { get; set; }
@@ -103,11 +113,7 @@ else
     private bool deleting { get; set; } = false;
     private List<DailyScheduleEntry> deviceSchedule { get; set; } = new List<DailyScheduleEntry>();
     private string errorMessage { get; set; } = string.Empty;
-
-    [Parameter]
-    public EventCallback<IotDevice> OnDeviceChanged { get; set; }
-    [Parameter]
-    public EventCallback<int> OnDeviceDeleted { get; set; }
+    private int featureId { get; set; }
 
     private async Task OnScheduleChanged(List<DailyScheduleEntry> dailyScheduleEntries)
     {
@@ -204,10 +210,11 @@ else
             deviceSchedule = IotDevice.GetSchedule().ToList();
     }
 
-    private async Task OnScheduleButton()
+    private void OnScheduleButton(int id)
     {
+        featureId = id;
         scheduleMode = true;
-        await Task.CompletedTask;
+        StateHasChanged();
     }
 
     private void GoToLogIn()

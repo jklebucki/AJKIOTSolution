@@ -44,7 +44,7 @@
     public int DayNumber { get; set; }
 
     [Parameter]
-    public int DeviceId { get; set; }
+    public int FeatureId { get; set; }
 
     [Parameter]
     public List<DailyScheduleEntry> Schedule { get; set; } = new List<DailyScheduleEntry>();
@@ -129,7 +129,7 @@
 
         return new DailyScheduleEntry
             {
-                DeviceId = DeviceId,
+                FeatureId = FeatureId,
                 DayNumber = DayNumber,
                 EntryNumber = newEntryNumber,
                 StartTime = TimeOnly.FromTimeSpan((TimeSpan)newStartDateTime!),

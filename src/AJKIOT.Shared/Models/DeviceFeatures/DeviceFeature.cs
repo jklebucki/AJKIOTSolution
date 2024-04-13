@@ -9,7 +9,6 @@
         public int MinValue { get; set; }
         public int MaxValue { get; set; }
         public int NumberOfSteps { get; set; }
-        public IEnumerable<DailyScheduleEntry> DailyScheduleEntries { get; set; } = new List<DailyScheduleEntry>();
 
     }
 }
