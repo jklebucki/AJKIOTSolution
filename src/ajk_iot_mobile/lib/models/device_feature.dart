@@ -1,11 +1,11 @@
 class DeviceFeature {
-  final int id;
-  final String type;
-  final String name;
-  final int value;
-  final int minValue;
-  final int maxValue;
-  final int numberOfSteps;
+  int id;
+  String type;
+  String name;
+  int value;
+  int minValue;
+  int maxValue;
+  int numberOfSteps;
 
   DeviceFeature({
     required this.id,
@@ -17,27 +17,23 @@ class DeviceFeature {
     required this.numberOfSteps,
   });
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'type': type,
-      'name': name,
-      'value': value,
-      'minValue': minValue,
-      'maxValue': maxValue,
-      'numberOfSteps': numberOfSteps,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'type': type,
+    'name': name,
+    'value': value,
+    'minValue': minValue,
+    'maxValue': maxValue,
+    'numberOfSteps': numberOfSteps,
+  };
 
-  factory DeviceFeature.fromJson(Map<String, dynamic> json) {
-    return DeviceFeature(
-      id: json['id'],
-      type: json['type'],
-      name: json['name'],
-      value: json['value'],
-      minValue: json['minValue'],
-      maxValue: json['maxValue'],
-      numberOfSteps: json['numberOfSteps'],
-    );
-  }
+  static DeviceFeature fromJson(Map<String, dynamic> json) => DeviceFeature(
+    id: json['Id'],
+    type: json['Type'],
+    name: json['Name'],
+    value: json['Value'],
+    minValue: json['MinValue'],
+    maxValue: json['MaxValue'],
+    numberOfSteps: json['NumberOfSteps'],
+  );
 }

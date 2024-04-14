@@ -1,10 +1,12 @@
+import 'package:ajk_iot_mobile/models/time_only.dart';
+
 class DailyScheduleEntry {
-  final int id;
-  final int featureId;
-  final int dayNumber;
-  final int entryNumber;
-  final String startTime;
-  final String endTime;
+  int id;
+  int featureId;
+  int dayNumber;
+  int entryNumber;
+  TimeOnly startTime;
+  TimeOnly endTime;
 
   DailyScheduleEntry({
     required this.id,
@@ -15,25 +17,21 @@ class DailyScheduleEntry {
     required this.endTime,
   });
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'featureId': featureId,
-      'dayNumber': dayNumber,
-      'entryNumber': entryNumber,
-      'startTime': startTime,
-      'endTime': endTime,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'featureId': featureId,
+    'dayNumber': dayNumber,
+    'entryNumber': entryNumber,
+    'startTime': startTime.toJson(),
+    'endTime': endTime.toJson(),
+  };
 
-  factory DailyScheduleEntry.fromJson(Map<String, dynamic> json) {
-    return DailyScheduleEntry(
-      id: json['id'],
-      featureId: json['featureId'],
-      dayNumber: json['dayNumber'],
-      entryNumber: json['entryNumber'],
-      startTime: json['startTime'],
-      endTime: json['endTime'],
-    );
-  }
+  static DailyScheduleEntry fromJson(Map<String, dynamic> json) => DailyScheduleEntry(
+    id: json['id'],
+    featureId: json['featureId'],
+    dayNumber: json['dayNumber'],
+    entryNumber: json['entryNumber'],
+    startTime: TimeOnly.fromJson(json['startTime']),
+    endTime: TimeOnly.fromJson(json['endTime']),
+  );
 }
