@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:ajk_iot_mobile/pages/create_account_page.dart';
 import 'package:ajk_iot_mobile/pages/home_page.dart';
 import 'package:ajk_iot_mobile/pages/try_login_page.dart';
+import 'package:ajk_iot_mobile/providers/device_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
@@ -30,6 +31,7 @@ class AjkIotApp extends StatelessWidget {
     return MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (context) => AuthProvider()),
+          ChangeNotifierProvider(create: (context) => DeviceProvider()),
         ],
         child: MaterialApp(
           title: 'AJK IoT',
