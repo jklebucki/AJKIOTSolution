@@ -27,6 +27,27 @@ namespace AJKIOT.Shared.Models
             }
         }
 
+        public void SetFeatures(IEnumerable<DeviceFeature> deviceFeatures)
+        {
+            if (deviceFeatures != null)
+                DeviceFeaturesJson = JsonSerializer.Serialize(deviceFeatures);
+        }
+
+        public IEnumerable<DeviceFeature> GetFeatures()
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(DeviceFeaturesJson))
+                    return JsonSerializer.Deserialize<IEnumerable<DeviceFeature>>(DeviceFeaturesJson)!;
+                else
+                    return new List<DeviceFeature>();
+            }
+            catch
+            {
+                return new List<DeviceFeature>();
+            }
+        }
+
         public void SetSchedule(IEnumerable<DailyScheduleEntry> dailyScheduleEntries)
         {
             if (IsScheduleAvailable() && dailyScheduleEntries != null)
