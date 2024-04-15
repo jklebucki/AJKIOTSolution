@@ -19,7 +19,7 @@
 {
     <Grid Class="mb-1">
         <Column ColumnSize="ColumnSize.Is6">
-            <Button Class="form-control" Color="Color.Primary" Clicked="@(() => AddNewDevice(deviceType))">Add @deviceType</Button>
+            <Button Class="form-control" Color="Color.Primary" Clicked="@(() => AddNewDevice(deviceType.Key))">Add @deviceType.Value</Button>
         </Column>
     </Grid>
 }
@@ -32,15 +32,16 @@
 
     [Parameter]
     public EventCallback<IotDevice> OnDeviceAdded { get; set; }
-    private List<string> DeviceTypes = new List<string>();
+    private List<KeyValuePair<string, string>> DeviceTypes = new List<KeyValuePair<string, string>>();
     private IotDevice iotDevice = new IotDevice();
     private string deviceName = string.Empty;
     private string errorMessage = string.Empty;
     protected override void OnInitialized()
     {
-        DeviceTypes = new List<string>()
+        DeviceTypes = new List<KeyValuePair<string, string>>
         {
-            
+            new KeyValuePair<string, string>("Switch", "Switch"),
+            new KeyValuePair<string, string>("OpenTimer", "Open timer"),
         };
     }
 

@@ -13,7 +13,7 @@ namespace AJKIOT.Shared.Models
         public string DeviceName { get; set; } = string.Empty;
         public string DeviceFeaturesJson { get; set; } = string.Empty;
         public string DeviceScheduleJson { get; set; } = string.Empty;
-                       
+
 
         public void SetFeatures(IEnumerable<DeviceFeature> deviceFeatures)
         {

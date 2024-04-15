@@ -1,4 +1,6 @@
-﻿namespace AJKIOT.Shared.Models.DeviceFeatures
+﻿using AJKIOT.Shared.Enums;
+
+namespace AJKIOT.Shared.Models.DeviceFeatures
 {
     public class DeviceFeature
     {
@@ -12,15 +14,10 @@
 
         public bool IsScheduleAvailable()
         {
-            switch (Type)
-            {
-                case "Switch":
-                    return true;
-                case "OpenTimer":
-                    return false;
-                default:
-                    return false;
-            }
+            var scheduledTypes = Enum.GetNames(typeof(ScheduledFeature)).ToList();
+            if (scheduledTypes is null)
+                return false;
+            return scheduledTypes.Contains(Type);
         }
     }
 }
