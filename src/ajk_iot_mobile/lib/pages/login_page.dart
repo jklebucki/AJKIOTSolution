@@ -79,6 +79,7 @@ class LoginPageState extends State<LoginPage> {
             children: [
               TextFormField(
                 controller: _apiAddressController,
+                autocorrect: false,
                 decoration: const InputDecoration(labelText: 'API Address'),
                 validator: (value) => Uri.tryParse(value!)?.isAbsolute == true
                     ? null
@@ -86,6 +87,8 @@ class LoginPageState extends State<LoginPage> {
               ),
               TextFormField(
                 controller: _emailController,
+                autocorrect: false,
+                keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(labelText: 'Email'),
                 validator: (value) =>
                     value!.contains('@') ? null : 'Please enter a valid email',
