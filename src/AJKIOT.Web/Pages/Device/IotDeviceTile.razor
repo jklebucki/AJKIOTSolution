@@ -54,7 +54,7 @@
                         </Alert>
                     </Column>
                     <Column ColumnSize="ColumnSize.IsHalf">
-                        @if (IotDevice.IsScheduleAvailable())
+                        @if (feature.IsScheduleAvailable())
                         {
                             <Tooltip Text="Add schedule">
                                 <Button Size="Size.Large" Class="btn btn-outline-primary me-2" onclick="@(() => OnScheduleButton(feature.Id))"><Icon Name="IconName.Calendar" /></Button>
@@ -206,8 +206,7 @@ else
     protected override void OnParametersSet()
     {
         features = JsonSerializer.Deserialize<List<DeviceFeature>>(IotDevice!.DeviceFeaturesJson)!;
-        if (IotDevice.IsScheduleAvailable())
-            deviceSchedule = IotDevice.GetSchedule().ToList();
+        deviceSchedule = IotDevice.GetSchedule().ToList();
     }
 
     private void OnScheduleButton(int id)
