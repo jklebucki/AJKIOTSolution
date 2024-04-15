@@ -6,14 +6,14 @@ namespace AJKIOT.Web.Templates
 {
     public class IotDeviceTemplate
     {
-        public static IotDevice CreateDevice(DeviceTypeSelect deviceSelect)
+        public static IotDevice CreateDevice(FeatureTypeSelect deviceSelect)
         {
 
             switch (deviceSelect.Type)
             {
-                case DeviceType.Switch:
+                case FeatureType.Switch:
                     return CreateSwitch();
-                case DeviceType.OpenTimer:
+                case FeatureType.OpenTimer:
                     return CreateOpenTimer();
                 default:
                     return new IotDevice();
@@ -24,7 +24,7 @@ namespace AJKIOT.Web.Templates
         {
             return new IotDevice()
             {
-                DeviceType = DeviceType.Switch.ToString(),
+                DeviceType = FeatureType.Switch.ToString(),
                 DeviceName = "Switch",
                 DeviceFeaturesJson = JsonSerializer.Serialize(new List<DeviceFeature> {
                     new DeviceFeature { Id = 1, Name = "Switch", Type = "Switch", Value = 0, MaxValue = 1 }
@@ -36,10 +36,10 @@ namespace AJKIOT.Web.Templates
         {
             return new IotDevice()
             {
-                DeviceType = DeviceType.OpenTimer.ToString(),
+                DeviceType = FeatureType.OpenTimer.ToString(),
                 DeviceName = "Open timer",
                 DeviceFeaturesJson = JsonSerializer.Serialize(new List<DeviceFeature> {
-                    new DeviceFeature { Id = 1, Name = "Open timer", Type = DeviceType.OpenTimer.ToString(), Value = 0, MaxValue = 1000 }
+                    new DeviceFeature { Id = 1, Name = "Open timer", Type = FeatureType.OpenTimer.ToString(), Value = 0, MaxValue = 1000 }
                 })
             };
         }

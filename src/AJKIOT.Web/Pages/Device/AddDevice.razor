@@ -32,16 +32,16 @@
 
     [Parameter]
     public EventCallback<IotDevice> OnDeviceAdded { get; set; }
-    private List<DeviceTypeSelect> DeviceTypes = new List<DeviceTypeSelect>();
+    private List<FeatureTypeSelect> DeviceTypes = new List<FeatureTypeSelect>();
     private IotDevice iotDevice = new IotDevice();
     private string deviceName = string.Empty;
     private string errorMessage = string.Empty;
     protected override void OnInitialized()
     {
-        DeviceTypes = new List<DeviceTypeSelect>()
+        DeviceTypes = new List<FeatureTypeSelect>()
         {
-            new DeviceTypeSelect { Id = 1, Type = DeviceType.Switch },
-            new DeviceTypeSelect { Id = 2, Type = DeviceType.OpenTimer }
+            new FeatureTypeSelect { Id = 1, Type = FeatureType.Switch },
+            new FeatureTypeSelect { Id = 2, Type = FeatureType.OpenTimer }
         };
     }
 
@@ -50,7 +50,7 @@
         await OnDeviceAdded.InvokeAsync(null);
     }
 
-    private async Task AddNewDevice(DeviceTypeSelect deviceType)
+    private async Task AddNewDevice(FeatureTypeSelect deviceType)
     {
 
         if (deviceName != string.Empty)

@@ -14,22 +14,31 @@ namespace AJKIOT.Shared.Models
         public string DeviceFeaturesJson { get; set; } = string.Empty;
         public string DeviceScheduleJson { get; set; } = string.Empty;
 
-        public bool IsScheduleAvailable()
+
+        public IEnumerable<DeviceFeature> GetDeviceFeatures()
         {
-            switch (DeviceType)
+            try
             {
-                case "Switch":
-                    return true;
-                case "OpenTimer":
-                    return false;
-                default:
-                    return false;
+                if (!string.IsNullOrEmpty(DeviceFeaturesJson))
+                    return JsonSerializer.Deserialize<IEnumerable<DeviceFeature>>(DeviceFeaturesJson)!;
+                else
+                    return new List<DeviceFeature>();
             }
+            catch
+            {
+                return new List<DeviceFeature>();
+            }
+        }
+
+        public void SetDeviceFeatures(IEnumerable<DeviceFeature> deviceFeatures)
+        {
+            if (deviceFeatures != null)
+                DeviceFeaturesJson = JsonSerializer.Serialize(deviceFeatures);
         }
 
         public void SetSchedule(IEnumerable<DailyScheduleEntry> dailyScheduleEntries)
         {
-            if (IsScheduleAvailable() && dailyScheduleEntries != null)
+            if (dailyScheduleEntries != null)
                 DeviceScheduleJson = JsonSerializer.Serialize(dailyScheduleEntries);
         }
 
@@ -37,7 +46,7 @@ namespace AJKIOT.Shared.Models
         {
             try
             {
-                if (IsScheduleAvailable() && !string.IsNullOrEmpty(DeviceScheduleJson))
+                if (!string.IsNullOrEmpty(DeviceScheduleJson))
                     return JsonSerializer.Deserialize<IEnumerable<DailyScheduleEntry>>(DeviceScheduleJson)!;
                 else
                     return new List<DailyScheduleEntry>();

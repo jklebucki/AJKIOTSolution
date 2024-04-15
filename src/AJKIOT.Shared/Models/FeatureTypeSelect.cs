@@ -1,14 +1,14 @@
 ﻿namespace AJKIOT.Shared.Models
 {
-    public enum DeviceType
+    public enum FeatureType
     {
         Switch = 1,
         OpenTimer,
     }
 
-    public class DeviceTypeSelect
+    public class FeatureTypeSelect
     {
         public int Id { get; set; }
-        public DeviceType Type { get; set; }
+        public FeatureType Type { get; set; }
     }
 }

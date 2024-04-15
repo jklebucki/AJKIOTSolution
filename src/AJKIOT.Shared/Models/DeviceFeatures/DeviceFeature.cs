@@ -10,5 +10,17 @@
         public int MaxValue { get; set; }
         public int NumberOfSteps { get; set; }
 
+        public bool IsScheduleAvailable()
+        {
+            switch (Type)
+            {
+                case "Switch":
+                    return true;
+                case "OpenTimer":
+                    return false;
+                default:
+                    return false;
+            }
+        }
     }
 }
