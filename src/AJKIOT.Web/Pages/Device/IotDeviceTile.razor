@@ -198,7 +198,11 @@ else
 
     private async Task ToggleDeviceStatus(DeviceFeature feature)
     {
-        IotDevice!.DeviceFeaturesJson = JsonSerializer.Serialize(features);
+        var features = IotDevice!.GetFeatures();
+        var featureToUpdate = features.FirstOrDefault(x => x.Id == feature.Id);
+        if (featureToUpdate != null)
+            featureToUpdate.Update(feature);
+        IotDevice.SetFeatures(features);
         await OnDeviceChanged.InvokeAsync(IotDevice);
         StateHasChanged();
     }

@@ -1,6 +1,6 @@
-@AJKIOT.Api_HostAddress = http://localhost:5158
+@AJKIOT.Api_HostAddress = https://localhost:7253
 
-GET {{AJKIOT.Api_HostAddress}}/device/all/
+GET {{AJKIOT.Api_HostAddress}}/api/devices/all
 Accept: application/json
 
 ###

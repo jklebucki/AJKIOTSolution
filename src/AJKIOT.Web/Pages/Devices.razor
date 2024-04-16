@@ -53,9 +53,27 @@
 
     private string errorMessage = string.Empty;
 
-    private void HandleDeviceChanged(IotDevice iotDevice)
+    private async Task HandleDeviceChanged(IotDevice iotDevice)
     {
-        Console.WriteLine($"Pin status changed id: {iotDevice.DeviceFeaturesJson}");
+        if (iotDevice != null)
+            try
+            {
+                var updateDeviceRequest = new UpdateDeviceRequest()
+                    {
+                        Device = iotDevice
+                    };
+                var apiResponse = await api.UpdateDeviceAsync(updateDeviceRequest);
+                if (apiResponse != null && apiResponse.Data != null && apiResponse.IsSuccess)
+                {
+                    var device = devices.First(x => x.Id == apiResponse.Data.Id);
+                    device.Update(apiResponse.Data);
+                }
+                errorMessage = string.Join("; ", apiResponse!.Errors);
+            }
+            catch (Exception ex)
+            {
+                errorMessage = ex.Message;
+            }
     }
 
     private async Task HandleDeviceAdded(IotDevice iotDevice)

@@ -14,13 +14,19 @@ namespace AJKIOT.Shared.Models
         public string DeviceFeaturesJson { get; set; } = string.Empty;
         public string DeviceScheduleJson { get; set; } = string.Empty;
 
+        public void Update(IotDevice device)
+        {
+            DeviceType = device.DeviceType;
+            DeviceName = device.DeviceName;
+            DeviceFeaturesJson = device.DeviceFeaturesJson;
+            DeviceScheduleJson = device.DeviceScheduleJson;
+        }
 
         public void SetFeatures(IEnumerable<DeviceFeature> deviceFeatures)
         {
             if (deviceFeatures != null)
                 DeviceFeaturesJson = JsonSerializer.Serialize(deviceFeatures);
         }
-
 
         public IEnumerable<DeviceFeature> GetFeatures()
         {

@@ -19,5 +19,14 @@ namespace AJKIOT.Shared.Models.DeviceFeatures
                 return false;
             return scheduledTypes.Contains(Type);
         }
+        public void Update(DeviceFeature deviceFeature)
+        {
+            Type = deviceFeature.Type;
+            Name = deviceFeature.Name;
+            Value = deviceFeature.Value;
+            MinValue = deviceFeature.MinValue;
+            MaxValue = deviceFeature.MaxValue;
+            NumberOfSteps = deviceFeature.NumberOfSteps;
+        }
     }
 }
