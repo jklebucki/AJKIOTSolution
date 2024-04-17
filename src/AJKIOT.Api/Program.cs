@@ -1,4 +1,5 @@
 using AJKIOT.Api.Data;
+using AJKIOT.Api.Hubs;
 using AJKIOT.Api.Middleware;
 using AJKIOT.Api.Models;
 using AJKIOT.Api.Repositories;
@@ -12,6 +13,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using MQTTnet.Server;
+using MQTTnet;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -131,16 +134,10 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
     options.SuppressModelStateInvalidFilter = true;
 });
-// builder.WebHost.ConfigureKestrel(opts =>
-// {
-//     opts.ListenAnyIP(5203); 
-//     opts.ListenAnyIP(5204, listenOptions => listenOptions.UseHttps());  
-//     // opts.ListenAnyIP(5005, listenOptions => // listen on https://*:5005
-//     // {
-//     //     listenOptions.UseHttps("testCert.pfx", "testPassword");
-//     // });
-// });
+
 builder.Services.AddHostedService<MessageProcessingWorker>();
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<IMqttService, MqttService>();
 
 var app = builder.Build();
 
@@ -157,5 +154,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<MyWebSocketMiddleware>();
 app.MapControllers();
+app.MapHub<NotificationHub>("/notificationHub");
 
 app.Run();
