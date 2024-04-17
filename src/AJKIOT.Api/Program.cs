@@ -1,10 +1,10 @@
+using AJKIOT.Api.Controllers;
 using AJKIOT.Api.Data;
 using AJKIOT.Api.Hubs;
 using AJKIOT.Api.Middleware;
 using AJKIOT.Api.Models;
 using AJKIOT.Api.Repositories;
 using AJKIOT.Api.Services;
-using AJKIOT.Api.Settings;
 using AJKIOT.Api.Workers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -13,8 +13,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using MQTTnet.AspNetCore;
 using MQTTnet.Server;
-using MQTTnet;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -29,10 +29,6 @@ builder.Services.AddSingleton<ITemplateService, TemplateService>();
 builder.Services.AddSingleton<IMessageBus, MessageBus>();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(opt => opt.UseNpgsql(connectionString));
-
-var mongoDBSettings = builder.Configuration.GetSection(nameof(MongoDBSettings));
-builder.Services.Configure<MongoDBSettings>(mongoDBSettings);
-builder.Services.AddSingleton(sp => (IMongoDBSettings)sp.GetRequiredService<IOptions<MongoDBSettings>>().Value);
 
 builder.Services.AddControllers().AddJsonOptions(opt =>
 {
@@ -130,6 +126,7 @@ builder.Services.AddCors(options =>
                    .AllowAnyHeader();
         });
 });
+
 builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
     options.SuppressModelStateInvalidFilter = true;
@@ -137,7 +134,15 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 
 builder.Services.AddHostedService<MessageProcessingWorker>();
 builder.Services.AddSignalR();
-builder.Services.AddSingleton<IMqttService, MqttService>();
+builder.Services.AddHostedMqttServer(
+               optionsBuilder =>
+               {
+                   optionsBuilder.WithDefaultEndpoint();
+               });
+builder.Services.AddMqttConnectionHandler();
+builder.Services.AddSingleton(provider => provider.GetRequiredService<MqttServer>());
+builder.Services.AddConnections();
+builder.Services.AddSingleton<MqttController>();
 
 var app = builder.Build();
 
@@ -151,9 +156,22 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseWebSockets();
 app.UseAuthentication();
-app.UseAuthorization();
-app.UseMiddleware<MyWebSocketMiddleware>();
+//app.UseMiddleware<MyWebSocketMiddleware>();
 app.MapControllers();
 app.MapHub<NotificationHub>("/notificationHub");
+app.MapConnectionHandler<MqttConnectionHandler>(
+            "/mqtt",
+            httpConnectionDispatcherOptions => httpConnectionDispatcherOptions.WebSockets.SubProtocolSelector =
+                protocolList => protocolList.FirstOrDefault() ?? string.Empty);
+//app.UseMqttServer(
+//    server =>
+//    {
+//        var mqttController = app.Services.GetRequiredService<MqttController>();
+//        server.ValidatingConnectionAsync += mqttController.ValidateConnection;
+//        server.ClientConnectedAsync += mqttController.OnClientConnected;
+//        server.InterceptingPublishAsync += mqttController.OnInterceptingPublish;
+//    });
+app.UseRouting();
+app.UseAuthorization();
 
 app.Run();

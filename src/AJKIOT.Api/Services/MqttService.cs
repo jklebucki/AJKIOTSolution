@@ -1,5 +1,5 @@
-﻿using MQTTnet.Server;
-using MQTTnet;
+﻿using MQTTnet;
+using MQTTnet.Server;
 using System.Text;
 
 namespace AJKIOT.Api.Services
@@ -11,15 +11,12 @@ namespace AJKIOT.Api.Services
         public MqttService()
         {
             var factory = new MqttFactory();
-            var optionsBuilder = new MqttServerOptionsBuilder()
-            .WithConnectionBacklog(100)
-            .WithDefaultEndpointPort(1883);
-            _mqttServer = factory.CreateMqttServer(optionsBuilder.Build());
+            var optionsBuilder = new MqttServerOptionsBuilder().WithDefaultEndpoint().Build();
+            _mqttServer = factory.CreateMqttServer(optionsBuilder);
         }
 
         public async Task StartMqttServerAsync()
         {
-
 
             await _mqttServer.StartAsync();
         }
@@ -29,10 +26,14 @@ namespace AJKIOT.Api.Services
             var message = new MqttApplicationMessageBuilder()
                 .WithTopic(topic)
                 .WithPayload(Encoding.UTF8.GetBytes(payload))
-                .WithQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce) 
+                .WithQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce)
                 .Build();
 
-            await _mqttServer.PublishAsync(message);
+
+            await _mqttServer.InjectApplicationMessage(new InjectedMqttApplicationMessage(message)
+            {
+                SenderClientId = "SenderClientId"
+            });
         }
     }
 }
