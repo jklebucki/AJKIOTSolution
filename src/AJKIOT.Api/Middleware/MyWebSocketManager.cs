@@ -4,7 +4,7 @@ using System.Text;
 
 namespace AJKIOT.Api.Middleware
 {
-    public class WebSocketManager : IWebSocketManager
+    public class MyWebSocketManager : IWebSocketManager
     {
         private ConcurrentDictionary<string, WebSocket> _sockets = new ConcurrentDictionary<string, WebSocket>();
 
