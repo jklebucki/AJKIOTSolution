@@ -19,6 +19,8 @@ using System.Text;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configuration and service registration
 builder.Services.AddSingleton<IWebSocketManager, AJKIOT.Api.Middleware.WebSocketManager>();
 builder.Services.AddScoped<IDeviceStatusService, DeviceStatusService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
@@ -35,19 +37,18 @@ builder.Services.AddControllers().AddJsonOptions(opt =>
     opt.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
-builder.Services
-    .AddIdentity<ApplicationUser, IdentityRole>(options =>
-    {
-        options.SignIn.RequireConfirmedAccount = false;
-        options.User.RequireUniqueEmail = true;
-        options.Password.RequireDigit = false;
-        options.Password.RequiredLength = 6;
-        options.Password.RequireNonAlphanumeric = false;
-        options.Password.RequireUppercase = false;
-    })
-    .AddRoles<IdentityRole>()
-    .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddDefaultTokenProviders();
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = false;
+    options.User.RequireUniqueEmail = true;
+    options.Password.RequireDigit = false;
+    options.Password.RequiredLength = 6;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = false;
+})
+.AddRoles<IdentityRole>()
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(option =>
@@ -62,7 +63,6 @@ builder.Services.AddSwaggerGen(option =>
         BearerFormat = "JWT",
         Scheme = "Bearer"
     });
-
     option.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -89,23 +89,21 @@ builder.Services.AddAuthentication(options =>
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 })
-    .AddJwtBearer(options =>
+.AddJwtBearer(options =>
+{
+    options.IncludeErrorDetails = true;
+    options.TokenValidationParameters = new TokenValidationParameters()
     {
-        options.IncludeErrorDetails = true;
-        options.TokenValidationParameters = new TokenValidationParameters()
-        {
-            ClockSkew = TimeSpan.Zero,
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = validIssuer,
-            ValidAudience = validAudience,
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(symmetricSecurityKey!)
-            ),
-        };
-    });
+        ClockSkew = TimeSpan.Zero,
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = validIssuer,
+        ValidAudience = validAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(symmetricSecurityKey))
+    };
+});
 
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.AddSingleton<IEmailSender, EmailSenderService>(serviceProvider =>
@@ -118,13 +116,10 @@ builder.Services.AddSingleton<IEmailSender, EmailSenderService>(serviceProvider 
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
-        builder =>
-        {
-            builder.AllowAnyOrigin()
-                   .AllowAnyMethod()
-                   .AllowAnyHeader();
-        });
+    options.AddPolicy("AllowAll", builder =>
+    {
+        builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+    });
 });
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>
@@ -134,44 +129,34 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 
 builder.Services.AddHostedService<MessageProcessingWorker>();
 builder.Services.AddSignalR();
-builder.Services.AddHostedMqttServer(
-               optionsBuilder =>
-               {
-                   optionsBuilder.WithDefaultEndpoint();
-               });
+builder.Services.AddHostedMqttServer(optionsBuilder =>
+{
+    optionsBuilder.WithoutDefaultEndpoint().WithEncryptedEndpointPort(8884);
+});
 builder.Services.AddMqttConnectionHandler();
-builder.Services.AddSingleton(provider => provider.GetRequiredService<MqttServer>());
-builder.Services.AddConnections();
 builder.Services.AddSingleton<MqttController>();
 
 var app = builder.Build();
 
-app.UseCors("AllowAll");
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
+// Middleware pipeline configuration
 app.UseHttpsRedirection();
-app.UseWebSockets();
+app.UseRouting();
+app.UseCors("AllowAll");
 app.UseAuthentication();
-//app.UseMiddleware<MyWebSocketMiddleware>();
+app.UseAuthorization();
+app.UseWebSockets();
 app.MapControllers();
 app.MapHub<NotificationHub>("/notificationHub");
-app.MapConnectionHandler<MqttConnectionHandler>(
-            "/mqtt",
-            httpConnectionDispatcherOptions => httpConnectionDispatcherOptions.WebSockets.SubProtocolSelector =
-                protocolList => protocolList.FirstOrDefault() ?? string.Empty);
-//app.UseMqttServer(
-//    server =>
-//    {
-//        var mqttController = app.Services.GetRequiredService<MqttController>();
-//        server.ValidatingConnectionAsync += mqttController.ValidateConnection;
-//        server.ClientConnectedAsync += mqttController.OnClientConnected;
-//        server.InterceptingPublishAsync += mqttController.OnInterceptingPublish;
-//    });
-app.UseRouting();
-app.UseAuthorization();
-
+app.MapConnectionHandler<MqttConnectionHandler>("/mqtt", httpConnectionDispatcherOptions =>
+{
+    httpConnectionDispatcherOptions.WebSockets.SubProtocolSelector = protocolList => protocolList.FirstOrDefault() ?? string.Empty;
+});
+app.UseMqttServer(server =>
+{
+    var mqttController = app.Services.GetRequiredService<MqttController>();
+    server.ValidatingConnectionAsync += mqttController.ValidateConnection;
+    server.ClientConnectedAsync += mqttController.OnClientConnected;
+});
+app.UseSwagger();
+app.UseSwaggerUI();
 app.Run();
