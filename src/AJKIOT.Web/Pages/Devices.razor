@@ -59,10 +59,10 @@
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
-
+        var userData = await LocalStorage.GetApplicationUserAsync();
         if (user.Identity!.IsAuthenticated)
         {
-            var userData = await LocalStorage.GetApplicationUserAsync();
+            userData = await LocalStorage.GetApplicationUserAsync();
             try
             {
                 var apiResponse = await api.GetUserDevicesAsync(userData.Email);
@@ -81,7 +81,8 @@
         }
 
         hubConnection = new HubConnectionBuilder()
-            .WithUrl("https://localhost:7253/notificationHub")
+            .WithUrl($"https://localhost:7253/notificationHub?clientId={userData.Email}")
+            .WithAutomaticReconnect()
             .Build();
 
         hubConnection.On<IotDevice>("DeviceUpdated", (updatedDevice) =>

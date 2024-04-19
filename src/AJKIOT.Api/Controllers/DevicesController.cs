@@ -4,6 +4,7 @@ using AJKIOT.Shared.Models;
 using AJKIOT.Shared.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace AJKIOT.Api.Controllers
 {
@@ -15,14 +16,14 @@ namespace AJKIOT.Api.Controllers
         private readonly ILogger<DevicesController> _logger;
         private readonly IUserService _userService;
         private readonly IIotDeviceService _iotDeviceService;
-        private readonly NotificationHub _notificationHub;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
-        public DevicesController(ILogger<DevicesController> logger, IUserService userService, IIotDeviceService iotDeviceService , NotificationHub notificationHub)
+        public DevicesController(ILogger<DevicesController> logger, IUserService userService, IIotDeviceService iotDeviceService , IHubContext<NotificationHub> hubContext)
         {
             _logger = logger;
             _userService = userService;
             _iotDeviceService = iotDeviceService;
-            _notificationHub = notificationHub;
+            _hubContext = hubContext;
         }
 
         [HttpGet("{username}")]
@@ -103,8 +104,12 @@ namespace AJKIOT.Api.Controllers
             try
             {
                 var device = await _iotDeviceService.GetDeviceAsync(deviceId);
-                device.DeviceName = $"{device.DeviceName} - {DateTime.Now.ToString()}";
-                await _notificationHub.UpdateDevice(device);
+                var features = device.GetFeatures().ToList();
+                features[0].Value = features[0].Value == 1 ? 0 : 1;
+                device.SetFeatures(features);
+                await _iotDeviceService.UpdateDeviceAsync(device); 
+                string username = await _userService.GetUsernameAsync(device.OwnerId);
+                await _hubContext.Clients.All.SendAsync("DeviceUpdated", device);
                 var response = new ApiResponse<IotDevice> { Data = device };
                 return Ok(device);
             }
