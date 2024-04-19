@@ -1,4 +1,5 @@
-﻿using AJKIOT.Api.Services;
+﻿using AJKIOT.Api.Hubs;
+using AJKIOT.Api.Services;
 using AJKIOT.Shared.Models;
 using AJKIOT.Shared.Requests;
 using Microsoft.AspNetCore.Authorization;
@@ -14,12 +15,14 @@ namespace AJKIOT.Api.Controllers
         private readonly ILogger<DevicesController> _logger;
         private readonly IUserService _userService;
         private readonly IIotDeviceService _iotDeviceService;
+        private readonly NotificationHub _notificationHub;
 
-        public DevicesController(ILogger<DevicesController> logger, IUserService userService, IIotDeviceService iotDeviceService)
+        public DevicesController(ILogger<DevicesController> logger, IUserService userService, IIotDeviceService iotDeviceService , NotificationHub notificationHub)
         {
             _logger = logger;
             _userService = userService;
             _iotDeviceService = iotDeviceService;
+            _notificationHub = notificationHub;
         }
 
         [HttpGet("{username}")]
@@ -90,6 +93,25 @@ namespace AJKIOT.Api.Controllers
                 _logger.LogError($"Something went wrong: {ex}");
                 var apiResponse = new ApiResponse<bool> { Data = false, Errors = new List<string> { ex.Message } };
                 return BadRequest(apiResponse);
+            }
+
+        }
+
+        [HttpGet("SignalR/{deviceId:int}")]
+        public async Task<IActionResult> TestSignalR(int deviceId)
+        {
+            try
+            {
+                var device = await _iotDeviceService.GetDeviceAsync(deviceId);
+                device.DeviceName = $"{device.DeviceName} - {DateTime.Now.ToString()}";
+                await _notificationHub.UpdateDevice(device);
+                var response = new ApiResponse<IotDevice> { Data = device };
+                return Ok(device);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Something went wrong: {ex}");
+                return BadRequest(new ApiResponse<IotDevice> { Data = new IotDevice(), Errors = new List<string> { ex.Message } });
             }
 
         }

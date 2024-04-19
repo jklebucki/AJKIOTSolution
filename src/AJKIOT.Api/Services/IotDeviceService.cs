@@ -28,6 +28,11 @@ namespace AJKIOT.Api.Services
             return new ApiResponse<bool>() { Data = deleted };
         }
 
+        public async Task<IotDevice> GetDeviceAsync(int devdeviceId)
+        {
+            return await _repository.GetDeviceAsync(devdeviceId);
+        }
+
         public async Task<ApiResponse<IEnumerable<IotDevice>>> GetUserDevicesAsync(string userId)
         {
             var devices = _repository.GetUserDevicesAsync(userId);
