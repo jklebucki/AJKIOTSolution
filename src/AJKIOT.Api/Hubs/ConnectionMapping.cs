@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Concurrent;
 
 namespace AJKIOT.Api.Hubs
@@ -12,7 +11,7 @@ namespace AJKIOT.Api.Hubs
             _connections.TryAdd(connectionId, client);
         }
 
-        public IEnumerable<KeyValuePair<string,string>> GetAllClients()
+        public IEnumerable<KeyValuePair<string, string>> GetAllClients()
         {
             return _connections;
         }

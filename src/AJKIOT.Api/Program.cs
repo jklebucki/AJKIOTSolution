@@ -8,7 +8,6 @@ using AJKIOT.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -25,7 +24,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(opt => opt.UseNpgsql(connect
 
 // Services
 builder.Services.AddSingleton<IWebSocketManager, MyWebSocketManager>();
-builder.Services.AddScoped<IDeviceStatusService, DeviceStatusService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IIotDeviceRepository, IotDeviceRepository>();
@@ -166,15 +164,4 @@ app.UseMqttServer(server =>
     server.InterceptingPublishAsync += mqttController.OnInterceptingPublish;
     server.ClientDisconnectedAsync += mqttController.OnClientDisconnected;
 });
-app.Use(async (context, next) =>
-{
-    using var scope = app.Services.CreateScope();
-    var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
-    if (userService is UserService realUserService)
-    {
-        realUserService.UserDeleted += AJKIOT.Api.Events.UserEvents.UserService_UserDeleted!;
-    }
-    await next();
-});
-
 app.Run();

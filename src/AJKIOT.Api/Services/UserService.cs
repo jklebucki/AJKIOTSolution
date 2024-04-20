@@ -1,4 +1,5 @@
-﻿using AJKIOT.Api.Models;
+﻿using AJKIOT.Api.Events;
+using AJKIOT.Api.Models;
 using AJKIOT.Shared.Enums;
 using AJKIOT.Shared.Models;
 using Microsoft.AspNetCore.Identity;
@@ -12,20 +13,23 @@ namespace AJKIOT.Api.Services
         private readonly ITokenService _tokenService;
         private readonly ILogger<UserService> _logger;
         private readonly IEmailSender _emailSenderService;
+        private readonly IIotDeviceService _iotDeviceService;
 
-        public UserService(UserManager<ApplicationUser> userManager, ITokenService tokenService, ILogger<UserService> logger, IEmailSender emailSenderService)
+        public UserService(UserManager<ApplicationUser> userManager, ITokenService tokenService, ILogger<UserService> logger,
+                            IEmailSender emailSenderService, IIotDeviceService iotDeviceService)
         {
             _userManager = userManager;
             _tokenService = tokenService;
             _logger = logger;
             _emailSenderService = emailSenderService;
-            UserDeleted += Events.UserEvents.UserService_UserDeleted!;
+            _iotDeviceService = iotDeviceService;
+            UserDeleted += UserEvents.UserService_UserDeleted!;
         }
 
         protected virtual void OnUserDeleted(ApplicationUser user)
         {
             UserEventArgs args = new UserEventArgs { User = user };
-            UserDeleted?.Invoke(this, args);
+            UserDeleted?.Invoke(_iotDeviceService, args);
         }
         public class UserEventArgs : EventArgs
         {

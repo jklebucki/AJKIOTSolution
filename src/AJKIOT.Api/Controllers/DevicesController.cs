@@ -19,7 +19,7 @@ namespace AJKIOT.Api.Controllers
         private readonly IHubContext<NotificationHub> _hubContext;
         private readonly ConnectionMapping _connectionMapping;
 
-        public DevicesController(ILogger<DevicesController> logger, IUserService userService, 
+        public DevicesController(ILogger<DevicesController> logger, IUserService userService,
                                 IIotDeviceService iotDeviceService, IHubContext<NotificationHub> notificationHub,
                                 ConnectionMapping connectionMapping)
         {

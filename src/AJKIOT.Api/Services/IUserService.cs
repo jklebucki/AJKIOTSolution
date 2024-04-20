@@ -1,5 +1,4 @@
 ﻿using AJKIOT.Shared.Models;
-using static AJKIOT.Api.Services.UserService;
 
 namespace AJKIOT.Api.Services
 {

@@ -1,4 +1,3 @@
-using System;
 using AJKIOT.Shared.Models;
 
 namespace AJKIOT.Api.Hubs
