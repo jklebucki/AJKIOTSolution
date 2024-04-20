@@ -8,6 +8,7 @@ using AJKIOT.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -31,7 +32,7 @@ builder.Services.AddScoped<IIotDeviceRepository, IotDeviceRepository>();
 builder.Services.AddScoped<IIotDeviceService, IotDeviceService>();
 builder.Services.AddSingleton<ITemplateService, TemplateService>();
 builder.Services.AddSingleton<IMessageBus, MessageBus>();
-
+builder.Services.AddSingleton<ConnectionMapping>();
 // JSON
 builder.Services.AddControllers().AddJsonOptions(opt =>
 {
@@ -71,7 +72,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtSettings.GetValue<string>("ValidIssuer"),
         ValidAudience = jwtSettings.GetValue<string>("ValidAudience"),
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.GetValue<string>("SymmetricSecurityKey")))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.GetValue<string>("SymmetricSecurityKey")!))
     };
 });
 
@@ -164,6 +165,16 @@ app.UseMqttServer(server =>
     server.ClientConnectedAsync += mqttController.OnClientConnected;
     server.InterceptingPublishAsync += mqttController.OnInterceptingPublish;
     server.ClientDisconnectedAsync += mqttController.OnClientDisconnected;
+});
+app.Use(async (context, next) =>
+{
+    using var scope = app.Services.CreateScope();
+    var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+    if (userService is UserService realUserService)
+    {
+        realUserService.UserDeleted += AJKIOT.Api.Events.UserEvents.UserService_UserDeleted!;
+    }
+    await next();
 });
 
 app.Run();

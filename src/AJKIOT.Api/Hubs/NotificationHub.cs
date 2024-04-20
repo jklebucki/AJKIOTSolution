@@ -1,49 +1,39 @@
-﻿using System.Collections.Concurrent;
-using AJKIOT.Shared.Models;
+﻿using AJKIOT.Shared.Models;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AJKIOT.Api.Hubs
 {
     public class NotificationHub : Hub
     {
-        private static ConcurrentDictionary<string, string> _clientConnections = new ConcurrentDictionary<string, string>();
+        private readonly ConnectionMapping _connectedClients;
+
+        public NotificationHub(ConnectionMapping connectedClients)
+        {
+            _connectedClients = connectedClients;
+        }
 
         public override Task OnConnectedAsync()
         {
-            var clientId = Context.GetHttpContext()!.Request.Query["clientId"];
-            Console.WriteLine($"Connected {clientId}");
+            var clientId = Context.GetHttpContext()!.Request.Query["clientId"].ToString();
             if (!string.IsNullOrEmpty(clientId))
             {
-                _clientConnections[Context.ConnectionId] = clientId!;
+                _connectedClients.Add(Context.ConnectionId, clientId);
             }
             return base.OnConnectedAsync();
         }
 
         public override Task OnDisconnectedAsync(Exception? exception)
         {
-            _clientConnections.TryRemove(Context.ConnectionId, out _);
+            _connectedClients.Remove(Context.ConnectionId);
             return base.OnDisconnectedAsync(exception);
         }
 
-        public async Task SendMessage(string clientId, string message)
+        public async Task NotifyDeviceUpdate(string clientId, IotDevice updatedDevice)
         {
-            var targetClientId = _clientConnections.FirstOrDefault(c => c.Value == clientId).Value;
-            if (targetClientId != null)
+            foreach (var connection in _connectedClients.GetAllClients().Where(c => c.Value == clientId))
             {
-                await Clients.Client(targetClientId).SendAsync("ReceiveMessage", message);
+                await Clients.Client(connection.Key).SendAsync("DeviceUpdated", updatedDevice);
             }
-        }
-
-        public async Task DeviceUpdated(string clientId, IotDevice updatedDevice)
-        {
-            Console.WriteLine($"Message to {clientId}: {updatedDevice.DeviceName}");
-            var targetClientId = _clientConnections.FirstOrDefault(c => c.Value == clientId).Value;
-            if (targetClientId != null)
-            {
-
-                await Clients.Client(targetClientId).SendAsync("DeviceUpdated", updatedDevice);
-            }
-
         }
     }
 }

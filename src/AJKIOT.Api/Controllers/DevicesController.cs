@@ -17,13 +17,17 @@ namespace AJKIOT.Api.Controllers
         private readonly IUserService _userService;
         private readonly IIotDeviceService _iotDeviceService;
         private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly ConnectionMapping _connectionMapping;
 
-        public DevicesController(ILogger<DevicesController> logger, IUserService userService, IIotDeviceService iotDeviceService , IHubContext<NotificationHub> hubContext)
+        public DevicesController(ILogger<DevicesController> logger, IUserService userService, 
+                                IIotDeviceService iotDeviceService, IHubContext<NotificationHub> notificationHub,
+                                ConnectionMapping connectionMapping)
         {
             _logger = logger;
             _userService = userService;
             _iotDeviceService = iotDeviceService;
-            _hubContext = hubContext;
+            _hubContext = notificationHub;
+            _connectionMapping = connectionMapping;
         }
 
         [HttpGet("{username}")]
@@ -105,20 +109,24 @@ namespace AJKIOT.Api.Controllers
             {
                 var device = await _iotDeviceService.GetDeviceAsync(deviceId);
                 var features = device.GetFeatures().ToList();
-                features[0].Value = features[0].Value == 1 ? 0 : 1;
+                features[0].Value = features[0].Value == 1 ? 0 : 1; // Toggle the feature
                 device.SetFeatures(features);
-                await _iotDeviceService.UpdateDeviceAsync(device); 
-                string username = await _userService.GetUsernameAsync(device.OwnerId);
+                await _iotDeviceService.UpdateDeviceAsync(device);
+                string ownerId = device.OwnerId;
+                foreach (var connection in _connectionMapping.GetAllClients().Where(c => c.Value == ownerId))
+                {
+                    await _hubContext.Clients.Client(connection.Key).SendAsync("DeviceUpdated", device);
+                }
                 await _hubContext.Clients.All.SendAsync("DeviceUpdated", device);
+
                 var response = new ApiResponse<IotDevice> { Data = device };
-                return Ok(device);
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Something went wrong: {ex}");
                 return BadRequest(new ApiResponse<IotDevice> { Data = new IotDevice(), Errors = new List<string> { ex.Message } });
             }
-
         }
     }
 }

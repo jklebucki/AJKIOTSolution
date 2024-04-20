@@ -49,7 +49,6 @@
 
 @code {
 
-    private HubConnection hubConnection;
     private bool AddMode = false;
     private bool ScheduleMode = false;
     private string errorMessage = string.Empty;
@@ -80,7 +79,7 @@
             }
         }
 
-        hubConnection = new HubConnectionBuilder()
+        var hubConnection = new HubConnectionBuilder()
             .WithUrl($"https://localhost:7253/notificationHub?clientId={userData.Email}")
             .WithAutomaticReconnect()
             .Build();

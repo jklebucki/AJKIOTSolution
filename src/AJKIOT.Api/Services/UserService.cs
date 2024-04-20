@@ -8,7 +8,7 @@ namespace AJKIOT.Api.Services
     public class UserService : IUserService
     {
         private readonly UserManager<ApplicationUser> _userManager;
-
+        public event EventHandler<UserEventArgs>? UserDeleted;
         private readonly ITokenService _tokenService;
         private readonly ILogger<UserService> _logger;
         private readonly IEmailSender _emailSenderService;
@@ -19,6 +19,17 @@ namespace AJKIOT.Api.Services
             _tokenService = tokenService;
             _logger = logger;
             _emailSenderService = emailSenderService;
+            UserDeleted += Events.UserEvents.UserService_UserDeleted!;
+        }
+
+        protected virtual void OnUserDeleted(ApplicationUser user)
+        {
+            UserEventArgs args = new UserEventArgs { User = user };
+            UserDeleted?.Invoke(this, args);
+        }
+        public class UserEventArgs : EventArgs
+        {
+            public ApplicationUser? User { get; set; }
         }
 
         public async Task<ApiResponse<AuthResponse>> AuthenticateUserAsync(AuthRequest request)
@@ -147,8 +158,25 @@ namespace AJKIOT.Api.Services
         {
             var user = await _userManager.FindByIdAsync(ownerId);
             if (user != null)
-                return user.UserName;
+                return user.UserName!;
             return string.Empty;
+        }
+
+        public async Task DeleteUserAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user != null)
+            {
+                var result = await _userManager.DeleteAsync(user);
+                if (result.Succeeded)
+                {
+                    OnUserDeleted(user);
+                }
+                else
+                {
+                    throw new InvalidOperationException("Failed to delete user.");
+                }
+            }
         }
     }
 }

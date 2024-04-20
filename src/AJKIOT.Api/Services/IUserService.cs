@@ -1,4 +1,5 @@
 ﻿using AJKIOT.Shared.Models;
+using static AJKIOT.Api.Services.UserService;
 
 namespace AJKIOT.Api.Services
 {
@@ -10,5 +11,6 @@ namespace AJKIOT.Api.Services
         Task<ApiResponse<bool>> ResetPasswordConfirmAsync(ResetPasswordConfirmRequest request);
         Task<string> GetUserIdAsync(string username);
         Task<string> GetUsernameAsync(string ownerId);
+        Task DeleteUserAsync(string userId);
     }
 }
