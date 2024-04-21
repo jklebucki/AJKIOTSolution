@@ -9,5 +9,7 @@ namespace AJKIOT.Api.Services
         Task<ApiResponse<bool>> SendPasswordResetLinkAsync(ResetPasswordCustomRequest request);
         Task<ApiResponse<bool>> ResetPasswordConfirmAsync(ResetPasswordConfirmRequest request);
         Task<string> GetUserIdAsync(string username);
+        Task<string> GetUsernameAsync(string ownerId);
+        Task DeleteUserAsync(string userId);
     }
 }

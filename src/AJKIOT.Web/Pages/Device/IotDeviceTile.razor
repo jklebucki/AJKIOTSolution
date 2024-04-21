@@ -54,7 +54,7 @@
                         </Alert>
                     </Column>
                     <Column ColumnSize="ColumnSize.IsHalf">
-                        @if (IotDevice.IsScheduleAvailable())
+                        @if (feature.IsScheduleAvailable())
                         {
                             <Tooltip Text="Add schedule">
                                 <Button Size="Size.Large" Class="btn btn-outline-primary me-2" onclick="@(() => OnScheduleButton(feature.Id))"><Icon Name="IconName.Calendar" /></Button>
@@ -198,7 +198,11 @@ else
 
     private async Task ToggleDeviceStatus(DeviceFeature feature)
     {
-        IotDevice!.DeviceFeaturesJson = JsonSerializer.Serialize(features);
+        var features = IotDevice!.GetFeatures();
+        var featureToUpdate = features.FirstOrDefault(x => x.Id == feature.Id);
+        if (featureToUpdate != null)
+            featureToUpdate.Update(feature);
+        IotDevice.SetFeatures(features);
         await OnDeviceChanged.InvokeAsync(IotDevice);
         StateHasChanged();
     }
@@ -206,8 +210,7 @@ else
     protected override void OnParametersSet()
     {
         features = JsonSerializer.Deserialize<List<DeviceFeature>>(IotDevice!.DeviceFeaturesJson)!;
-        if (IotDevice.IsScheduleAvailable())
-            deviceSchedule = IotDevice.GetSchedule().ToList();
+        deviceSchedule = IotDevice.GetSchedule().ToList();
     }
 
     private void OnScheduleButton(int id)

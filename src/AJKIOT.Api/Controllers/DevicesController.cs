@@ -1,8 +1,10 @@
-﻿using AJKIOT.Api.Services;
+﻿using AJKIOT.Api.Hubs;
+using AJKIOT.Api.Services;
 using AJKIOT.Shared.Models;
 using AJKIOT.Shared.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace AJKIOT.Api.Controllers
 {
@@ -14,12 +16,18 @@ namespace AJKIOT.Api.Controllers
         private readonly ILogger<DevicesController> _logger;
         private readonly IUserService _userService;
         private readonly IIotDeviceService _iotDeviceService;
+        private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly ConnectionMapping _connectionMapping;
 
-        public DevicesController(ILogger<DevicesController> logger, IUserService userService, IIotDeviceService iotDeviceService)
+        public DevicesController(ILogger<DevicesController> logger, IUserService userService,
+                                IIotDeviceService iotDeviceService, IHubContext<NotificationHub> notificationHub,
+                                ConnectionMapping connectionMapping)
         {
             _logger = logger;
             _userService = userService;
             _iotDeviceService = iotDeviceService;
+            _hubContext = notificationHub;
+            _connectionMapping = connectionMapping;
         }
 
         [HttpGet("{username}")]
@@ -92,6 +100,33 @@ namespace AJKIOT.Api.Controllers
                 return BadRequest(apiResponse);
             }
 
+        }
+
+        [HttpGet("SignalR/{deviceId:int}")]
+        public async Task<IActionResult> TestSignalR(int deviceId)
+        {
+            try
+            {
+                var device = await _iotDeviceService.GetDeviceAsync(deviceId);
+                var features = device.GetFeatures().ToList();
+                features[0].Value = features[0].Value == 1 ? 0 : 1; // Toggle the feature
+                device.SetFeatures(features);
+                await _iotDeviceService.UpdateDeviceAsync(device);
+                string ownerId = device.OwnerId;
+                foreach (var connection in _connectionMapping.GetAllClients().Where(c => c.Value == ownerId))
+                {
+                    await _hubContext.Clients.Client(connection.Key).SendAsync("DeviceUpdated", device);
+                }
+                await _hubContext.Clients.All.SendAsync("DeviceUpdated", device);
+
+                var response = new ApiResponse<IotDevice> { Data = device };
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Something went wrong: {ex}");
+                return BadRequest(new ApiResponse<IotDevice> { Data = new IotDevice(), Errors = new List<string> { ex.Message } });
+            }
         }
     }
 }

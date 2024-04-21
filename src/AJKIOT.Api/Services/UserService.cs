@@ -1,4 +1,5 @@
-﻿using AJKIOT.Api.Models;
+﻿using AJKIOT.Api.Events;
+using AJKIOT.Api.Models;
 using AJKIOT.Shared.Enums;
 using AJKIOT.Shared.Models;
 using Microsoft.AspNetCore.Identity;
@@ -8,17 +9,31 @@ namespace AJKIOT.Api.Services
     public class UserService : IUserService
     {
         private readonly UserManager<ApplicationUser> _userManager;
-
+        public event EventHandler<UserEventArgs>? UserDeleted;
         private readonly ITokenService _tokenService;
         private readonly ILogger<UserService> _logger;
         private readonly IEmailSender _emailSenderService;
+        private readonly IIotDeviceService _iotDeviceService;
 
-        public UserService(UserManager<ApplicationUser> userManager, ITokenService tokenService, ILogger<UserService> logger, IEmailSender emailSenderService)
+        public UserService(UserManager<ApplicationUser> userManager, ITokenService tokenService, ILogger<UserService> logger,
+                            IEmailSender emailSenderService, IIotDeviceService iotDeviceService)
         {
             _userManager = userManager;
             _tokenService = tokenService;
             _logger = logger;
             _emailSenderService = emailSenderService;
+            _iotDeviceService = iotDeviceService;
+            UserDeleted += UserEvents.UserService_UserDeleted!;
+        }
+
+        protected virtual void OnUserDeleted(ApplicationUser user)
+        {
+            UserEventArgs args = new UserEventArgs { User = user };
+            UserDeleted?.Invoke(_iotDeviceService, args);
+        }
+        public class UserEventArgs : EventArgs
+        {
+            public ApplicationUser? User { get; set; }
         }
 
         public async Task<ApiResponse<AuthResponse>> AuthenticateUserAsync(AuthRequest request)
@@ -141,6 +156,31 @@ namespace AJKIOT.Api.Services
             if (user != null)
                 return user.Id;
             return string.Empty;
+        }
+
+        public async Task<string> GetUsernameAsync(string ownerId)
+        {
+            var user = await _userManager.FindByIdAsync(ownerId);
+            if (user != null)
+                return user.UserName!;
+            return string.Empty;
+        }
+
+        public async Task DeleteUserAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user != null)
+            {
+                var result = await _userManager.DeleteAsync(user);
+                if (result.Succeeded)
+                {
+                    OnUserDeleted(user);
+                }
+                else
+                {
+                    throw new InvalidOperationException("Failed to delete user.");
+                }
+            }
         }
     }
 }

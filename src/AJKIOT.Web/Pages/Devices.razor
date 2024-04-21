@@ -6,6 +6,7 @@
 @using AJKIOT.Web.Services
 @using Microsoft.AspNetCore.Authorization
 @using Blazorise
+@using Microsoft.AspNetCore.SignalR.Client
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject LocalStorageService LocalStorage
 @inject NavigationManager NavigationManager
@@ -34,7 +35,7 @@
             @foreach (var device in devices)
             {
                 <div class="col-md-4 mb-4">
-                    <IotDeviceTile IotDevice="device" OnDeviceChanged="HandleDeviceChanged"  OnDeviceDeleted="HandleDeviceDeleted"/>
+                    <IotDeviceTile IotDevice="device" OnDeviceChanged="HandleDeviceChanged" OnDeviceDeleted="HandleDeviceDeleted" />
                 </div>
             }
         </div>
@@ -50,12 +51,75 @@
 
     private bool AddMode = false;
     private bool ScheduleMode = false;
-
     private string errorMessage = string.Empty;
+    private List<IotDevice> devices = new List<IotDevice>();
 
-    private void HandleDeviceChanged(IotDevice iotDevice)
+    protected override async Task OnInitializedAsync()
     {
-        Console.WriteLine($"Pin status changed id: {iotDevice.DeviceFeaturesJson}");
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userData = await LocalStorage.GetApplicationUserAsync();
+        if (user.Identity!.IsAuthenticated)
+        {
+            userData = await LocalStorage.GetApplicationUserAsync();
+            try
+            {
+                var apiResponse = await api.GetUserDevicesAsync(userData.Email);
+                devices.AddRange(apiResponse.Data!.OrderBy(x => x.Id));
+            }
+            catch (UnauthorizedAccessException)
+            {
+                var customProvider = AuthenticationStateProvider as CustomAuthenticationStateProvider;
+                customProvider!.NotifyUserLogout();
+                NavigationManager.NavigateTo("/Account/Login");
+            }
+            catch (Exception ex)
+            {
+                errorMessage = ex.Message;
+            }
+        }
+
+        var hubConnection = new HubConnectionBuilder()
+            .WithUrl($"https://localhost:7253/notificationHub?clientId={userData.Email}")
+            .WithAutomaticReconnect()
+            .Build();
+
+        hubConnection.On<IotDevice>("DeviceUpdated", (updatedDevice) =>
+        {
+            var index = devices.FindIndex(d => d.Id == updatedDevice.Id);
+            if (index != -1)
+            {
+                devices[index] = updatedDevice;
+                StateHasChanged();
+            }
+        });
+
+        await hubConnection.StartAsync();
+    }
+
+
+
+    private async Task HandleDeviceChanged(IotDevice iotDevice)
+    {
+        if (iotDevice != null)
+            try
+            {
+                var updateDeviceRequest = new UpdateDeviceRequest()
+                    {
+                        Device = iotDevice
+                    };
+                var apiResponse = await api.UpdateDeviceAsync(updateDeviceRequest);
+                if (apiResponse != null && apiResponse.Data != null && apiResponse.IsSuccess)
+                {
+                    var device = devices.First(x => x.Id == apiResponse.Data.Id);
+                    device.Update(apiResponse.Data);
+                }
+                errorMessage = string.Join("; ", apiResponse!.Errors);
+            }
+            catch (Exception ex)
+            {
+                errorMessage = ex.Message;
+            }
     }
 
     private async Task HandleDeviceAdded(IotDevice iotDevice)
@@ -88,31 +152,4 @@
         devices.Remove(devices.First(x => x.Id == deviceId));
     }
 
-    private List<IotDevice> devices = new List<IotDevice>();
-
-    protected override async Task OnInitializedAsync()
-    {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-
-        if (user.Identity!.IsAuthenticated)
-        {
-            var userData = await LocalStorage.GetApplicationUserAsync();
-            try
-            {
-                var apiResponse = await api.GetUserDevicesAsync(userData.Email);
-                devices.AddRange(apiResponse.Data!.OrderBy(x => x.Id));
-            }
-            catch (UnauthorizedAccessException)
-            {
-                var customProvider = AuthenticationStateProvider as CustomAuthenticationStateProvider;
-                customProvider!.NotifyUserLogout();
-                NavigationManager.NavigateTo("/Account/Login");
-            }
-            catch (Exception ex)
-            {
-                errorMessage = ex.Message;
-            }
-        }
-    }
 }

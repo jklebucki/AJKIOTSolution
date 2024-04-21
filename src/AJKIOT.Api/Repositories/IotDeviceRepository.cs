@@ -41,9 +41,9 @@ namespace AJKIOT.Api.Repositories
             }
         }
 
-        public async Task<IotDevice> GetDeviceAsync(string userId, int deviceId)
+        public async Task<IotDevice> GetDeviceAsync(int deviceId)
         {
-            var device = await _context.IotDevices.FirstOrDefaultAsync(x => x.OwnerId == userId && x.Id == deviceId);
+            var device = await _context.IotDevices.FirstOrDefaultAsync(x => x.Id == deviceId);
             return device!;
         }
 

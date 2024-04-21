@@ -1,5 +1,6 @@
 ﻿using AJKIOT.Api.Services;
 using AJKIOT.Shared.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AJKIOT.Api.Controllers
@@ -94,6 +95,15 @@ namespace AJKIOT.Api.Controllers
             }
 
             return BadRequest(response);
+        }
+
+        [Authorize]
+        [HttpDelete("delete/{email}")]
+        public async Task<IActionResult> DeleteUser(string email)
+        {
+            var userId = await _userService.GetUserIdAsync(email);
+            await _userService.DeleteUserAsync(userId);
+            return Ok();
         }
     }
 }
