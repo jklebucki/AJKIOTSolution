@@ -3,6 +3,8 @@ import 'package:ajk_iot_mobile/widgets/iot_device_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import 'package:signalr_flutter/signalr_api.dart';
+import 'package:signalr_flutter/signalr_flutter.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -12,13 +14,26 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  String signalRStatus = "disconnected";
+  late SignalR signalR;
   @override
   void initState() {
     super.initState();
+    initPlatformState();
     Future.microtask(
         () => Provider.of<DeviceProvider>(context, listen: false).getDevices());
     // Future.microtask(
     //     () => Provider.of<AuthProvider>(context, listen: false).loadUserInfo());
+  }
+
+Future<void> initPlatformState() async {
+    signalR = SignalR(
+      "<Your server url here>",
+      "<Your hub name here>",
+      hubMethods: ["<Your Hub Method Names>"],
+      statusChangeCallback: _onStatusChange,
+      hubCallback: _onNewMessage,
+    );
   }
 
   @override
@@ -63,4 +78,26 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+void _onStatusChange(ConnectionStatus? status) {
+    if (mounted) {
+      setState(() {
+        signalRStatus = status?.name ?? ConnectionStatus.disconnected.name;
+      });
+    }
+  }
+
+  void _onNewMessage(String methodName, String message) {
+    print("MethodName = $methodName, Message = $message");
+  }
+
+  void _buttonTapped() async {
+    try {
+      final result = await signalR.invokeMethod("<Your Method Name>",
+          arguments: ["<Your Method Arguments>"]);
+      print(result);
+    } catch (e) {
+      print(e);
+    }
+  }
+
 }
