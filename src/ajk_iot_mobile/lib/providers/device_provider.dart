@@ -8,13 +8,23 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class DeviceProvider with ChangeNotifier {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
   List<IotDevice> _devices = []; // Ensuring _devices is never null.
-
   List<IotDevice> get devices => _devices;
 
+  void updateDeviceFromMessage(IotDevice updatedDevice) {
+    int index = devices.indexWhere((device) => device.id == updatedDevice.id);
+    if (index != -1) {
+      devices[index] = updatedDevice;
+      notifyListeners();   
+    }
+  }
+
   Future<void> getDevices() async {
-    final baseUrl = await _storage.read(key: 'apiUrl') ?? ''; // Providing a default empty string if null
-    final username = await _storage.read(key: 'email') ?? ''; // Providing a default empty string if null
-    final token = await _storage.read(key: 'jwt') ?? ''; // Providing a default empty string if null
+    final baseUrl = await _storage.read(key: 'apiUrl') ??
+        ''; // Providing a default empty string if null
+    final username = await _storage.read(key: 'email') ??
+        ''; // Providing a default empty string if null
+    final token = await _storage.read(key: 'jwt') ??
+        ''; // Providing a default empty string if null
 
     final response = await http.get(
       Uri.parse('$baseUrl/api/Devices/$username'),
@@ -23,9 +33,9 @@ class DeviceProvider with ChangeNotifier {
 
     if (response.statusCode == 200) {
       ApiResponse<List<IotDevice>> apiResponse = ApiResponse.fromJson(
-        jsonDecode(response.body), 
-        (data) => List<IotDevice>.from(data.map((item) => IotDevice.fromJson(item)))
-      );
+          jsonDecode(response.body),
+          (data) => List<IotDevice>.from(
+              data.map((item) => IotDevice.fromJson(item))));
       if (apiResponse.isSuccess && apiResponse.data != null) {
         _devices = apiResponse.data!;
         notifyListeners(); // Notify listeners about data change
@@ -36,11 +46,14 @@ class DeviceProvider with ChangeNotifier {
   }
 
   Future<void> updateDevice(IotDevice updatedDevice) async {
-    final baseUrl = await _storage.read(key: 'apiUrl') ?? ''; // Providing a default empty string if null
-    final token = await _storage.read(key: 'jwt') ?? ''; // Providing a default empty string if null
+    final baseUrl = await _storage.read(key: 'apiUrl') ??
+        ''; // Providing a default empty string if null
+    final token = await _storage.read(key: 'jwt') ??
+        ''; // Providing a default empty string if null
 
     final response = await http.patch(
-      Uri.parse('$baseUrl/api/Devices/${updatedDevice.id}'), // Assuming each device has an ID
+      Uri.parse(
+          '$baseUrl/api/Devices/${updatedDevice.id}'), // Assuming each device has an ID
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token'
@@ -50,14 +63,14 @@ class DeviceProvider with ChangeNotifier {
 
     if (response.statusCode == 200) {
       ApiResponse<IotDevice> apiResponse = ApiResponse.fromJson(
-        jsonDecode(response.body), 
-        (data) => IotDevice.fromJson(data)
-      );
+          jsonDecode(response.body), (data) => IotDevice.fromJson(data));
       if (apiResponse.isSuccess && apiResponse.data != null) {
-        int index = _devices.indexWhere((device) => device.id == updatedDevice.id);
+        int index =
+            _devices.indexWhere((device) => device.id == updatedDevice.id);
         if (index != -1) {
-          _devices[index] = apiResponse.data!;  // Update the specific device in the list
-          notifyListeners();  // Notify listeners about the update
+          _devices[index] =
+              apiResponse.data!; // Update the specific device in the list
+          notifyListeners(); // Notify listeners about the update
           if (kDebugMode) {
             print('Update successful');
           }

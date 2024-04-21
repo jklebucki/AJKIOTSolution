@@ -14,7 +14,9 @@ namespace AJKIOT.Api.Hubs
 
         public override Task OnConnectedAsync()
         {
+            
             var clientId = Context.GetHttpContext()!.Request.Query["clientId"].ToString();
+            Console.WriteLine($"Client connected: {clientId}");
             if (!string.IsNullOrEmpty(clientId))
             {
                 _connectedClients.Add(Context.ConnectionId, clientId);

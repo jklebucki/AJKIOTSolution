@@ -35,11 +35,10 @@ class DeviceFeatureWidgetState extends State<DeviceFeatureWidget> {
     switch (featureType) {
       case 'Switch':
         return Switch(
-          value: value == 1 ? true : false,
+          value: widget.feature.value == 1 ? true : false,
           onChanged: (newValue) {
             setState(() {
-              value = newValue ? 1 : 0;
-              // Tu trzeba dodać logikę aktualizacji stanu za pomocą providera
+              widget.feature.value = newValue ? 1 : 0;
             });
           },
         );
