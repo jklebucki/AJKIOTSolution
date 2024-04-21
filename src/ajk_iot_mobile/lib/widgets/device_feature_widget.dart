@@ -39,6 +39,7 @@ class DeviceFeatureWidgetState extends State<DeviceFeatureWidget> {
           onChanged: (newValue) {
             setState(() {
               widget.feature.value = newValue ? 1 : 0;
+              // TODO: Send value to server
             });
           },
         );
