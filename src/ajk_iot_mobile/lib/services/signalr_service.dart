@@ -5,10 +5,11 @@ import 'package:signalr_netcore/signalr_client.dart';
 class SignalRService {
   Function(IotDevice)? onUpdateDevice;
   late HubConnection _hubConnection;
+  String apiUrl;
 
-  SignalRService({this.onUpdateDevice}) {
-    const serverUrl = "https://localhost:7253/notificationHub";
-    _hubConnection = HubConnectionBuilder().withUrl(serverUrl).build();
+
+  SignalRService({required this.apiUrl, this.onUpdateDevice}) {
+    _hubConnection = HubConnectionBuilder().withUrl('$apiUrl/notificationHub').build();
     _hubConnection.onclose(_connectionClosed);
     _hubConnection.on("DeviceUpdated", _handleAClientProvidedFunction);
   }

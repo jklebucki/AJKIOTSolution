@@ -2,6 +2,7 @@ import 'package:ajk_iot_mobile/providers/device_provider.dart';
 import 'package:ajk_iot_mobile/services/signalr_service.dart';
 import 'package:ajk_iot_mobile/widgets/iot_device_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 
@@ -14,19 +15,27 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late SignalRService _signalRService;
-
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  String _apiUrl = '';
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       var deviceProvider = Provider.of<DeviceProvider>(context, listen: false);
       deviceProvider.getDevices();
-      _signalRService = SignalRService(onUpdateDevice: (device) {
-        Provider.of<DeviceProvider>(context, listen: false)
-            .updateDeviceFromMessage(device);
-      });
-      _signalRService.startConnection();
+      _initializeSignalR();
     });
+  }
+
+  Future<void> _initializeSignalR() async {
+    _apiUrl = await _storage.read(key: 'apiUrl') ?? '';
+    _signalRService = SignalRService(
+        apiUrl: _apiUrl,
+        onUpdateDevice: (device) {
+          Provider.of<DeviceProvider>(context, listen: false)
+              .updateDeviceFromMessage(device);
+        });
+    _signalRService.startConnection();
   }
 
   @override
