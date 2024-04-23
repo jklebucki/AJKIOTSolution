@@ -4,6 +4,7 @@
 </div>
 
 @code {
+
     [Parameter]
     public DeviceFeature? Feature { get; set; }
 
@@ -12,9 +13,22 @@
 
     private string ButtonClass = "";
 
+    protected override void OnParametersSet()
+    {
+        setClass();
+    }
+
+    private void setClass()
+    {
+        if (Feature!.Value == 1)
+            ButtonClass = "button-3d-pressed";
+        else
+            ButtonClass = "";
+    }
+
     private async Task ButtonPressed()
     {
-        ButtonClass = "button-3d-pressed";
+
         Feature!.Value = 1;
         await IsOnChanged.InvokeAsync(Feature);
         StateHasChanged();
@@ -26,7 +40,7 @@
         await Task.Delay(5000);
         Feature!.Value = 0;
         await IsOnChanged.InvokeAsync(Feature);
-        ButtonClass = "";
+
         StateHasChanged();
     }
 }

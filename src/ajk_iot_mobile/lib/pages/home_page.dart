@@ -16,7 +16,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late SignalRService _signalRService;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
-  String _apiUrl = '';
   @override
   void initState() {
     super.initState();
@@ -28,9 +27,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _initializeSignalR() async {
-    _apiUrl = await _storage.read(key: 'apiUrl') ?? '';
+    var apiUrl = await _storage.read(key: 'apiUrl') ?? '';
+    var userEmail = await _storage.read(key: 'email') ?? '';
     _signalRService = SignalRService(
-        apiUrl: _apiUrl,
+        apiUrl: apiUrl,
+        userEmail: userEmail,
         onUpdateDevice: (device) {
           Provider.of<DeviceProvider>(context, listen: false)
               .updateDeviceFromMessage(device);

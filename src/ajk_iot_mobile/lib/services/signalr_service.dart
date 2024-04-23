@@ -6,10 +6,11 @@ class SignalRService {
   Function(IotDevice)? onUpdateDevice;
   late HubConnection _hubConnection;
   String apiUrl;
+  String userEmail;
 
 
-  SignalRService({required this.apiUrl, this.onUpdateDevice}) {
-    _hubConnection = HubConnectionBuilder().withUrl('$apiUrl/notificationHub').build();
+  SignalRService({required this.apiUrl, required this.userEmail, this.onUpdateDevice}) {
+    _hubConnection = HubConnectionBuilder().withUrl('$apiUrl/notificationHub?clientId=$userEmail').build();
     _hubConnection.onclose(_connectionClosed);
     _hubConnection.on("DeviceUpdated", _handleAClientProvidedFunction);
   }

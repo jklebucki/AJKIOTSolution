@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:ajk_iot_mobile/models/iot_device.dart';
 import 'package:ajk_iot_mobile/models/api_response.dart';
+import 'package:ajk_iot_mobile/models/update_device_request.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -46,19 +47,20 @@ class DeviceProvider with ChangeNotifier {
   }
 
   Future<void> updateDevice(IotDevice updatedDevice) async {
+    UpdateDeviceRequest request = UpdateDeviceRequest(device: updatedDevice);
     final baseUrl = await _storage.read(key: 'apiUrl') ??
         ''; // Providing a default empty string if null
     final token = await _storage.read(key: 'jwt') ??
         ''; // Providing a default empty string if null
 
-    final response = await http.patch(
+    final response = await http.put(
       Uri.parse(
-          '$baseUrl/api/Devices/${updatedDevice.id}'), // Assuming each device has an ID
+          '$baseUrl/api/Devices/updateDevice/${updatedDevice.id}'), // Assuming each device has an ID
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token'
       },
-      body: jsonEncode(updatedDevice.toJson()),
+      body: jsonEncode(request.toJson()),
     );
 
     if (response.statusCode == 200) {

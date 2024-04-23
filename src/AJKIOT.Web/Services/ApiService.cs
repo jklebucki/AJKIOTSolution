@@ -90,7 +90,7 @@ namespace AJKIOT.Web.Services
         public async Task<ApiResponse<IotDevice>> UpdateDeviceAsync(UpdateDeviceRequest updateDeviceRequest)
         {
             await _tokenService.AddTokenToHeader(_httpClient);
-            var request = new HttpRequestMessage(HttpMethod.Post, $"api/Devices/updateDevice");
+            var request = new HttpRequestMessage(HttpMethod.Put, $"api/Devices/updateDevice/{updateDeviceRequest.Device.Id}");
             request.Content = JsonContent.Create(updateDeviceRequest);
             var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)

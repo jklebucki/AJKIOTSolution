@@ -44,6 +44,8 @@ namespace AJKIOT.Api.Repositories
         public async Task<IotDevice> GetDeviceAsync(int deviceId)
         {
             var device = await _context.IotDevices.FirstOrDefaultAsync(x => x.Id == deviceId);
+            if (device != null)
+                _context.Entry(device).State = EntityState.Detached;
             return device!;
         }
 

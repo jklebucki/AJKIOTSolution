@@ -18,13 +18,13 @@ class DeviceFeature {
   });
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'type': type,
-    'name': name,
-    'value': value,
-    'minValue': minValue,
-    'maxValue': maxValue,
-    'numberOfSteps': numberOfSteps,
+    'Id': id,
+    'Type': type,
+    'Name': name,
+    'Value': value,
+    'MinValue': minValue,
+    'MaxValue': maxValue,
+    'NumberOfSteps': numberOfSteps,
   };
 
   static DeviceFeature fromJson(Map<String, dynamic> json) => DeviceFeature(

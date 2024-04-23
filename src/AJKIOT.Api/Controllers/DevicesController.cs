@@ -68,12 +68,16 @@ namespace AJKIOT.Api.Controllers
 
         }
 
-        [HttpPost("updateDevice")]
-        public async Task<IActionResult> UpdateUserDeviceAsync([FromBody] UpdateDeviceRequest updateDeviceRequest)
+        [HttpPut("updateDevice/{id:int}")]
+        public async Task<IActionResult> UpdateUserDeviceAsync(int id, [FromBody] UpdateDeviceRequest updateDeviceRequest)
         {
             try
             {
+                var device = await _iotDeviceService.GetDeviceAsync(id);
+                if (device == null)
+                    throw new Exception("Device not found");
                 var apiResponse = await _iotDeviceService.UpdateDeviceAsync(updateDeviceRequest.Device);
+                await InformClients(updateDeviceRequest.Device.Id);
                 return Ok(apiResponse);
             }
             catch (Exception ex)
@@ -102,15 +106,11 @@ namespace AJKIOT.Api.Controllers
 
         }
 
-        [HttpGet("SignalR/{deviceId:int}")]
-        public async Task<IActionResult> TestSignalR(int deviceId)
+        private async Task<IActionResult> InformClients(int deviceId)
         {
             try
             {
                 var device = await _iotDeviceService.GetDeviceAsync(deviceId);
-                var features = device.GetFeatures().ToList();
-                features[0].Value = features[0].Value == 1 ? 0 : 1; // Toggle the feature
-                device.SetFeatures(features);
                 await _iotDeviceService.UpdateDeviceAsync(device);
                 string ownerId = device.OwnerId;
                 foreach (var connection in _connectionMapping.GetAllClients().Where(c => c.Value == ownerId))

@@ -20,7 +20,7 @@ class IotDeviceWidgetState extends State<IotDeviceWidget> {
       child: ExpansionTile(
         title: Text(widget.device.deviceName),  // Accessing the device using widget.device
         initiallyExpanded: true,
-        children: widget.device.getFeatures().map((f) => DeviceFeatureWidget(feature: f)).toList(),
+        children: widget.device.getFeatures().map((f) => DeviceFeatureWidget(feature: f, deviceId: widget.device.id)).toList(),
       ),
     );
   }
