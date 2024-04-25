@@ -17,6 +17,7 @@ namespace AJKIOT.Web.Services
             _logger = logger;
         }
 
+        public string ApiUrl() => _httpClient.BaseAddress!.ToString();
         public async Task<ApiResponse<IotDevice>> CreateUserDeviceAsync(CreateDeviceRequest device)
         {
             await _tokenService.AddTokenToHeader(_httpClient);
@@ -108,5 +109,28 @@ namespace AJKIOT.Web.Services
                 return new ApiResponse<IotDevice>() { Data = updateDeviceRequest.Device, Errors = new List<string>() { response.ReasonPhrase! } };
             }
         }
+
+        public async Task<ApiResponse<Stream>> ReceiveDeviceFirmwareAsync(ReceiveDeviceFirmwareRequest receiveDeviceFirmwareRequest)
+        {
+            await _tokenService.AddTokenToHeader(_httpClient);
+            var request = new HttpRequestMessage(HttpMethod.Post, $"api/Devices/deviceFirmware");
+            request.Content = JsonContent.Create(receiveDeviceFirmwareRequest);
+            var response = await _httpClient.SendAsync(request).ConfigureAwait(false);
+            if (response.IsSuccessStatusCode)
+            {
+                var stream = await response.Content.ReadAsStreamAsync();
+                return new ApiResponse<Stream> { Data = stream, Errors = new List<string>() };
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                throw new UnauthorizedAccessException();
+            }
+            else
+            {
+                _logger.LogError($"Request failed with status code: {response.StatusCode} - {response.ReasonPhrase}");
+                return new ApiResponse<Stream>() { Data = Stream.Null, Errors = new List<string>() { response.ReasonPhrase! } };
+            }
+        }
+
     }
 }

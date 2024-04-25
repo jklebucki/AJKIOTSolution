@@ -9,6 +9,7 @@ namespace AJKIOT.Web.Services
         Task<ApiResponse<IotDevice>> CreateUserDeviceAsync(CreateDeviceRequest createDeviceRequest);
         Task<ApiResponse<IotDevice>> UpdateDeviceAsync(UpdateDeviceRequest updateDeviceRequest);
         Task<ApiResponse<bool>> DeleteDeviceAsync(int deviceId);
-
+        Task<ApiResponse<Stream>> ReceiveDeviceFirmwareAsync(ReceiveDeviceFirmwareRequest getDeviceFirmwareRequest);
+        string ApiUrl();
     }
 }

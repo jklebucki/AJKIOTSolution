@@ -105,6 +105,24 @@ namespace AJKIOT.Api.Controllers
             }
 
         }
+        [HttpPost("deviceFirmware")]
+        public async Task<IActionResult> SendDeviceFirmware([FromBody] ReceiveDeviceFirmwareRequest receiveDeviceFirmwareRequest)
+        {
+            try
+            {
+                var stream = new MemoryStream();
+                var writer = new StreamWriter(stream);
+                writer.Write("Some data");
+                writer.Flush();
+                stream.Position = 0;
+                return File(stream, "application/octet-stream", $"firmware_device_{receiveDeviceFirmwareRequest.DeviceId}.zip");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Something went wrong: {ex}");
+                return BadRequest(ex.Message);
+            }
+        }
 
         private async Task<IActionResult> InformClients(int deviceId)
         {

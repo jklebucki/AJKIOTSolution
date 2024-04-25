@@ -1,0 +1,119 @@
+@using AJKIOT.Shared.Models
+@using AJKIOT.Web.Services
+@using Blazorise
+@inject IApiService api
+@inject IJSRuntime JSRuntime
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" role="alert">Error: @errorMessage</div>
+}
+<Card>
+    <CardHeader Class="d-flex justify-content-center">
+        <h4>@IotDevice!.DeviceName</h4>
+    </CardHeader>
+    <CardBody>
+        <Grid Class="mb-1">
+            <Column ColumnSize="ColumnSize.Is12">
+                <Alert Color="Color.Info" Visible>
+                    <AlertMessage>
+                        Device ID: @IotDevice!.Id
+                    </AlertMessage>
+                </Alert>
+            </Column>
+        </Grid>
+        <Validations @ref="validations" Mode="ValidationMode.Manual">
+            <Grid Class="mb-1">
+                <Column ColumnSize="ColumnSize.Is12">
+                    <Validation Validator="@ValidationRule.IsNotEmpty">
+                        <Field>
+                            <TextEdit Class="form-control" @bind-Text="@wifiName" Placeholder="WiFi name (SSID)" />
+                        </Field>
+                    </Validation>
+                </Column>
+            </Grid>
+            <Grid Class="mb-1">
+                <Column ColumnSize="ColumnSize.Is12">
+                    <Validation Validator="@ValidationRule.IsNotEmpty">
+                        <Field>
+                            <TextEdit Class="form-control" @bind-Text="@wifiPassword" Placeholder="WiFi password" />
+                        </Field>
+                    </Validation>
+                </Column>
+            </Grid>
+            <Grid Class="mb-1">
+                <Column ColumnSize="ColumnSize.Is12">
+                    <Validation Validator="@ValidationRule.IsNotEmpty">
+                        <Field>
+                            <TextEdit Class="form-control" @bind-Text="@apiAddress" Placeholder="API address" />
+                        </Field>
+                    </Validation>
+                </Column>
+            </Grid>
+        </Validations>
+    </CardBody>
+    <CardFooter Class="d-flex justify-content-end">
+        <Button Color="Color.Secondary" Class="me-2" Outline Clicked="@Cancel">Cancel</Button>
+        <Button Color="Color.Primary" Outline Clicked="@DownloadDeviceCode">Download firmware</Button>
+    </CardFooter>
+</Card>
+
+
+@code {
+    [Parameter]
+    public IotDevice? IotDevice { get; set; }
+    [Parameter]
+    public EventCallback<bool> OnDownloaded { get; set; }
+    string wifiName { get; set; } = string.Empty;
+    string wifiPassword { get; set; } = string.Empty;
+    string apiAddress { get; set; } = string.Empty;
+    private Validations validations;
+    private string errorMessage { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        apiAddress = api.ApiUrl();
+        await Task.CompletedTask;
+    }
+
+    private async Task DownloadDeviceCode()
+    {
+        if (await validations.ValidateAll())
+        {
+            try
+            {
+                var response = await api.ReceiveDeviceFirmwareAsync(new Shared.Requests.ReceiveDeviceFirmwareRequest
+                    {
+                        DeviceId = IotDevice!.Id,
+                        WiFiSSID = wifiName ?? string.Empty,
+                        WiFiPassword = wifiPassword ?? string.Empty,
+                        ApiUrl = apiAddress ?? string.Empty
+
+                    });
+                errorMessage = string.Join("; ", response!.Errors);
+                if (response.IsSuccess)
+                {
+                    await DownloadFile(response.Data!, "firmware_device_" + IotDevice!.Id + ".zip");
+                    await OnDownloaded.InvokeAsync(true);
+                }
+            }
+            catch (Exception ex)
+            {
+                errorMessage = ex.Message;
+            }
+
+        }
+    }
+
+    private async Task Cancel()
+    {
+        await OnDownloaded.InvokeAsync(true);
+    }
+
+    private async Task DownloadFile(Stream stream, string filename)
+    {
+        var arrayBuffer = new byte[stream.Length];
+        await stream.ReadAsync(arrayBuffer, 0, arrayBuffer.Length);
+        await JSRuntime.InvokeVoidAsync("downloadFileFromStream", filename, "application/octet-stream", arrayBuffer);
+    }
+}

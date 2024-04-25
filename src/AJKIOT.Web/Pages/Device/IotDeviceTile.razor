@@ -109,7 +109,7 @@
         break;
 
     case ViewMode.DownloadCodeMode:
-        <GetDeviceCode DeviceId="@IotDevice!.Id" />
+        <GetDeviceFirmware OnDownloaded="@OnCodeDownloaded" IotDevice="@IotDevice" />
         break;
 
     case ViewMode.DeleteMode:
@@ -156,6 +156,11 @@
         }
         mode = ViewMode.BasicMode;
         await Task.CompletedTask;
+    }
+
+    private void OnCodeDownloaded()
+    {
+         mode = ViewMode.BasicMode;
     }
 
     private void OnEditButton()
