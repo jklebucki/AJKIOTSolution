@@ -1,0 +1,60 @@
+﻿@using AJKIOT.Shared.Models
+@using Blazorise
+
+<Modal @ref="modalRef">
+    <ModalContent Size="ModalSize.Default" Visible>
+        <ModalHeader Background="Background.Danger">
+            <h3>Delete Device</h3>
+        </ModalHeader>
+        <ModalBody>
+            <Div>
+                <p><Strong>Device ID: </Strong>@IotDevice!.Id</p>
+                <p><Strong>Device Name: </Strong> @IotDevice.DeviceName</p>
+                <p>This action cannot be undone.</p>
+                <p>Are you sure you want to delete this device?</p>
+            </Div>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Outline Clicked="@HideModal">Cancel</Button>
+            <Button Color="Color.Danger" Outline Clicked="@DeleteConfirmed">Delete</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+@code {
+
+    [Parameter]
+    public IotDevice? IotDevice { get; set; }
+    [Parameter]
+    public EventCallback<bool> OnDeleteConfirmed { get; set; }
+
+
+    private Modal modalRef = new Modal();
+
+    private Task ShowModal()
+    {
+        return modalRef.Show();
+    }
+
+    private Task HideModal()
+    {
+        OnDeleteConfirmed.InvokeAsync(false);
+        return modalRef.Hide();
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            ShowModal();
+        }
+    }
+
+
+    private void DeleteConfirmed()
+    {
+        OnDeleteConfirmed.InvokeAsync(true);
+        HideModal();
+    }
+
+}
