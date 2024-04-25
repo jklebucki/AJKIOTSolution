@@ -12,89 +12,113 @@
 @if (errorMessage != string.Empty)
 {
     <Alert Color="Color.Danger" Visible>
-        <AlertMessage>
-            @errorMessage
-        </AlertMessage>
-    </Alert>
+    <AlertMessage>
+        @errorMessage
+    </AlertMessage>
+</Alert>
 }
 
-@if (!scheduleMode)
+@switch (mode)
 {
-    <div class="card">
-        <div class="card-header d-flex justify-content-center">
-            @if (editing)
-            {
-                <TextEdit @bind-Text="@IotDevice!.DeviceName" OnValueChanged="OnEditDeviceName" />
-                <Tooltip Text="Save">
-                    <Button Class="btn btn-outline-primary" @onclick="@OnSaveButton"><Icon Name="IconName.Save" /></Button>
-                </Tooltip>
-                <Tooltip Text="Cancel">
-                    <Button Class="btn btn-outline-danger" @onclick="@OnCancelButton"><Icon Name="IconName.Times" /></Button>
-                </Tooltip>
-            }
-            else
-            {
-                <h4 class="card-title">@IotDevice!.DeviceName</h4>
-            }
-        </div>
-        <div class="card-body">
-            <Alert Color="Color.Info" Visible>
-                <AlertMessage>
-                    Device ID: @IotDevice.Id
-                </AlertMessage>
-            </Alert>
-            @foreach (var feature in features)
-            {
-                <Grid>
-                    <Column ColumnSize="ColumnSize.IsHalf">
-                        <Alert Color="@(feature.Value == 1 ? Color.Success : Color.Secondary)" Visible>
-                            <AlertMessage>
-                                Status : @(feature.Value == 1 ? "ON" : "OFF")
-                            </AlertMessage>
-                        </Alert>
-                    </Column>
-                    <Column ColumnSize="ColumnSize.IsHalf">
-                        @if (feature.IsScheduleAvailable())
-                        {
-                            <Tooltip Text="Add schedule">
-                                <Button Size="Size.Large" Class="btn btn-outline-primary me-2" onclick="@(() => OnScheduleButton(feature.Id))"><Icon Name="IconName.Calendar" /></Button>
-                            </Tooltip>
-                        }
-                    </Column>
-                </Grid>
-                switch (feature.Type)
+    case ViewMode.BasicMode:
+        <div class="card">
+    <div class="card-header d-flex justify-content-center">
+        @if (editing)
                 {
-                    case "Switch":
-                        <OnSwitch Feature="feature" IsOnChanged="ToggleDeviceStatus"></OnSwitch>
-                        break;
-                    case "OpenTimer":
-                        <OpenTimer Feature="feature" IsOnChanged="ToggleDeviceStatus"></OpenTimer>
-                        break;
+                    <TextEdit @bind-Text="@IotDevice!.DeviceName" OnValueChanged="OnEditDeviceName" />
+                    <Tooltip Text="Save">
+                        <Button Class="btn btn-outline-primary" @onclick="@OnSaveButton">
+                            <Icon Name="IconName.Save" />
+                        </Button>
+                    </Tooltip>
+                    <Tooltip Text="Cancel">
+                        <Button Class="btn btn-outline-danger" @onclick="@OnCancelButton">
+                            <Icon Name="IconName.Times" />
+                        </Button>
+                    </Tooltip>
                 }
-            }
+                else
+                {
+                    <h4 class="card-title">@IotDevice!.DeviceName</h4>
+                }
+            </div>
+            <div class="card-body">
+                <Alert Color="Color.Info" Visible>
+                    <AlertMessage>
+                        Device ID: @IotDevice.Id
+                    </AlertMessage>
+                </Alert>
+                @foreach (var feature in features)
+                {
+                    <Grid>
+                        <Column ColumnSize="ColumnSize.IsHalf">
+                            <Alert Color="@(feature.Value == 1 ? Color.Success : Color.Secondary)" Visible>
+                                <AlertMessage>
+                                    Status : @(feature.Value == 1 ? "ON" : "OFF")
+                                </AlertMessage>
+                            </Alert>
+                        </Column>
+                        <Column ColumnSize="ColumnSize.IsHalf">
+                            @if (feature.IsScheduleAvailable())
+                            {
+                                <Tooltip Text="Add schedule">
+                                    <Button Size="Size.Large" Class="btn btn-outline-primary me-2"
+                                        onclick="@(() => OnScheduleButton(feature.Id))">
+                                        <Icon Name="IconName.Calendar" />
+                                    </Button>
+                                </Tooltip>
+                            }
+                        </Column>
+                    </Grid>
+                    switch (feature.Type)
+                    {
+                        case "Switch":
+                            <OnSwitch Feature="feature" IsOnChanged="ToggleDeviceStatus"></OnSwitch>
+                            break;
+                        case "OpenTimer":
+                            <OpenTimer Feature="feature" IsOnChanged="ToggleDeviceStatus"></OpenTimer>
+                            break;
+                    }
+                }
 
-        </div>
-        <div class="card-footer d-flex justify-content-end">
+            </div>
+            <div class="card-footer d-flex justify-content-end">
 
-            <Tooltip Text="Download firmware">
-                <Button Class="btn btn-outline-secondary me-2" onclick="@(() => OnDownloadButton())"><Icon Name="IconName.Download" /></Button>
-            </Tooltip>
-            <Tooltip Text="Edit">
-                <Button Class="btn btn-outline-success me-2" onclick="@(() => OnEditButton())"><Icon Name="IconName.Edit" /></Button>
-            </Tooltip>
-            <Tooltip Text="Delete">
-                <Button Class="btn btn-outline-danger" onclick="@(() => OnDeleteButton())"><Icon Name="IconName.Delete" /></Button>
-            </Tooltip>
+                <Tooltip Text="Download firmware">
+                    <Button Class="btn btn-outline-secondary me-2" onclick="@(() => OnDownloadButton())">
+                        <Icon Name="IconName.Download" />
+                    </Button>
+                </Tooltip>
+                <Tooltip Text="Edit">
+                    <Button Class="btn btn-outline-success me-2" onclick="@(() => OnEditButton())">
+                        <Icon Name="IconName.Edit" />
+                    </Button>
+                </Tooltip>
+                <Tooltip Text="Delete">
+                    <Button Class="btn btn-outline-danger" onclick="@(() => OnDeleteButton())">
+                        <Icon Name="IconName.Delete" />
+                    </Button>
+                </Tooltip>
+            </div>
         </div>
-    </div>
-}
-else
-{
-    <DailySchedule WeekSchedules="@IotDevice!.GetSchedule().ToList()" OnScheduleChanged="@OnScheduleChanged" FeatureId="featureId"></DailySchedule>
-}
-@if (deleting)
-{
-    //Modal here
+        break;
+
+    case ViewMode.ScheduleMode:
+        <DailySchedule WeekSchedules="@IotDevice!.GetSchedule().ToList()" OnScheduleChanged="@OnScheduleChanged"
+    FeatureId="featureId"></DailySchedule>
+        break;
+
+    case ViewMode.DownloadCodeMode:
+        <GetDeviceCode DeviceId="@IotDevice!.Id" />
+        break;
+
+    case ViewMode.DeleteMode:
+        <ContactPage />
+        break;
+
+    default:
+        <p>Unknown view</p>
+        break;
 }
 
 
@@ -107,13 +131,20 @@ else
     public EventCallback<int> OnDeviceDeleted { get; set; }
 
     private List<DeviceFeature> features = new List<DeviceFeature>();
-    private bool scheduleMode { get; set; }
+    private ViewMode mode { get; set; }
     private bool isOn { get; set; }
     private bool editing { get; set; } = false;
     private bool deleting { get; set; } = false;
     private List<DailyScheduleEntry> deviceSchedule { get; set; } = new List<DailyScheduleEntry>();
     private string errorMessage { get; set; } = string.Empty;
     private int featureId { get; set; }
+    private enum ViewMode
+    {
+        BasicMode,
+        ScheduleMode,
+        DownloadCodeMode,
+        DeleteMode,
+    }
 
     private async Task OnScheduleChanged(List<DailyScheduleEntry> dailyScheduleEntries)
     {
@@ -123,7 +154,7 @@ else
             await SaveDeviceData();
             deviceSchedule = dailyScheduleEntries;
         }
-        scheduleMode = false;
+        mode = ViewMode.BasicMode;
         await Task.CompletedTask;
     }
 
@@ -168,7 +199,7 @@ else
 
     private void OnDownloadButton()
     {
-        // Add logic here for downloading
+        mode = ViewMode.DownloadCodeMode;
     }
 
     private async Task SaveDeviceData()
@@ -216,7 +247,7 @@ else
     private void OnScheduleButton(int id)
     {
         featureId = id;
-        scheduleMode = true;
+        mode = ViewMode.ScheduleMode;
         StateHasChanged();
     }
 

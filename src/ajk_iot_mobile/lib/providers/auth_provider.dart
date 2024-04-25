@@ -6,7 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthProvider with ChangeNotifier {
   // Initialization of necessary variables
-  String _baseUrl = ''; // Base URL will be dynamically loaded
+  String _baseUrl = ''; 
   String _token = "";
   String _refreshToken = "";
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
@@ -14,7 +14,6 @@ class AuthProvider with ChangeNotifier {
   String _errorMessage = "";
 
   AuthProvider() {
-    // Constructor calls loadBaseUrl on initialization
     loadBaseUrl();
   }
 
@@ -26,7 +25,7 @@ class AuthProvider with ChangeNotifier {
   // Method to load base URL from secure storage
   Future<void> loadBaseUrl() async {
     String? storedUrl = await _storage.read(key: 'apiUrl');
-    _baseUrl = storedUrl ?? 'https://defaulturl.com/api'; // Fallback URL
+    _baseUrl = storedUrl ?? ''; 
     notifyListeners();
   }
 
