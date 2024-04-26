@@ -2,9 +2,7 @@
 
 IOT Solution (WEB, API, Mobile)
 
-![Static Badge](https://img.shields.io/badge/c%23-100commitow-blue)
-
-![Version 0.0.1](<URL-of-the-image>)
+![100commitow](https://img.shields.io/badge/c%23-100commitow-blue)![Version](https://img.shields.io/badge/version-0.0.1-green)
 
 This solution is to deliver 4 projects:  
 
