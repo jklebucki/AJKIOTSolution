@@ -87,8 +87,8 @@
                         DeviceId = IotDevice!.Id,
                         WiFiSSID = wifiName ?? string.Empty,
                         WiFiPassword = wifiPassword ?? string.Empty,
-                        ApiUrl = apiAddress ?? string.Empty
-
+                        ApiUrl = apiAddress ?? string.Empty,
+                        DeviceType = IotDevice.DeviceType
                     });
                 errorMessage = string.Join("; ", response!.Errors);
                 if (response.IsSuccess)

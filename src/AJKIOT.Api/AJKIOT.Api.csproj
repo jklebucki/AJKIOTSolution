@@ -25,4 +25,26 @@
     <ProjectReference Include="..\AJKIOT.Shared\AJKIOT.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="FirmwareFiles\Switch\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="FirmwareFiles\FirmwareSettings.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="FirmwareFiles\OpenTimer\FirmwareCode.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="FirmwareFiles\OpenTimer\FirmwareSettings.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="FirmwareFiles\Switch\FirmwareCode.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="FirmwareFiles\Switch\FirmwareSettings.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

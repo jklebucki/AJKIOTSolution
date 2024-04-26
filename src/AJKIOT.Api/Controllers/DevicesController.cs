@@ -2,6 +2,7 @@
 using AJKIOT.Api.Services;
 using AJKIOT.Shared.Models;
 using AJKIOT.Shared.Requests;
+using AJKIOT.Shared.Settings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -116,11 +117,14 @@ namespace AJKIOT.Api.Controllers
         {
             try
             {
-                var stream = new MemoryStream();
-                var writer = new StreamWriter(stream);
-                writer.Write("Some data");
-                writer.Flush();
-                stream.Position = 0;
+                var stream = await _iotDeviceService.GetDeviceFirmwareAsStreamAsync(new FirmwareSettings
+                {
+                    WiFiPassword = receiveDeviceFirmwareRequest.WiFiPassword,
+                    DeviceId = receiveDeviceFirmwareRequest.DeviceId,
+                    WiFiSSID = receiveDeviceFirmwareRequest.WiFiSSID,
+                    ApiUrl = receiveDeviceFirmwareRequest.ApiUrl,
+                    DeviceType = receiveDeviceFirmwareRequest.DeviceType,
+                });
                 return File(stream, "application/octet-stream", $"firmware_device_{receiveDeviceFirmwareRequest.DeviceId}.zip");
             }
             catch (Exception ex)

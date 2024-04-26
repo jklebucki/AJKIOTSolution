@@ -6,5 +6,6 @@
         public string WiFiPassword { get; set; } = string.Empty;
         public string ApiUrl { get; set; } = string.Empty;
         public int DeviceId { get; set; }
+        public string DeviceType { get; set; } = string.Empty;
     }
 }

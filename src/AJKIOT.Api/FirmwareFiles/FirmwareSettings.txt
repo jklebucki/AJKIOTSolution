@@ -1,0 +1,3 @@
+﻿":ssid";
+":password";
+":apiUrl";

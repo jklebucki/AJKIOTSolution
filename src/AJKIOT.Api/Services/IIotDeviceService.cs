@@ -1,4 +1,5 @@
 ﻿using AJKIOT.Shared.Models;
+using AJKIOT.Shared.Settings;
 
 namespace AJKIOT.Api.Services
 {
@@ -9,5 +10,6 @@ namespace AJKIOT.Api.Services
         Task<IotDevice> GetDeviceAsync(int devdeviceId);
         Task<ApiResponse<IEnumerable<IotDevice>>> GetUserDevicesAsync(string userId);
         Task<ApiResponse<IotDevice>> UpdateDeviceAsync(IotDevice iotDevice);
+        Task<Stream> GetDeviceFirmwareAsStreamAsync(FirmwareSettings firmwareSettings);
     }
 }
