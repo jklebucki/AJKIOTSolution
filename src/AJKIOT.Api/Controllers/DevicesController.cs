@@ -57,6 +57,7 @@ namespace AJKIOT.Api.Controllers
                     throw new Exception("User not found");
                 createDeviceRequest.Device.OwnerId = ownerId;
                 var apiResponse = await _iotDeviceService.AddDeviceAsync(createDeviceRequest.Device);
+                await InformClients(apiResponse.Data!.Id);
                 return Created($"/api/Devices/{apiResponse.Data!.Id}", apiResponse);
             }
             catch (Exception ex)
@@ -94,7 +95,12 @@ namespace AJKIOT.Api.Controllers
         {
             try
             {
+                var device = await _iotDeviceService.GetDeviceAsync(id);
+                if (device == null)
+                    throw new Exception("Device not found");
                 var apiResponse = await _iotDeviceService.DeleteDeviceAsync(id);
+                device.Id = -1;//To inform clients that the device was deleted
+                await InformClientsDeviceDeleted(device);
                 return Ok(apiResponse);
             }
             catch (Exception ex)
@@ -130,6 +136,27 @@ namespace AJKIOT.Api.Controllers
             {
                 var device = await _iotDeviceService.GetDeviceAsync(deviceId);
                 await _iotDeviceService.UpdateDeviceAsync(device);
+                string ownerId = device.OwnerId;
+                foreach (var connection in _connectionMapping.GetAllClients().Where(c => c.Value == ownerId))
+                {
+                    await _hubContext.Clients.Client(connection.Key).SendAsync("DeviceUpdated", device);
+                }
+                await _hubContext.Clients.All.SendAsync("DeviceUpdated", device);
+
+                var response = new ApiResponse<IotDevice> { Data = device };
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Something went wrong: {ex}");
+                return BadRequest(new ApiResponse<IotDevice> { Data = new IotDevice(), Errors = new List<string> { ex.Message } });
+            }
+        }
+
+        private async Task<IActionResult> InformClientsDeviceDeleted(IotDevice device)
+        {
+            try
+            {
                 string ownerId = device.OwnerId;
                 foreach (var connection in _connectionMapping.GetAllClients().Where(c => c.Value == ownerId))
                 {

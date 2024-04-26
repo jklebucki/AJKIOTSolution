@@ -16,6 +16,8 @@ class DeviceProvider with ChangeNotifier {
     if (index != -1) {
       devices[index] = updatedDevice;
       notifyListeners();   
+    } else {
+      getDevices();
     }
   }
 
