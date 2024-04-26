@@ -1,6 +1,7 @@
 # AJKIOTSolution
 
 IOT Solution (WEB, API, Mobile)
+![100 - commitów](https://img.shields.io/badge/100-commitów-2ea44f?logo=go)
 
 This solution is to deliver 4 projects:  
 
