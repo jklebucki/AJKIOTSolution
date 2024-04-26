@@ -2,7 +2,7 @@
 
 IOT Solution (WEB, API, Mobile)
 
-![100 Commits](https://img.shields.io/badge/100-commitów-2ea44f?logo=c-sharp)
+![100 Commits](https://img.shields.io/badge/c#-100commitów-blue)
 
 ![Version 0.0.1](<URL-of-the-image>)
 
