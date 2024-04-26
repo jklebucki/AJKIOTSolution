@@ -2,7 +2,7 @@
 
 IOT Solution (WEB, API, Mobile)
 
-![100 Commits](https://img.shields.io/badge/c#-100commitów-blue)
+![Static Badge](https://img.shields.io/badge/c%23-100commitow-blue)
 
 ![Version 0.0.1](<URL-of-the-image>)
 
