@@ -2,7 +2,9 @@
 
 IOT Solution (WEB, API, Mobile)
 
-![100 - commitów](https://img.shields.io/badge/100-commitów-2ea44f?logo=go)
+![100 - commitów](https://img.shields.io/badge/100-commitów-2ea44f?logo=c#)
+
+![Version 0.0.1](<URL-of-the-image>)
 
 This solution is to deliver 4 projects:  
 
