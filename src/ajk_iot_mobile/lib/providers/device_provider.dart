@@ -40,7 +40,7 @@ class DeviceProvider with ChangeNotifier {
           (data) => List<IotDevice>.from(
               data.map((item) => IotDevice.fromJson(item))));
       if (apiResponse.isSuccess && apiResponse.data != null) {
-        _devices = apiResponse.data!;
+        _devices = (apiResponse.data!);
         notifyListeners(); // Notify listeners about data change
       }
     } else {

@@ -35,8 +35,8 @@ namespace AJKIOT.Api.Services
 
         public async Task<ApiResponse<IEnumerable<IotDevice>>> GetUserDevicesAsync(string userId)
         {
-            var devices = _repository.GetUserDevicesAsync(userId);
-            return new ApiResponse<IEnumerable<IotDevice>>() { Data = await devices };
+            var devices = await _repository.GetUserDevicesAsync(userId);
+            return new ApiResponse<IEnumerable<IotDevice>>() { Data = devices.OrderBy(d => d.Id) };
         }
 
         public async Task<ApiResponse<IotDevice>> UpdateDeviceAsync(IotDevice iotDevice)

@@ -15,15 +15,6 @@ class DeviceFeatureWidget extends StatefulWidget {
 }
 
 class DeviceFeatureWidgetState extends State<DeviceFeatureWidget> {
-  late dynamic value;
-  late dynamic featureType;
-
-  @override
-  void initState() {
-    super.initState();
-    value = widget.feature.value;
-    featureType = widget.feature.type;
-  }
 
   Future<void> updateFeature() async {
     var feature = widget.feature;
@@ -41,13 +32,13 @@ class DeviceFeatureWidgetState extends State<DeviceFeatureWidget> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        buildValue(),
+        buildFeature(),
       ],
     );
   }
 
-  Widget buildValue() {
-    switch (featureType) {
+  Widget buildFeature() {
+    switch (widget.feature.type) {
       case 'Switch':
         return Switch(
           value: widget.feature.value == 1 ? true : false,
