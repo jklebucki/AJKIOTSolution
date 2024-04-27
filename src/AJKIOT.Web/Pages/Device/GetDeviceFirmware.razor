@@ -67,7 +67,7 @@
     string wifiName { get; set; } = string.Empty;
     string wifiPassword { get; set; } = string.Empty;
     string apiAddress { get; set; } = string.Empty;
-    private Validations validations;
+    private Validations? validations;
     private string errorMessage { get; set; } = string.Empty;
 
     protected override async Task OnInitializedAsync()
@@ -78,7 +78,7 @@
 
     private async Task DownloadDeviceCode()
     {
-        if (await validations.ValidateAll())
+        if (await validations!.ValidateAll())
         {
             try
             {
