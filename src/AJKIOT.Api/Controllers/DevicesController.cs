@@ -20,15 +20,18 @@ namespace AJKIOT.Api.Controllers
         private readonly IHubContext<NotificationHub> _hubContext;
         private readonly ConnectionMapping _connectionMapping;
 
+        private readonly MqttController _mqttController;
+
         public DevicesController(ILogger<DevicesController> logger, IUserService userService,
                                 IIotDeviceService iotDeviceService, IHubContext<NotificationHub> notificationHub,
-                                ConnectionMapping connectionMapping)
+                                ConnectionMapping connectionMapping, MqttController mqttController)
         {
             _logger = logger;
             _userService = userService;
             _iotDeviceService = iotDeviceService;
             _hubContext = notificationHub;
             _connectionMapping = connectionMapping;
+            _mqttController = mqttController;
         }
 
         [HttpGet("{username}")]
@@ -157,6 +160,13 @@ namespace AJKIOT.Api.Controllers
             }
         }
 
+        [HttpPost("mqtt")]
+        public async Task<IActionResult> PublishMessage([FromBody] MqttMessage mqttMessage)
+        {
+            await _mqttController.PublishMessageAsync(mqttMessage.Topic, mqttMessage.Message);
+            return Ok();
+        }
+
         private async Task<IActionResult> InformClientsDeviceDeleted(IotDevice device)
         {
             try
@@ -177,5 +187,6 @@ namespace AJKIOT.Api.Controllers
                 return BadRequest(new ApiResponse<IotDevice> { Data = new IotDevice(), Errors = new List<string> { ex.Message } });
             }
         }
+
     }
 }

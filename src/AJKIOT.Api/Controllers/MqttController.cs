@@ -27,7 +27,8 @@ namespace AJKIOT.Api.Controllers
 
         public async Task ValidateConnection(ValidatingConnectionEventArgs eventArgs)
         {
-            if (eventArgs.ClientId != "dca5027d-ae7e-405e-852c-1d2ede047021")
+            string[] allowedClients = { "device-0000", "device-0001", "ESP_3219065" };
+            if (!allowedClients.Contains(eventArgs.ClientId))
             {
                 Console.WriteLine($"Client '{eventArgs.ClientId}' wants to connect. Not accepting!");
                 await eventArgs.ChannelAdapter.DisconnectAsync(CancellationToken.None);
@@ -39,7 +40,6 @@ namespace AJKIOT.Api.Controllers
         public async Task OnInterceptingPublish(InterceptingPublishEventArgs eventArgs)
         {
             Console.WriteLine($"Client '{eventArgs.ClientId}' {eventArgs.ApplicationMessage.Topic} {Encoding.UTF8.GetString(eventArgs.ApplicationMessage.PayloadSegment)}");
-
             await Task.FromResult(true);
         }
 
@@ -51,10 +51,9 @@ namespace AJKIOT.Api.Controllers
                 .WithQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce)
                 .Build();
 
-
             await _mqttServer.InjectApplicationMessage(new InjectedMqttApplicationMessage(message)
             {
-                SenderClientId = "SenderClientId"
+                SenderClientId = "AJKIOT.MQTT.Server",
             });
         }
     }

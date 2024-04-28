@@ -127,6 +127,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddSignalR();
 builder.Services.AddMqttServer(mqttServer =>
 {
+    mqttServer.WithDefaultEndpointBoundIPAddress(System.Net.IPAddress.Any);
     mqttServer.WithDefaultEndpointPort(1883);
 })
 .AddMqttWebSocketServerAdapter()
@@ -142,7 +143,7 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 var app = builder.Build();
 
 // Middleware 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseWebSockets();
 app.UseRouting()
