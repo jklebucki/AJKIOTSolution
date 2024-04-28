@@ -72,7 +72,7 @@ void reconnect()
 
 void setup()
 {
-  Serial.begin(57600);
+  Serial.begin(115200);
   setup_wifi();
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
