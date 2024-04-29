@@ -6,6 +6,7 @@ using AJKIOT.Shared.Settings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using System.Text.Json;
 
 namespace AJKIOT.Api.Controllers
 {
@@ -82,7 +83,23 @@ namespace AJKIOT.Api.Controllers
                 if (device == null)
                     throw new Exception("Device not found");
                 var apiResponse = await _iotDeviceService.UpdateDeviceAsync(updateDeviceRequest.Device);
+                // SignalR
                 await InformClients(updateDeviceRequest.Device.Id);
+                // MQTT features
+                await InformDevicesAsync(new MqttMessage
+                {
+                    DeviceId = updateDeviceRequest.Device.Id,
+                    MessageType = MqttMessageType.UpdateFeature,
+                    Message = JsonSerializer.Serialize(updateDeviceRequest.Device.GetFeatures())
+                });
+                // MQTT schedule
+                if(updateDeviceRequest.Device.GetSchedule().Any())
+                await InformDevicesAsync(new MqttMessage
+                {
+                    DeviceId = updateDeviceRequest.Device.Id,
+                    MessageType = MqttMessageType.UpdateSchedule,
+                    Message = JsonSerializer.Serialize(updateDeviceRequest.Device.GetSchedule())
+                });
                 return Ok(apiResponse);
             }
             catch (Exception ex)
@@ -202,10 +219,16 @@ namespace AJKIOT.Api.Controllers
             switch (mqttMessage.MessageType)
             {
                 case MqttMessageType.Config:
-                    topic = $"config/{mqttMessage.DeviceId}";
+                    topic = $"configDevice/{mqttMessage.DeviceId}";
                     break;
-                case MqttMessageType.Update:
-                    topic = $"update/{mqttMessage.DeviceId}";
+                case MqttMessageType.UpdateFeature:
+                    topic = $"updateFeature/{mqttMessage.DeviceId}";
+                    break;
+                case MqttMessageType.UpdateSchedule:
+                    topic = $"configSchedule/{mqttMessage.DeviceId}";
+                    break;
+                case MqttMessageType.Control:
+                    topic = $"controlDevice/{mqttMessage.DeviceId}";
                     break;
                 default:
                     break;

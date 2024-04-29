@@ -7,7 +7,9 @@
         public string Message { get; set; } = string.Empty;
     }
     public enum MqttMessageType{
+        UpdateFeature,
         Config,
-        Update,
+        Control,
+        UpdateSchedule
     }
 }

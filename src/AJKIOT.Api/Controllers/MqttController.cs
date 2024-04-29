@@ -1,4 +1,5 @@
-﻿using MQTTnet;
+﻿using AJKIOT.Api.Services;
+using MQTTnet;
 using MQTTnet.Server;
 using System.Text;
 
@@ -27,7 +28,7 @@ namespace AJKIOT.Api.Controllers
 
         public async Task ValidateConnection(ValidatingConnectionEventArgs eventArgs)
         {
-            string[] allowedClients = { "device-0000", "device-0001", "ESP_3219065" };
+            string[] allowedClients = { "device-0000", "device-0001", "3" };
             if (!allowedClients.Contains(eventArgs.ClientId))
             {
                 Console.WriteLine($"Client '{eventArgs.ClientId}' wants to connect. Not accepting!");

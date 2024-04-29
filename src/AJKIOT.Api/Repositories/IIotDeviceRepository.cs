@@ -9,5 +9,6 @@ namespace AJKIOT.Api.Repositories
         Task<IotDevice> GetDeviceAsync(int deviceId);
         Task<IotDevice> UpdateDeviceAsync(IotDevice device);
         Task<bool> DeleteDeviceAsync(int id);
+        Task<IEnumerable<IotDevice>> GetAllDevicesAsync();
     }
 }

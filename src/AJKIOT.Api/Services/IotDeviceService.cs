@@ -100,5 +100,10 @@ namespace AJKIOT.Api.Services
             var device = await _repository.UpdateDeviceAsync(iotDevice);
             return new ApiResponse<IotDevice>() { Data = device };
         }
+
+        public async Task<IEnumerable<string>> GetAllowedDevicesAsync()
+        {
+            return (await _repository.GetAllDevicesAsync()).Select(d => d.Id.ToString()).ToList();
+        }
     }
 }

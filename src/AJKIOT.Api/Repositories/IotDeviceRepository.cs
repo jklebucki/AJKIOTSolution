@@ -41,6 +41,11 @@ namespace AJKIOT.Api.Repositories
             }
         }
 
+        public async Task<IEnumerable<IotDevice>> GetAllDevicesAsync()
+        {
+            return await _context.IotDevices.ToListAsync();
+        }
+
         public async Task<IotDevice> GetDeviceAsync(int deviceId)
         {
             var device = await _context.IotDevices.FirstOrDefaultAsync(x => x.Id == deviceId);
