@@ -2,7 +2,12 @@
 {
     public class MqttMessage
     {
-        public string Topic { get; set; } = string.Empty;
+        public int DeviceId { get; set; }
+        public MqttMessageType MessageType { get; set; }
         public string Message { get; set; } = string.Empty;
+    }
+    public enum MqttMessageType{
+        Config,
+        Update,
     }
 }

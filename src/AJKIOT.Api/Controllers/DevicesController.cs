@@ -163,8 +163,16 @@ namespace AJKIOT.Api.Controllers
         [HttpPost("mqtt")]
         public async Task<IActionResult> PublishMessage([FromBody] MqttMessage mqttMessage)
         {
-            await _mqttController.PublishMessageAsync(mqttMessage.Topic, mqttMessage.Message);
-            return Ok();
+            if (mqttMessage != null)
+            {
+                await InformDevicesAsync(mqttMessage);
+                return Ok();
+            }
+            else
+            {
+                return BadRequest();
+            }
+
         }
 
         private async Task<IActionResult> InformClientsDeviceDeleted(IotDevice device)
@@ -186,6 +194,23 @@ namespace AJKIOT.Api.Controllers
                 _logger.LogError($"Something went wrong: {ex}");
                 return BadRequest(new ApiResponse<IotDevice> { Data = new IotDevice(), Errors = new List<string> { ex.Message } });
             }
+        }
+
+        private async Task InformDevicesAsync(MqttMessage mqttMessage)
+        {
+            var topic = string.Empty;
+            switch (mqttMessage.MessageType)
+            {
+                case MqttMessageType.Config:
+                    topic = $"config/{mqttMessage.DeviceId}";
+                    break;
+                case MqttMessageType.Update:
+                    topic = $"update/{mqttMessage.DeviceId}";
+                    break;
+                default:
+                    break;
+            }
+            await _mqttController.PublishMessageAsync(topic, mqttMessage.Message);
         }
 
     }

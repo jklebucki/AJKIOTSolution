@@ -24,7 +24,8 @@
       "dotnetRunMessages": true,
       "launchBrowser": true,
       "launchUrl": "swagger",
-      "applicationUrl": "https://ajkdesktop.local:7253;http://ajkdesktop.local:5217;http://172.16.90.151:5217",
+      "applicationUrl": "https://localhost:7253;http://localhost:5217",
+      "_applicationUrl": "https://ajkdesktop.local:7253;http://ajkdesktop.local:5217;http://172.16.90.151:5217",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
