@@ -86,20 +86,21 @@ namespace AJKIOT.Api.Controllers
                 // SignalR
                 await InformClients(updateDeviceRequest.Device.Id);
                 // MQTT features
-                await InformDevicesAsync(new MqttMessage
-                {
-                    DeviceId = updateDeviceRequest.Device.Id,
-                    MessageType = MqttMessageType.UpdateFeature,
-                    Message = JsonSerializer.Serialize(updateDeviceRequest.Device.GetFeatures())
-                });
+                foreach (var featureItem in updateDeviceRequest.Device.GetFeatures())
+                    await InformDevicesAsync(new MqttMessage
+                    {
+                        DeviceId = updateDeviceRequest.Device.Id,
+                        MessageType = MqttMessageType.UpdateFeature,
+                        Message = JsonSerializer.Serialize(featureItem)
+                    });
                 // MQTT schedule
-                if(updateDeviceRequest.Device.GetSchedule().Any())
-                await InformDevicesAsync(new MqttMessage
-                {
-                    DeviceId = updateDeviceRequest.Device.Id,
-                    MessageType = MqttMessageType.UpdateSchedule,
-                    Message = JsonSerializer.Serialize(updateDeviceRequest.Device.GetSchedule())
-                });
+                foreach (var scheduleItem in updateDeviceRequest.Device.GetSchedule())
+                    await InformDevicesAsync(new MqttMessage
+                    {
+                        DeviceId = updateDeviceRequest.Device.Id,
+                        MessageType = MqttMessageType.UpdateSchedule,
+                        Message = JsonSerializer.Serialize(scheduleItem)
+                    });
                 return Ok(apiResponse);
             }
             catch (Exception ex)
