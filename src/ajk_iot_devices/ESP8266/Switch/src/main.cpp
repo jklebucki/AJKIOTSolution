@@ -89,11 +89,11 @@ void setup()
   Serial.printf("Config schedule topic: %s \r\n", updateScheduleTopic);
   Serial.printf("Config device topic: %s \r\n", configDeviceTopic);
   Serial.printf("Control device topic: %s \r\n", controlDeviceTopic);
-  // mqtt.onSecure([](WiFiClientSecure *client, String host)               {
-  //     Serial.printf("Secure: %s\r\n", host.c_str());
-  //     return client->setFingerprint(fingerprint.c_str()); });
+  mqtt.onSecure([](WiFiClientSecure *client, String host)               {
+      Serial.printf("Secure: %s\r\n", host.c_str());
+      return client->setFingerprint(fingerprint.c_str()); });
 
-  // topic, data, data is continuing
+  //topic, data, data is continuing
   mqtt.onData([](String topic, String data, bool cont)
               {
     Serial.printf("Data received, topic: %s, data: ", topic.c_str());
