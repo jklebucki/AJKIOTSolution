@@ -56,16 +56,15 @@ void deserializeIotDevice(String json)
   const char *deviceFeaturesJson = doc["DeviceFeaturesJson"];
   const char *deviceScheduleJson = doc["DeviceScheduleJson"];
 
-  // You can now use these values in your application
 }
 
 String getAddress(String addressData)
 {
-  int colonIndex = addressData.indexOf(':'); // Znajduje indeks pierwszego wystąpienia dwukropka
+  int colonIndex = addressData.indexOf(':'); 
 
   if (colonIndex != -1)
-  {                                               // Sprawdza, czy znaleziono dwukropek
-    return addressData.substring(colonIndex + 1); // Pobiera substring zaczynający się po dwukropku // Wypisuje wynik
+  {                                               
+    return addressData.substring(colonIndex + 1); 
   }
   else
   {
@@ -75,7 +74,7 @@ String getAddress(String addressData)
 
 void callback(char *topic, byte *payload, unsigned int length)
 {
-  payload[length] = '\0'; // Ensure null-terminated string
+  payload[length] = '\0'; 
   String message = String((char *)payload);
   deserializeIotDevice(message);
 }
