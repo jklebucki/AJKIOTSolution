@@ -9,14 +9,16 @@
             @GetWeekdayName()
         </div>
         <div class="card-body">
-            @foreach (var entry in Schedule.OrderBy(e => e.EntryNumber))
+            @foreach (var entry in Schedule.OrderBy(e => e.StartTime.ToTimeSpan()))
             {
                 <div class="row">
                     <div class="col-10">
                         Entry #@entry.EntryNumber: @entry.StartTime.ToString(@"HH\:mm") - @entry.EndTime.ToString(@"HH\:mm")
                     </div>
                     <div class="col-2">
-                        <Button Color="Color.Primary" Size="Size.Small" Outline @onclick="() => RemoveScheduleEntry(entry)"><Icon Name="IconName.MinusCircle" /></Button>
+                        <Button Color="Color.Primary" Size="Size.Small" Outline @onclick="() => RemoveScheduleEntry(entry)">
+                            <Icon Name="IconName.MinusCircle" />
+                        </Button>
                     </div>
                 </div>
             }
@@ -31,10 +33,11 @@
                         <TimePicker TValue="TimeSpan?" Size="Size.Small" Time="@newEndDateTime" TimeAs24hr="true" TimeChanged="@((TimeSpan? value) => EndDateTimeChanged(value))" />
                     </div>
                     <div class="col-2">
-                        <Button Color="Color.Primary" Size="Size.Small" Outline @onclick="AddScheduleEntry"><Icon Name="IconName.PlusCircle" /></Button>
+                        <Button Color="Color.Primary" Size="Size.Small" Outline @onclick="AddScheduleEntry">
+                            <Icon Name="IconName.PlusCircle" />
+                        </Button>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -64,7 +67,7 @@
         }
         else
         {
-            Schedule = Schedule.Where(d => d.DayNumber == DayNumber).OrderBy(e => e.EntryNumber).ToList();
+            Schedule = Schedule.Where(d => d.DayNumber == DayNumber).OrderBy(e => e.StartTime.ToTimeSpan()).ToList();
         }
     }
 
@@ -77,27 +80,47 @@
     private void StartDateTimeChanged(TimeSpan? value)
     {
         newStartDateTime = value;
-        if (newStartDateTime >= newEndDateTime)
-            newEndDateTime = newStartDateTime.Value.Add(TimeSpan.FromHours(1));
-        var lastEntry = Schedule.LastOrDefault();
-        if (lastEntry != null && newStartDateTime <= lastEntry.EndTime.ToTimeSpan())
-            newStartDateTime = lastEntry.EndTime.ToTimeSpan().Add(TimeSpan.FromMinutes(5));
+        AdjustEndDateTimeIfNeeded();
     }
 
     private void EndDateTimeChanged(TimeSpan? value)
     {
         newEndDateTime = value;
-        if (newEndDateTime <= newStartDateTime)
-            newEndDateTime = newStartDateTime.Value.Add(TimeSpan.FromMinutes(5));
+        AdjustStartDateTimeIfNeeded();
+    }
+
+    private void AdjustEndDateTimeIfNeeded()
+    {
+        if (newStartDateTime.HasValue && (newEndDateTime <= newStartDateTime))
+        {
+            newEndDateTime = newStartDateTime.Value.Add(TimeSpan.FromHours(1));
+        }
+    }
+
+    private void AdjustStartDateTimeIfNeeded()
+    {
+        if (newEndDateTime.HasValue && (newEndDateTime <= newStartDateTime))
+        {
+            newStartDateTime = newEndDateTime.Value.Subtract(TimeSpan.FromHours(1));
+        }
     }
 
     private async Task AddScheduleEntry()
     {
-        var newEntry = AddEntryLogic();
-        if (newEntry != null)
+        var overlap = Schedule.Any(s => s.StartTime.ToTimeSpan() < newEndDateTime && s.EndTime.ToTimeSpan() > newStartDateTime);
+        if (!overlap)
         {
+            var newEntry = new DailyScheduleEntry
+                {
+                    FeatureId = FeatureId,
+                    DayNumber = DayNumber,
+                    EntryNumber = (Schedule.Any() ? Schedule.Max(e => e.EntryNumber) + 1 : 1),
+                    StartTime = TimeOnly.FromTimeSpan(newStartDateTime.Value),
+                    EndTime = TimeOnly.FromTimeSpan(newEndDateTime.Value)
+                };
             Schedule.Add(newEntry);
-            newStartDateTime = newEndDateTime?.Add(TimeSpan.FromHours(1));
+            Schedule = Schedule.OrderBy(s => s.StartTime.ToTimeSpan()).ToList();
+            newStartDateTime = newEntry.EndTime.ToTimeSpan().Add(TimeSpan.FromHours(1));
             newEndDateTime = newStartDateTime?.Add(TimeSpan.FromHours(1));
             var data = new KeyValuePair<int, List<DailyScheduleEntry>>(DayNumber, Schedule);
             await OnScheduleChanged.InvokeAsync(data);
@@ -110,32 +133,4 @@
         var data = new KeyValuePair<int, List<DailyScheduleEntry>>(DayNumber, Schedule);
         await OnScheduleChanged.InvokeAsync(data);
     }
-
-    private DailyScheduleEntry? AddEntryLogic()
-    {
-        if (Schedule.Any())
-        {
-            var lastEntry = Schedule.LastOrDefault();
-            if (lastEntry != null && (newStartDateTime <= lastEntry.EndTime.ToTimeSpan() || newStartDateTime == newEndDateTime))
-            {
-                return null;
-            }
-        }
-
-        var newEntryNumber = 1;
-        if (Schedule.Any())
-        {
-            newEntryNumber = Schedule.Max(entry => entry.EntryNumber) + 1;
-        }
-
-        return new DailyScheduleEntry
-            {
-                FeatureId = FeatureId,
-                DayNumber = DayNumber,
-                EntryNumber = newEntryNumber,
-                StartTime = TimeOnly.FromTimeSpan((TimeSpan)newStartDateTime!),
-                EndTime = TimeOnly.FromTimeSpan((TimeSpan)newEndDateTime!),
-            };
-    }
 }
-
