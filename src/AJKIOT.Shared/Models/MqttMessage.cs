@@ -6,7 +6,8 @@
         public MqttMessageType MessageType { get; set; }
         public string Message { get; set; } = string.Empty;
     }
-    public enum MqttMessageType{
+    public enum MqttMessageType
+    {
         UpdateFeature,
         Config,
         Control,
