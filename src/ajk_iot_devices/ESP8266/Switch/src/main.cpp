@@ -85,8 +85,10 @@ void maintainPinState()
         break; // Jeśli znaleziono pasujący zakres, nie ma potrzeby dalszego przeszukiwania
       }
     }
+    Serial.print((entry->StartTime).Hour);
+    Serial.print(":");
+    Serial.println((entry->StartTime).Minute);
   }
-
   digitalWrite(OUT_PIN, pinShouldBeOn ? HIGH : LOW); // Ustawienie stanu pinu
 }
 
