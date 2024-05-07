@@ -5,7 +5,16 @@
 #include <ESP8266Ping.h>
 #include <ESP8266MQTTClient.h>
 #include <ArduinoJson.h>
+#include <ScheduleEntry.h>
+#include <LinkedList.h>
+#include <TimeLib.h>
+#include <NTPClient.h>
+#include <WiFiUdp.h>
+#define OUT_PIN 0
+WiFiUDP ntpUDP; // Obiekt UDP dla komunikacji z serwerem NTP
+NTPClient timeClient(ntpUDP, "pool.ntp.org", 3600, 60000);
 
+LinkedList<ScheduleEntry *> scheduleEntries = LinkedList<ScheduleEntry *>();
 // WiFi credentials
 const char *ssid = "Orange_Swiatlowod_B5AC";
 const char *password = "cdHqhMotvgMSJ9L4tD";
@@ -13,6 +22,7 @@ const char *password = "cdHqhMotvgMSJ9L4tD";
 const char *deviceId = "3";
 const char *updateFeatureTopic = "updateFeature/3";
 const char *updateScheduleTopic = "configSchedule/3";
+const char *signalScheduleTopic = "signalSchedule/3";
 const char *configDeviceTopic = "configDevice/3";
 const char *controlDeviceTopic = "controlDevice/3";
 // Millis
@@ -44,27 +54,49 @@ void setup_wifi()
   Serial.println(WiFi.dnsIP());
 }
 
-void deserializeIotDevice(String json)
+bool isTimeWithinInterval(time_t currentTime, tmElements_t start, tmElements_t end)
 {
-  StaticJsonDocument<1024> doc;
-  deserializeJson(doc, json);
+  time_t startTime = makeTime(start);
+  time_t endTime = makeTime(end);
+  return currentTime >= startTime && currentTime <= endTime;
+}
 
-  int id = doc["Id"];
-  const char *ownerId = doc["OwnerId"];
-  const char *deviceType = doc["DeviceType"];
-  const char *deviceName = doc["DeviceName"];
-  const char *deviceFeaturesJson = doc["DeviceFeaturesJson"];
-  const char *deviceScheduleJson = doc["DeviceScheduleJson"];
+void maintainPinState()
+{
+  int currentDayOfWeek = weekday(); // Pobranie aktualnego dnia tygodnia (1 = niedziela, 2 = poniedziałek, ..., 7 = sobota)
+  if (currentDayOfWeek == 1)
+  {
+    currentDayOfWeek = 7; // Niedziela jako 7
+  }
+  else
+  {
+    currentDayOfWeek -= 1; // Poniedziałek jako 1, ..., Sobota jako 6
+  }
+  bool pinShouldBeOn = false;
 
+  for (int i = 0; i < scheduleEntries.size(); i++)
+  {
+    ScheduleEntry *entry = scheduleEntries.get(i);
+    if (entry->DayNumber == currentDayOfWeek)
+    {
+      if (isTimeWithinInterval(now(), entry->StartTime, entry->EndTime))
+      {
+        pinShouldBeOn = true;
+        break; // Jeśli znaleziono pasujący zakres, nie ma potrzeby dalszego przeszukiwania
+      }
+    }
+  }
+
+  digitalWrite(OUT_PIN, pinShouldBeOn ? HIGH : LOW); // Ustawienie stanu pinu
 }
 
 String getAddress(String addressData)
 {
-  int colonIndex = addressData.indexOf(':'); 
+  int colonIndex = addressData.indexOf(':');
 
   if (colonIndex != -1)
-  {                                               
-    return addressData.substring(colonIndex + 1); 
+  {
+    return addressData.substring(colonIndex + 1);
   }
   else
   {
@@ -72,11 +104,19 @@ String getAddress(String addressData)
   }
 }
 
-void callback(char *topic, byte *payload, unsigned int length)
+void parseSchedule(const char *json)
 {
-  payload[length] = '\0'; 
-  String message = String((char *)payload);
-  deserializeIotDevice(message);
+  ScheduleEntry *entry = new ScheduleEntry();
+  if (entry->parseJson(json))
+  {
+    Serial.println("JSON parsed successfully!");
+    scheduleEntries.add(entry);
+  }
+  else
+  {
+    Serial.println("Failed to parse JSON.");
+    delete entry; // Important to prevent memory leak
+  }
 }
 
 void setup()
@@ -89,15 +129,20 @@ void setup()
   Serial.printf("Config schedule topic: %s \r\n", updateScheduleTopic);
   Serial.printf("Config device topic: %s \r\n", configDeviceTopic);
   Serial.printf("Control device topic: %s \r\n", controlDeviceTopic);
-  mqtt.onSecure([](WiFiClientSecure *client, String host)               {
+  mqtt.onSecure([](WiFiClientSecure *client, String host)
+                {
       Serial.printf("Secure: %s\r\n", host.c_str());
       return client->setFingerprint(fingerprint.c_str()); });
 
-  //topic, data, data is continuing
+  // topic, data, data is continuing
   mqtt.onData([](String topic, String data, bool cont)
               {
     Serial.printf("Data received, topic: %s, data: ", topic.c_str());
     Serial.println(data);
+    if(topic == updateScheduleTopic){
+    parseSchedule(data.c_str());
+    }
+
     if (data.indexOf("Stop pinging") != -1)
     pinging = false;
     else if (data.indexOf("Start pinging") != -1)
@@ -118,17 +163,22 @@ void setup()
     Serial.printf("MQTT: Connected\r\n");
     Serial.printf("Subscribe id: %d\r\n", mqtt.subscribe(updateFeatureTopic, 0));
     mqtt.subscribe(updateScheduleTopic, 1);
-    mqtt.subscribe(configDeviceTopic, 2);
-    mqtt.subscribe(controlDeviceTopic, 3); });
+    mqtt.subscribe(signalScheduleTopic, 1);
+    mqtt.subscribe(configDeviceTopic, 1);
+    mqtt.subscribe(controlDeviceTopic, 1); });
 
   mqtt.begin("ws://172.16.90.151:5217/mqtt", deviceId, {.lwtTopic = "test/topic", .lwtMsg = "Offline", .lwtQos = 0, .lwtRetain = 0});
   // mqtt.begin("ws://test.mosquitto.org:8443", {.lwtTopic = "hello", .lwtMsg = "offline", .lwtQos = 0, .lwtRetain = 0});
   // mqtt.begin("ws://mosquito.org:8443", "user", "pass");
   // mqtt.begin("ws://mosquito.org:8443", "clientId", "user", "pass");
+
+  timeClient.begin();
 }
 
 void loop()
 {
+  timeClient.update();
+  maintainPinState();
   unsigned long currentMillis = millis();
   if (pinging)
     if (Ping.ping(address.c_str(), 1))
