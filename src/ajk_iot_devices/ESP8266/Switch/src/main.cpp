@@ -73,16 +73,17 @@ void maintainPinState()
     currentDayOfWeek -= 1; // Poniedziałek jako 1, ..., Sobota jako 6
   }
   bool pinShouldBeOn = false;
+  time_t currentTime = now();
 
   for (int i = 0; i < scheduleEntries.size(); i++)
   {
     ScheduleEntry *entry = scheduleEntries.get(i);
     if (entry->DayNumber == currentDayOfWeek)
     {
-      if (isTimeWithinInterval(now(), entry->StartTime, entry->EndTime))
+      if (isTimeWithinInterval(currentTime, entry->StartTime, entry->EndTime))
       {
         pinShouldBeOn = true;
-        break; // Jeśli znaleziono pasujący zakres, nie ma potrzeby dalszego przeszukiwania
+        break; // Jeśli znaleziono pasującego zakresu, nie ma potrzeby dalszego przeszukiwania
       }
     }
     Serial.print((entry->StartTime).Hour);
