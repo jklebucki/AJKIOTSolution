@@ -24,6 +24,9 @@ const char *updateScheduleTopic = "configSchedule/3";
 const char *signalScheduleTopic = "signalSchedule/3";
 const char *configDeviceTopic = "configDevice/3";
 const char *controlDeviceTopic = "controlDevice/3";
+const char *controlOnline = "online:3";
+String signal = "";
+
 // Millis
 unsigned long onlineWatchdog = 0;
 bool watchdogEnabled = false;
@@ -50,7 +53,7 @@ void setup_wifi()
   Serial.println(WiFi.dnsIP());
 }
 
-bool isTimeWithinInterval(time_t currentTime, tmElements_t start, tmElements_t end, bool printDebug = false)
+bool isTimeWithinInterval(time_t currentTime, tmElements_t start, tmElements_t end)
 {
   // Set a fixed date for all time comparisons (e.g., January 1, 2000)
   int fixedYear = 2000;
@@ -84,17 +87,6 @@ bool isTimeWithinInterval(time_t currentTime, tmElements_t start, tmElements_t e
   tempCurrent.Month = fixedMonth;
   tempCurrent.Day = fixedDay;
   time_t adjustedCurrentTime = makeTime(tempCurrent);
-  if (printDebug)
-  {
-    Serial.print("Current time: ");
-    Serial.println(currentTime);
-    Serial.print("Adjusted current time: ");
-    Serial.println(adjustedCurrentTime);
-    Serial.print("Fixed start time: ");
-    Serial.println(fixedStartTime);
-    Serial.print("Fixed end time: ");
-    Serial.println(fixedEndTime);
-  }
   // Adjust for midnight crossing
   if (fixedEndTime <= fixedStartTime)
   {
@@ -158,7 +150,6 @@ void parseSchedule(const char *json)
   ScheduleEntry *entry = new ScheduleEntry();
   if (entry->parseJson(json))
   {
-    scheduleEntries.clear();
     scheduleEntries.add(entry);
     Serial.println("Entry added!");
   }
@@ -190,6 +181,7 @@ void setup()
   Serial.printf("Device id: %s \r\n", deviceId);
   Serial.printf("Update feature topic: %s \r\n", updateFeatureTopic);
   Serial.printf("Config schedule topic: %s \r\n", updateScheduleTopic);
+  Serial.printf("Control signal topic: %s \r\n", signalScheduleTopic);
   Serial.printf("Config device topic: %s \r\n", configDeviceTopic);
   Serial.printf("Control device topic: %s \r\n", controlDeviceTopic);
   mqtt.onSecure([](WiFiClientSecure *client, String host)
@@ -202,8 +194,17 @@ void setup()
               {
     Serial.printf("Data received, topic: %s, data: ", topic.c_str());
     Serial.println(data);
-    if(topic == updateScheduleTopic){
-    parseSchedule(data.c_str());
+    if (topic == signalScheduleTopic) {
+        if (data == "start") {
+            signal = "start";
+            scheduleEntries.clear();  // Clear existing schedule entries if starting anew
+        } else if (data == "stop") {
+            signal = "stop";
+        }
+    }
+    // Process schedule updates only if the signal is "start"
+    if (signal == "start" && topic == updateScheduleTopic) {
+        parseSchedule(data.c_str());
     }
 
     mqtt.unSubscribe("/qos0"); });
@@ -248,7 +249,6 @@ void loop()
     {
       Serial.println("Pin is LOW");
     }
-    Serial.println(digitalRead(OUT_PIN));
     Serial.print("Free RAM: ");
     Serial.println(ESP.getFreeHeap());
     Serial.print("Current time: ");
@@ -256,10 +256,6 @@ void loop()
     Serial.print(" - Current weekday: ");
     Serial.println(weekday());
     showEntries();
-    if (scheduleEntries.size() > 0)
-    {
-      isTimeWithinInterval(timeClient.getEpochTime(), scheduleEntries.get(0)->StartTime, scheduleEntries.get(0)->EndTime, true) ? Serial.println("Pin should be on.") : Serial.println("Pin should be off.");
-    }
-    mqtt.publish(controlDeviceTopic, "Device online", 0, 0);
+    mqtt.publish(controlDeviceTopic, controlOnline, 0, 0);
   }
 }

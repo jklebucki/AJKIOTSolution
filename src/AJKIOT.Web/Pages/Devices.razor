@@ -35,7 +35,7 @@
             @foreach (var device in devices)
             {
                 <div class="col-md-4 mb-4">
-                    <IotDeviceTile IotDevice="device" OnDeviceChanged="HandleDeviceChanged" OnDeviceDeleted="HandleDeviceDeleted" />
+                    <IotDeviceTile IotDevice="device" Status="@deviceStatuses.First(x=>x.Contains($"device|{device.Id}|"))" OnDeviceChanged="HandleDeviceChanged" OnDeviceDeleted="HandleDeviceDeleted" />
                 </div>
             }
         </div>
@@ -53,9 +53,14 @@
     private bool ScheduleMode = false;
     private string errorMessage = string.Empty;
     private List<IotDevice> devices = new List<IotDevice>();
+    private List<string> deviceStatuses = new List<string>();
+    private System.Threading.Timer timer;
+    private DateTime lastUpdate;
+    private bool isCommunicationActive = true;
 
     protected override async Task OnInitializedAsync()
     {
+        timer = new System.Threading.Timer(CheckCommunicationStatus!, null, TimeSpan.Zero, TimeSpan.FromSeconds(10));
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         var userData = await LocalStorage.GetApplicationUserAsync();
@@ -66,6 +71,7 @@
             {
                 var apiResponse = await api.GetUserDevicesAsync(userData.Email);
                 devices.AddRange(apiResponse.Data!.OrderBy(x => x.Id));
+                deviceStatuses.AddRange(apiResponse.Data!.Select(x => $"device|{x.Id}|1|{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}"));
             }
             catch (UnauthorizedAccessException)
             {
@@ -94,11 +100,36 @@
             }
         });
 
+        hubConnection.On<string>("ControlSignal", (signal) =>
+        {
+            var split = signal.Split(":");
+            var index = devices.FindIndex(d => d.Id == int.Parse(split[1]));
+            if (index != -1)
+            {
+                deviceStatuses[index] = $"device|{split[1]}|1|{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}";
+                StateHasChanged();
+            }
+        });
+
         await hubConnection.StartAsync();
     }
 
+    private void CheckCommunicationStatus(object state)
+    {
+        InvokeAsync(StateHasChanged); // Safely call StateHasChanged from a non-UI thread
+    }
 
-
+    private void CheckStatuses(DateTime currentTime)
+    {
+        foreach (var status in deviceStatuses)
+        {
+            // var split = status.Split("|");
+            // if (DateTime.TryParse(split[3], "yyyy-MM-dd HH:mm:ss", out DateTime time) )
+            // {
+            //     status = $"device|{split[1]}|0|{split[3]}";
+            // }
+        }
+    }
     private async Task HandleDeviceChanged(IotDevice iotDevice)
     {
         if (iotDevice != null)

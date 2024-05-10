@@ -94,6 +94,12 @@ namespace AJKIOT.Api.Controllers
                         Message = JsonSerializer.Serialize(featureItem)
                     });
                 // MQTT schedule
+                await InformDevicesAsync(new MqttMessage
+                {
+                    DeviceId = updateDeviceRequest.Device.Id,
+                    MessageType = MqttMessageType.SignalSchedule,
+                    Message = "start"
+                });
                 foreach (var scheduleItem in updateDeviceRequest.Device.GetSchedule())
                     await InformDevicesAsync(new MqttMessage
                     {
@@ -101,6 +107,12 @@ namespace AJKIOT.Api.Controllers
                         MessageType = MqttMessageType.UpdateSchedule,
                         Message = JsonSerializer.Serialize(scheduleItem)
                     });
+                await InformDevicesAsync(new MqttMessage
+                {
+                    DeviceId = updateDeviceRequest.Device.Id,
+                    MessageType = MqttMessageType.SignalSchedule,
+                    Message = "stop"
+                });
                 return Ok(apiResponse);
             }
             catch (Exception ex)
@@ -227,6 +239,9 @@ namespace AJKIOT.Api.Controllers
                     break;
                 case MqttMessageType.UpdateSchedule:
                     topic = $"configSchedule/{mqttMessage.DeviceId}";
+                    break;
+                case MqttMessageType.SignalSchedule:
+                    topic = $"signalSchedule/{mqttMessage.DeviceId}";
                     break;
                 case MqttMessageType.Control:
                     topic = $"controlDevice/{mqttMessage.DeviceId}";

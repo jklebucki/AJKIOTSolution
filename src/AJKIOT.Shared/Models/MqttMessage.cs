@@ -11,6 +11,7 @@
         UpdateFeature,
         Config,
         Control,
-        UpdateSchedule
+        UpdateSchedule,
+        SignalSchedule
     }
 }
