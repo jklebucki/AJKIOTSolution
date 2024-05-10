@@ -231,6 +231,15 @@ void setup()
   timeClient.begin();
 }
 
+void debugSystemStatus()
+{
+  int pinStatus = digitalRead(OUT_PIN);
+  Serial.printf("Pin is %s\n", pinStatus == HIGH ? "HIGH" : "LOW");
+  Serial.printf("Free RAM: %d bytes\n", ESP.getFreeHeap());
+  Serial.printf("Current time: %s - Current weekday: %d\n", timeClient.getFormattedTime().c_str(), weekday());
+  showEntries();
+}
+
 void loop()
 {
   timeClient.update();
@@ -240,22 +249,7 @@ void loop()
   if (currentMillis - onlineWatchdog >= 5000)
   {
     onlineWatchdog = currentMillis;
-    int pinStatus = digitalRead(OUT_PIN); // Read the current state of the pin
-    if (pinStatus == HIGH)
-    {
-      Serial.println("Pin is HIGH");
-    }
-    else
-    {
-      Serial.println("Pin is LOW");
-    }
-    Serial.print("Free RAM: ");
-    Serial.println(ESP.getFreeHeap());
-    Serial.print("Current time: ");
-    Serial.print(timeClient.getFormattedTime());
-    Serial.print(" - Current weekday: ");
-    Serial.println(weekday());
-    showEntries();
+    debugSystemStatus();
     mqtt.publish(controlDeviceTopic, controlOnline, 0, 0);
   }
 }
