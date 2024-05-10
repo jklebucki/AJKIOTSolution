@@ -2,7 +2,6 @@
 #define DEFAULT_MQTT_BUFFER_SIZE_BYTES 4096
 #define DEFAULT_MQTT_MAX_QUEUE (4096 * 8)
 #include <ESP8266WiFi.h>
-#include <ESP8266Ping.h>
 #include <ESP8266MQTTClient.h>
 #include <ArduinoJson.h>
 #include <ScheduleEntry.h>
@@ -31,9 +30,6 @@ bool watchdogEnabled = false;
 
 // MQTT Server settings
 const char *mqtt_server = "ws://ajkdesktop:5217/mqtt";
-String address = "ajkdesktop";
-
-bool pinging = false;
 String fingerprint = "7E 36 22 01 F9 7E 99 2F C5 DB 3D BE AC 48 67 5B 5D 47 94 D2";
 
 MQTTClient mqtt;
@@ -54,26 +50,70 @@ void setup_wifi()
   Serial.println(WiFi.dnsIP());
 }
 
-bool isTimeWithinInterval(time_t currentTime, tmElements_t start, tmElements_t end)
+bool isTimeWithinInterval(time_t currentTime, tmElements_t start, tmElements_t end, bool printDebug = false)
 {
-  time_t startTime = makeTime(start);
-  time_t endTime = makeTime(end);
-  return currentTime >= startTime && currentTime <= endTime;
+  // Set a fixed date for all time comparisons (e.g., January 1, 2000)
+  int fixedYear = 2000;
+  int fixedMonth = 1;
+  int fixedDay = 1;
+
+  // Configure the fixed start and end dates
+  tmElements_t fixedStart, fixedEnd;
+  fixedStart.Year = fixedYear - 1970;
+  fixedStart.Month = fixedMonth;
+  fixedStart.Day = fixedDay;
+  fixedStart.Hour = start.Hour;
+  fixedStart.Minute = start.Minute;
+  fixedStart.Second = 0;
+
+  fixedEnd.Year = fixedYear - 1970;
+  fixedEnd.Month = fixedMonth;
+  fixedEnd.Day = fixedDay;
+  fixedEnd.Hour = end.Hour;
+  fixedEnd.Minute = end.Minute;
+  fixedEnd.Second = 0;
+
+  // Convert to time_t for easier comparison
+  time_t fixedStartTime = makeTime(fixedStart);
+  time_t fixedEndTime = makeTime(fixedEnd);
+
+  // Extract current time components
+  tmElements_t tempCurrent;
+  breakTime(currentTime, tempCurrent);
+  tempCurrent.Year = fixedYear - 1970;
+  tempCurrent.Month = fixedMonth;
+  tempCurrent.Day = fixedDay;
+  time_t adjustedCurrentTime = makeTime(tempCurrent);
+  if (printDebug)
+  {
+    Serial.print("Current time: ");
+    Serial.println(currentTime);
+    Serial.print("Adjusted current time: ");
+    Serial.println(adjustedCurrentTime);
+    Serial.print("Fixed start time: ");
+    Serial.println(fixedStartTime);
+    Serial.print("Fixed end time: ");
+    Serial.println(fixedEndTime);
+  }
+  // Adjust for midnight crossing
+  if (fixedEndTime <= fixedStartTime)
+  {
+    fixedEndTime += SECS_PER_DAY; // Add one day to the end time
+    if (adjustedCurrentTime < fixedStartTime)
+    {
+      adjustedCurrentTime += SECS_PER_DAY; // Adjust current time to the next day for comparison
+    }
+  }
+
+  // Perform the comparison
+  return (adjustedCurrentTime >= fixedStartTime && adjustedCurrentTime <= fixedEndTime);
 }
 
 void maintainPinState()
 {
-  int currentDayOfWeek = weekday(); // Pobranie aktualnego dnia tygodnia (1 = niedziela, 2 = poniedziałek, ..., 7 = sobota)
-  if (currentDayOfWeek == 1)
-  {
-    currentDayOfWeek = 7; // Niedziela jako 7
-  }
-  else
-  {
-    currentDayOfWeek -= 1; // Poniedziałek jako 1, ..., Sobota jako 6
-  }
+  int currentDayOfWeek = weekday();
   bool pinShouldBeOn = false;
-  time_t currentTime = now();
+  time_t currentTime = timeClient.getEpochTime();
 
   for (int i = 0; i < scheduleEntries.size(); i++)
   {
@@ -83,14 +123,20 @@ void maintainPinState()
       if (isTimeWithinInterval(currentTime, entry->StartTime, entry->EndTime))
       {
         pinShouldBeOn = true;
-        break; // Jeśli znaleziono pasującego zakresu, nie ma potrzeby dalszego przeszukiwania
+        break;
       }
     }
-    Serial.print((entry->StartTime).Hour);
-    Serial.print(":");
-    Serial.println((entry->StartTime).Minute);
   }
   digitalWrite(OUT_PIN, pinShouldBeOn ? HIGH : LOW); // Ustawienie stanu pinu
+}
+
+void showEntries()
+{
+  for (int i = 0; i < scheduleEntries.size(); i++)
+  {
+    ScheduleEntry *entry = scheduleEntries.get(i);
+    Serial.printf("Entry %d: Day: %d, StartTime: %02d:%02d, EndTime: %02d:%02d\n", i, entry->DayNumber, entry->StartTime.Hour, entry->StartTime.Minute, entry->EndTime.Hour, entry->EndTime.Minute);
+  }
 }
 
 String getAddress(String addressData)
@@ -112,8 +158,9 @@ void parseSchedule(const char *json)
   ScheduleEntry *entry = new ScheduleEntry();
   if (entry->parseJson(json))
   {
-    Serial.println("JSON parsed successfully!");
+    scheduleEntries.clear();
     scheduleEntries.add(entry);
+    Serial.println("Entry added!");
   }
   else
   {
@@ -122,11 +169,24 @@ void parseSchedule(const char *json)
   }
 }
 
+void setTime()
+{
+  configTime(3600, 3600, "pool.ntp.org", "time.nist.gov");
+  while (time(nullptr) < SECS_YR_2000)
+  { // Wait until the time is set
+    delay(100);
+    Serial.print(".");
+  }
+}
+
 void setup()
 {
+  pinMode(OUT_PIN, OUTPUT);
   Serial.begin(115200);
   setup_wifi();
-  configTime(3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
+  setTime();
+  Serial.println("\nTime set.");
+  digitalWrite(OUT_PIN, LOW);
   Serial.printf("Device id: %s \r\n", deviceId);
   Serial.printf("Update feature topic: %s \r\n", updateFeatureTopic);
   Serial.printf("Config schedule topic: %s \r\n", updateScheduleTopic);
@@ -146,14 +206,6 @@ void setup()
     parseSchedule(data.c_str());
     }
 
-    if (data.indexOf("Stop pinging") != -1)
-    pinging = false;
-    else if (data.indexOf("Start pinging") != -1)
-    pinging = true;
-    if (data.indexOf("Address:") != -1)
-    address = getAddress(data);
-    if (data.indexOf("Watchdog:") != -1)
-    watchdogEnabled = !watchdogEnabled;
     mqtt.unSubscribe("/qos0"); });
 
   mqtt.onSubscribe([](int sub_id)
@@ -170,7 +222,7 @@ void setup()
     mqtt.subscribe(configDeviceTopic, 1);
     mqtt.subscribe(controlDeviceTopic, 1); });
 
-  mqtt.begin("ws://172.16.90.151:5217/mqtt", deviceId, {.lwtTopic = "test/topic", .lwtMsg = "Offline", .lwtQos = 0, .lwtRetain = 0});
+  mqtt.begin(mqtt_server, deviceId, {.lwtTopic = "test/topic", .lwtMsg = "Offline", .lwtQos = 0, .lwtRetain = 0});
   // mqtt.begin("ws://test.mosquitto.org:8443", {.lwtTopic = "hello", .lwtMsg = "offline", .lwtQos = 0, .lwtRetain = 0});
   // mqtt.begin("ws://mosquito.org:8443", "user", "pass");
   // mqtt.begin("ws://mosquito.org:8443", "clientId", "user", "pass");
@@ -183,24 +235,31 @@ void loop()
   timeClient.update();
   maintainPinState();
   unsigned long currentMillis = millis();
-  if (pinging)
-    if (Ping.ping(address.c_str(), 1))
+  mqtt.handle();
+  if (currentMillis - onlineWatchdog >= 5000)
+  {
+    onlineWatchdog = currentMillis;
+    int pinStatus = digitalRead(OUT_PIN); // Read the current state of the pin
+    if (pinStatus == HIGH)
     {
-      Serial.printf("%s Success. Time taken: ", address.c_str());
-      Serial.print(Ping.averageTime());
-      Serial.print(" ms DNS: ");
-      Serial.println(WiFi.dnsIP());
+      Serial.println("Pin is HIGH");
     }
     else
     {
-      Serial.printf("Ping %s failed, DNS: ", address.c_str(), WiFi.dnsIP());
+      Serial.println("Pin is LOW");
     }
-  mqtt.handle();
-  if (watchdogEnabled && currentMillis - onlineWatchdog >= 5000)
-  {
-    onlineWatchdog = currentMillis;
+    Serial.println(digitalRead(OUT_PIN));
     Serial.print("Free RAM: ");
     Serial.println(ESP.getFreeHeap());
+    Serial.print("Current time: ");
+    Serial.print(timeClient.getFormattedTime());
+    Serial.print(" - Current weekday: ");
+    Serial.println(weekday());
+    showEntries();
+    if (scheduleEntries.size() > 0)
+    {
+      isTimeWithinInterval(timeClient.getEpochTime(), scheduleEntries.get(0)->StartTime, scheduleEntries.get(0)->EndTime, true) ? Serial.println("Pin should be on.") : Serial.println("Pin should be off.");
+    }
     mqtt.publish(controlDeviceTopic, "Device online", 0, 0);
   }
 }
