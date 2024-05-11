@@ -26,6 +26,7 @@ const char *configDeviceTopic = "configDevice/3";
 const char *controlDeviceTopic = "controlDevice/3";
 const char *controlOnline = "online:3";
 String signal = "";
+int restartCounter = 0;
 
 // Millis
 unsigned long onlineWatchdog = 0;
@@ -170,6 +171,36 @@ void setTime()
   }
 }
 
+// Centralized subscription setup to reuse upon reconnect
+void mqttSubscribeTopics()
+{
+  Serial.printf("Subscribe id: %d\r\n", mqtt.subscribe(updateFeatureTopic, 0));
+  mqtt.subscribe(updateScheduleTopic, 1);
+  mqtt.subscribe(signalScheduleTopic, 1);
+  mqtt.subscribe(configDeviceTopic, 1);
+  mqtt.subscribe(controlDeviceTopic, 1);
+  restartCounter = 0;
+}
+
+void mqqtUnsubscribeTopics()
+{
+  mqtt.unSubscribe(updateFeatureTopic);
+  mqtt.unSubscribe(updateScheduleTopic);
+  mqtt.unSubscribe(signalScheduleTopic);
+  mqtt.unSubscribe(configDeviceTopic);
+  mqtt.unSubscribe(controlDeviceTopic);
+  restartCounter++;
+}
+
+void clearScheduleEntries()
+{
+  while (scheduleEntries.size() > 0)
+  {
+    ScheduleEntry *entry = scheduleEntries.shift(); // Retrieve and remove the first element
+    delete entry;                                   // Delete the dynamically allocated ScheduleEntry
+  }
+}
+
 void setup()
 {
   pinMode(OUT_PIN, OUTPUT);
@@ -197,7 +228,7 @@ void setup()
     if (topic == signalScheduleTopic) {
         if (data == "start") {
             signal = "start";
-            scheduleEntries.clear();  // Clear existing schedule entries if starting anew
+            clearScheduleEntries();  // Clear existing schedule entries if starting anew
         } else if (data == "stop") {
             signal = "stop";
         }
@@ -205,25 +236,17 @@ void setup()
     // Process schedule updates only if the signal is "start"
     if (signal == "start" && topic == updateScheduleTopic) {
         parseSchedule(data.c_str());
-    }
-
-    mqtt.unSubscribe("/qos0"); });
+    } });
 
   mqtt.onSubscribe([](int sub_id)
                    { 
     Serial.printf("Subscribe topic id: %d ok\r\n", sub_id); 
-    mqtt.publish(updateFeatureTopic, "Device online", 0, 0); });
+    mqtt.publish(controlDeviceTopic, controlOnline, 0, 0); });
 
   mqtt.onConnect([]()
-                 {
-    Serial.printf("MQTT: Connected\r\n");
-    Serial.printf("Subscribe id: %d\r\n", mqtt.subscribe(updateFeatureTopic, 0));
-    mqtt.subscribe(updateScheduleTopic, 1);
-    mqtt.subscribe(signalScheduleTopic, 1);
-    mqtt.subscribe(configDeviceTopic, 1);
-    mqtt.subscribe(controlDeviceTopic, 1); });
+                 { Serial.printf("MQTT: Connected\r\n"); });
 
-  mqtt.begin(mqtt_server, deviceId, {.lwtTopic = "test/topic", .lwtMsg = "Offline", .lwtQos = 0, .lwtRetain = 0});
+  mqtt.begin(mqtt_server, deviceId);
   // mqtt.begin("ws://test.mosquitto.org:8443", {.lwtTopic = "hello", .lwtMsg = "offline", .lwtQos = 0, .lwtRetain = 0});
   // mqtt.begin("ws://mosquito.org:8443", "user", "pass");
   // mqtt.begin("ws://mosquito.org:8443", "clientId", "user", "pass");
@@ -240,8 +263,35 @@ void debugSystemStatus()
   showEntries();
 }
 
+// Check if MQTT is connected, if not attempt to reconnect
+void ensureMQTTConnected()
+{
+  if (!mqtt.connected())
+  {
+    mqqtUnsubscribeTopics();
+    Serial.println("MQTT disconnected. Attempting to reconnect...");
+    // Attempt to reconnect
+    if (mqtt.connect())
+    {
+      // Re-subscribe to topics after successful reconnection
+      mqttSubscribeTopics();
+      Serial.println("Reconnected and subscribed.");
+    }
+    else
+    {
+      Serial.println("Failed to reconnect.");
+    }
+  }
+}
+
 void loop()
 {
+  if (restartCounter >= 10)
+  {
+    Serial.println("Not enough free RAM. Rebooting...");
+    ESP.reset();
+  }
+  ensureMQTTConnected();
   timeClient.update();
   maintainPinState();
   unsigned long currentMillis = millis();
