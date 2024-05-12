@@ -126,6 +126,8 @@
     [Parameter]
     public IotDevice? IotDevice { get; set; }
     [Parameter]
+    public string Status { get; set; } = string.Empty;
+    [Parameter]
     public EventCallback<IotDevice> OnDeviceChanged { get; set; }
     [Parameter]
     public EventCallback<int> OnDeviceDeleted { get; set; }

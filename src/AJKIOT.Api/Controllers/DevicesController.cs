@@ -106,7 +106,8 @@ namespace AJKIOT.Api.Controllers
                         DeviceId = updateDeviceRequest.Device.Id,
                         MessageType = MqttMessageType.UpdateSchedule,
                         Message = JsonSerializer.Serialize(scheduleItem)
-                    });
+                    }
+                );
                 await InformDevicesAsync(new MqttMessage
                 {
                     DeviceId = updateDeviceRequest.Device.Id,

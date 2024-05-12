@@ -30,6 +30,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="MqttCert\ajksoftware.pl.pfx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="MqttCert\rootCA.crt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="FirmwareFiles\FirmwareSettings.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

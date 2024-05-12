@@ -48,7 +48,7 @@ namespace AJKIOT.Api.Controllers
             var message = new MqttApplicationMessageBuilder()
                 .WithTopic(topic)
                 .WithPayload(Encoding.UTF8.GetBytes(payload))
-                .WithQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.AtLeastOnce)
+                .WithQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.ExactlyOnce)
                 .Build();
 
             await _mqttServer.InjectApplicationMessage(new InjectedMqttApplicationMessage(message)
