@@ -5,6 +5,7 @@ using AJKIOT.Api.Middleware;
 using AJKIOT.Api.Models;
 using AJKIOT.Api.Repositories;
 using AJKIOT.Api.Services;
+using AJKIOT.Api.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -163,44 +164,50 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
     options.SuppressModelStateInvalidFilter = true;
 });
+
+
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.Listen(new IPAddress([172, 16, 90, 151]), 8883, listenOptions =>
     {
+
         listenOptions.UseHttps(httpsOptions =>
         {
-            httpsOptions.ServerCertificate = new X509Certificate2(Path.Combine(Environment.CurrentDirectory, "MqttCert", "ajksoftware.pl.pfx"), "AjkCertPass!5500");
-            httpsOptions.ClientCertificateMode = ClientCertificateMode.AllowCertificate;
+            // Ładowanie certyfikatu serwera
+            var serverCert = PemKeyUtils.LoadCertificate("MqttCert/server.crt", "MqttCert/server.key");
+            httpsOptions.ServerCertificate = serverCert;
+            httpsOptions.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
 
-            // Załaduj certyfikat Root CA
-            var rootCaCertificate = new X509Certificate2(Path.Combine(Environment.CurrentDirectory, "MqttCert", "rootCA.crt"));
+            // Ładowanie certyfikatu Root CA
+            var rootCaCertificate = new X509Certificate2("MqttCert/ca.crt");
 
-            // Ustaw funkcję weryfikacji certyfikatów klienta
+            // Weryfikacja certyfikatu klienta
             httpsOptions.ClientCertificateValidation = (clientCert, chain, sslPolicyErrors) =>
             {
-                if (clientCert == null || sslPolicyErrors != SslPolicyErrors.RemoteCertificateChainErrors)
+                if (clientCert == null)
                 {
-                    return false; // Certyfikat klienta nie istnieje lub wystąpiły błędy SSL
+                    return false; // Certyfikat klienta jest null
                 }
 
-                // Buduj łańcuch certyfikatów z uwzględnieniem Root CA
-                chain!.ChainPolicy.ExtraStore.Add(rootCaCertificate);
+                // Dodanie Root CA do polityki łańcucha
+                chain.ChainPolicy.ExtraStore.Add(rootCaCertificate);
                 chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
-                chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck; // Dostosuj zgodnie z potrzebą
+                chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck; // Dostosuj w razie potrzeby
                 chain.ChainPolicy.VerificationTime = DateTime.Now;
 
-                // Sprawdź, czy łańcuch buduje się poprawnie
+                // Sprawdzenie, czy łańcuch certyfikatów jest prawidłowy
                 bool isValid = chain.Build(clientCert);
 
-                // Sprawdź, czy root CA jest zaufany
-                if (isValid)// && chain.ChainElements[chain.ChainElements.Count - 1].Certificate.Thumbprint == rootCaCertificate.Thumbprint)
+                // Upewnienie się, że Root CA jest zaufany
+                if (isValid && chain.ChainElements[^1].Certificate.Thumbprint == rootCaCertificate.Thumbprint)
                 {
-                    return true; // Weryfikacja poprawna
+                    return true; // Certyfikat jest ważny i zaufany
                 }
 
-                return false; // Weryfikacja niepoprawna
+                return false; // Certyfikat nie jest ważny lub zaufany
             };
         });
+
         listenOptions.UseMqtt();
     });
     //options.Listen(new IPAddress([172, 16, 90, 151]), 8883, l => l.UseMqtt()); // MQTT over TCP
