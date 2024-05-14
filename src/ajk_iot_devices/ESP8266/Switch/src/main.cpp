@@ -9,7 +9,8 @@
 #include <TimeLib.h>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
-#define OUT_PIN 0
+#define OUT_PIN 2
+const char *ntpServer = "pool.ntp.org";
 WiFiUDP ntpUDP; // Obiekt UDP dla komunikacji z serwerem NTP
 NTPClient timeClient(ntpUDP, "pool.ntp.org", 3600, 60000);
 
@@ -104,10 +105,20 @@ bool isTimeWithinInterval(time_t currentTime, tmElements_t start, tmElements_t e
 
 void maintainPinState()
 {
-  int currentDayOfWeek = weekday();
+  struct tm timeinfo;
+  int currentDayOfWeek = -1;
+  if (getLocalTime(&timeinfo))
+  {
+    currentDayOfWeek = timeinfo.tm_wday;
+  }
+  else
+  {
+    Serial.println("Failed to obtain time");
+    return;
+  }
+
   bool pinShouldBeOn = false;
   time_t currentTime = timeClient.getEpochTime();
-
   for (int i = 0; i < scheduleEntries.size(); i++)
   {
     ScheduleEntry *entry = scheduleEntries.get(i);
@@ -246,6 +257,11 @@ void setup()
   mqtt.onConnect([]()
                  { Serial.printf("MQTT: Connected\r\n"); });
 
+  mqtt.onDisconnect([]()
+                    {
+                      Serial.printf("MQTT: Disconnected\r\n");
+                      mqqtUnsubscribeTopics(); });
+
   mqtt.begin(mqtt_server, deviceId);
   // mqtt.begin("ws://test.mosquitto.org:8443", {.lwtTopic = "hello", .lwtMsg = "offline", .lwtQos = 0, .lwtRetain = 0});
   // mqtt.begin("ws://mosquito.org:8443", "user", "pass");
@@ -259,7 +275,9 @@ void debugSystemStatus()
   int pinStatus = digitalRead(OUT_PIN);
   Serial.printf("Pin is %s\n", pinStatus == HIGH ? "HIGH" : "LOW");
   Serial.printf("Free RAM: %d bytes\n", ESP.getFreeHeap());
-  Serial.printf("Current time: %s - Current weekday: %d\n", timeClient.getFormattedTime().c_str(), weekday());
+  struct tm timeinfo;
+  getLocalTime(&timeinfo);
+  Serial.printf("Current time: %s - Current weekday: %d\n", timeClient.getFormattedTime().c_str(), timeinfo.tm_wday);
   showEntries();
 }
 
@@ -284,6 +302,21 @@ void ensureMQTTConnected()
   }
 }
 
+void printLocalTime()
+{
+  struct tm timeinfo;
+  if (getLocalTime(&timeinfo))
+  {
+    char buffer[64]; // Bufor na sformatowany czas
+    strftime(buffer, sizeof(buffer), "%A, %B %d %Y %H:%M:%S", &timeinfo);
+    Serial.println(buffer);
+  }
+  else
+  {
+    Serial.println("Failed to obtain time");
+  }
+}
+
 void loop()
 {
   if (restartCounter >= 10)
@@ -299,6 +332,7 @@ void loop()
   if (currentMillis - onlineWatchdog >= 5000)
   {
     onlineWatchdog = currentMillis;
+    printLocalTime();
     debugSystemStatus();
     mqtt.publish(controlDeviceTopic, controlOnline, 0, 0);
   }

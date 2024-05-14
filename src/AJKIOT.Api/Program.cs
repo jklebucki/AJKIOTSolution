@@ -210,7 +210,7 @@ builder.WebHost.ConfigureKestrel(options =>
 
         listenOptions.UseMqtt();
     });
-    //options.Listen(new IPAddress([172, 16, 90, 151]), 8883, l => l.UseMqtt()); // MQTT over TCP
+    options.Listen(new IPAddress([172, 16, 90, 151]), 1883, l => l.UseMqtt()); // MQTT over TCP
     //options.ListenAnyIP(5000); // HTTP for WebSocket connection
 });
 //builder.WebHost.ConfigureKestrel((context, options) =>
