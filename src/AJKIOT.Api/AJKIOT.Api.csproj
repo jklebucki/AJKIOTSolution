@@ -45,9 +45,6 @@
     <None Update="FirmwareFiles\Switch\FirmwareSettings.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="MqttCert\ca-cert.pem">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Update="MqttCert\server-cert.pfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

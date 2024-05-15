@@ -173,20 +173,46 @@ builder.WebHost.ConfigureKestrel(options =>
 
         listenOptions.UseHttps(httpsOptions =>
         {
-            httpsOptions.ServerCertificate = new X509Certificate2(
+            var serverCertificate = new X509Certificate2(
                 Path.Combine(Directory.GetCurrentDirectory(), "MqttCert", "server-cert.pfx"),
                 "AjkCertPass!3300"
             );
+
+            httpsOptions.ServerCertificate = serverCertificate;
             httpsOptions.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
             httpsOptions.ClientCertificateValidation = (cert, chain, errors) =>
             {
-                var caCertificate = PemKeyUtils.LoadCertificate(Path.Combine(Directory.GetCurrentDirectory(), "MqttCert", "ca-cert.pem"));
+                // Extract the issuing CA certificate from the server certificate chain
+                var caCertificate = PemKeyUtils.GetCaCertificateFromChain(serverCertificate);
+
+                if (caCertificate == null)
+                {
+                    Console.WriteLine("Unable to extract CA certificate from server certificate.");
+                    return false;
+                }
 
                 chain.ChainPolicy.ExtraStore.Add(caCertificate);
                 chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
-                chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
+                chain.ChainPolicy.VerificationFlags = X509VerificationFlags.NoFlag;
 
-                return chain.Build(cert);
+                Console.WriteLine($"Client certificate: {cert.Subject}");
+                var valid = chain.Build(cert);
+                Console.WriteLine($"Certificate chain valid: {valid}");
+
+                // Manual verification to ensure the final CA certificate is the same as the server's CA certificate
+                bool caMatch = false;
+                foreach (var element in chain.ChainElements)
+                {
+                    if (element.Certificate.Thumbprint == caCertificate.Thumbprint)
+                    {
+                        caMatch = true;
+                        break;
+                    }
+                }
+                Console.WriteLine($"Certificate issued by our CA: {caMatch}");
+
+                // Return the result of the chain validation and CA matching
+                return valid && caMatch;
             };
         });
 

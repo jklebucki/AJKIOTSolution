@@ -1,10 +1,4 @@
-﻿using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.Crypto;
-using Org.BouncyCastle.Security;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using Org.BouncyCastle.OpenSsl;
+﻿using System.Security.Cryptography.X509Certificates;
 
 namespace AJKIOT.Api.Utils
 {
@@ -35,5 +29,20 @@ namespace AJKIOT.Api.Utils
             string base64 = pemContents[start..end];
             return Convert.FromBase64String(base64);
         }
+        public static X509Certificate2 GetCaCertificateFromChain(X509Certificate2 certificate)
+        {
+            using var chain = new X509Chain();
+            chain.Build(certificate);
+            foreach (var element in chain.ChainElements)
+            {
+                // Find the root CA certificate in the chain
+                if (element.Certificate.Subject == element.Certificate.Issuer)
+                {
+                    return element.Certificate;
+                }
+            }
+            return null;
+        }
+
     }
 }
