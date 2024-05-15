@@ -30,15 +30,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="MqttCert\ajksoftware.pl.pfx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="MqttCert\ca.crt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="MqttCert\rootCA.crt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Update="FirmwareFiles\FirmwareSettings.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -54,10 +45,10 @@
     <None Update="FirmwareFiles\Switch\FirmwareSettings.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="MqttCert\server.crt">
+    <None Update="MqttCert\ca-cert.pem">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="MqttCert\server.key">
+    <None Update="MqttCert\server-cert.pfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -133,7 +133,7 @@ builder.Services.AddSignalR();
 // MQTT 
 builder.Services.AddMqttServer(mqttServer =>
 {
-    var certificate = new X509Certificate2(Path.Combine(Environment.CurrentDirectory, "MqttCert", "ajksoftware.pl.pfx"), "AjkCertPass!5500");
+    var certificate = new X509Certificate2(Path.Combine(Environment.CurrentDirectory, "MqttCert", "server-cert.pfx"), "AjkCertPass!3300");
     mqttServer.WithEncryptionCertificate(certificate)
               .WithClientCertificate((object sender, X509Certificate? cert, X509Chain? chain, SslPolicyErrors sslPolicyErrors) =>
               {
@@ -168,43 +168,25 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.Listen(new IPAddress([172, 16, 90, 151]), 8883, listenOptions =>
+    options.Listen(IPAddress.Parse("172.16.90.151"), 8883, listenOptions =>
     {
 
         listenOptions.UseHttps(httpsOptions =>
         {
-            // Ładowanie certyfikatu serwera
-            var serverCert = PemKeyUtils.LoadCertificate("MqttCert/server.crt", "MqttCert/server.key");
-            httpsOptions.ServerCertificate = serverCert;
+            httpsOptions.ServerCertificate = new X509Certificate2(
+                Path.Combine(Directory.GetCurrentDirectory(), "MqttCert", "server-cert.pfx"),
+                "AjkCertPass!3300"
+            );
             httpsOptions.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
-
-            // Ładowanie certyfikatu Root CA
-            var rootCaCertificate = new X509Certificate2("MqttCert/ca.crt");
-
-            // Weryfikacja certyfikatu klienta
-            httpsOptions.ClientCertificateValidation = (clientCert, chain, sslPolicyErrors) =>
+            httpsOptions.ClientCertificateValidation = (cert, chain, errors) =>
             {
-                if (clientCert == null)
-                {
-                    return false; // Certyfikat klienta jest null
-                }
+                var caCertificate = PemKeyUtils.LoadCertificate(Path.Combine(Directory.GetCurrentDirectory(), "MqttCert", "ca-cert.pem"));
 
-                // Dodanie Root CA do polityki łańcucha
-                chain.ChainPolicy.ExtraStore.Add(rootCaCertificate);
+                chain.ChainPolicy.ExtraStore.Add(caCertificate);
+                chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
                 chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
-                chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck; // Dostosuj w razie potrzeby
-                chain.ChainPolicy.VerificationTime = DateTime.Now;
 
-                // Sprawdzenie, czy łańcuch certyfikatów jest prawidłowy
-                bool isValid = chain.Build(clientCert);
-
-                // Upewnienie się, że Root CA jest zaufany
-                if (isValid && chain.ChainElements[^1].Certificate.Thumbprint == rootCaCertificate.Thumbprint)
-                {
-                    return true; // Certyfikat jest ważny i zaufany
-                }
-
-                return false; // Certyfikat nie jest ważny lub zaufany
+                return chain.Build(cert);
             };
         });
 
@@ -213,27 +195,7 @@ builder.WebHost.ConfigureKestrel(options =>
     options.Listen(new IPAddress([172, 16, 90, 151]), 1883, l => l.UseMqtt()); // MQTT over TCP
     //options.ListenAnyIP(5000); // HTTP for WebSocket connection
 });
-//builder.WebHost.ConfigureKestrel((context, options) =>
-//{
-//    var endpointConfiguration = context.Configuration.GetSection("Kestrel:Endpoints");
 
-//    foreach (var endpoint in endpointConfiguration.GetChildren())
-//    {
-//        var address = endpoint["Address"];
-//        var port = endpoint.GetValue<int>("Port");
-//        options.ListenAnyIP(port, listenOptions =>
-//        {
-//            if (endpoint.Key == "MqttServer")
-//            {
-//                listenOptions.UseMqtt(); // Configure for MQTT
-//            }
-//            else if (endpoint.Key == "HttpsServer")
-//            {
-//                listenOptions.UseHttps(); // Configure for HTTPS
-//            }
-//        });
-//    }
-//});
 
 var app = builder.Build();
 
