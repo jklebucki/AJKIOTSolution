@@ -182,16 +182,29 @@ builder.WebHost.ConfigureKestrel(options =>
             httpsOptions.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
             httpsOptions.ClientCertificateValidation = (cert, chain, errors) =>
             {
-                // Extract the issuing CA certificate from the server certificate chain
-                var caCertificate = PemKeyUtils.GetCaCertificateFromChain(serverCertificate);
+                // Build the server certificate chain
+                using var serverChain = new X509Chain();
+                serverChain.Build(serverCertificate);
 
-                if (caCertificate == null)
+                // Extract the root CA certificate from the server certificate chain
+                X509Certificate2 serverRootCa = null;
+                foreach (var element in serverChain.ChainElements)
                 {
-                    Console.WriteLine("Unable to extract CA certificate from server certificate.");
+                    if (element.Certificate.Subject == element.Certificate.Issuer)
+                    {
+                        serverRootCa = element.Certificate;
+                        break;
+                    }
+                }
+
+                if (serverRootCa == null)
+                {
+                    Console.WriteLine("Unable to extract root CA certificate from server certificate chain.");
                     return false;
                 }
 
-                chain.ChainPolicy.ExtraStore.Add(caCertificate);
+                // Build the client certificate chain
+                chain.ChainPolicy.ExtraStore.Add(serverRootCa);
                 chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
                 chain.ChainPolicy.VerificationFlags = X509VerificationFlags.NoFlag;
 
@@ -199,19 +212,28 @@ builder.WebHost.ConfigureKestrel(options =>
                 var valid = chain.Build(cert);
                 Console.WriteLine($"Certificate chain valid: {valid}");
 
-                // Manual verification to ensure the final CA certificate is the same as the server's CA certificate
-                bool caMatch = false;
+                // Extract the root CA certificate from the client certificate chain
+                X509Certificate2 clientRootCa = null;
                 foreach (var element in chain.ChainElements)
                 {
-                    if (element.Certificate.Thumbprint == caCertificate.Thumbprint)
+                    if (element.Certificate.Subject == element.Certificate.Issuer)
                     {
-                        caMatch = true;
+                        clientRootCa = element.Certificate;
                         break;
                     }
                 }
-                Console.WriteLine($"Certificate issued by our CA: {caMatch}");
 
-                // Return the result of the chain validation and CA matching
+                if (clientRootCa == null)
+                {
+                    Console.WriteLine("Unable to extract root CA certificate from client certificate chain.");
+                    return false;
+                }
+
+                // Compare the root CA certificates of both client and server
+                bool caMatch = clientRootCa.Thumbprint == serverRootCa.Thumbprint;
+                Console.WriteLine($"Certificates have the same root CA: {caMatch}");
+
+                // Return the result of the chain validation and root CA matching
                 return valid && caMatch;
             };
         });
