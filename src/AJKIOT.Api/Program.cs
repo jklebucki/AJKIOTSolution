@@ -150,12 +150,10 @@ builder.Services.AddMqttServer(mqttServer =>
                   Console.WriteLine($"Client certificate: {cert.Subject}");
                   return cert.GetPublicKey().SequenceEqual(certificate.GetPublicKey());
               })
-              .WithEncryptedEndpointBoundIPAddress(System.Net.IPAddress.Any)
+              .WithEncryptedEndpointBoundIPAddress(IPAddress.Any)
               .WithEncryptedEndpointPort(8883)
               .WithoutDefaultEndpoint();
-    //mqttServer.WithoutDefaultEndpoint();
 })
-//.AddMqttWebSocketServerAdapter()
 .AddConnections();
 builder.Services.AddSingleton<MqttController>();
 
@@ -170,78 +168,86 @@ builder.WebHost.ConfigureKestrel(options =>
 {
     options.Listen(IPAddress.Parse("172.16.90.151"), 8883, listenOptions =>
     {
+        // Load the CA certificate from PEM file
+        var caCertificate = new X509Certificate2(
+            Path.Combine(Directory.GetCurrentDirectory(), "MqttCert", "ca-cert.pem")
+        );
+
+        // Load the server certificate from the generated PFX file
+        var serverCertificate = new X509Certificate2(
+            Path.Combine(Directory.GetCurrentDirectory(), "MqttCert", "server-cert.pfx"),
+            "AjkCertPass!3300"
+        );
 
         listenOptions.UseHttps(httpsOptions =>
         {
-            var serverCertificate = new X509Certificate2(
-                Path.Combine(Directory.GetCurrentDirectory(), "MqttCert", "server-cert.pfx"),
-                "AjkCertPass!3300"
-            );
-
             httpsOptions.ServerCertificate = serverCertificate;
             httpsOptions.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
             httpsOptions.ClientCertificateValidation = (cert, chain, errors) =>
             {
-                // Build the server certificate chain
-                using var serverChain = new X509Chain();
-                serverChain.Build(serverCertificate);
-
-                // Extract the root CA certificate from the server certificate chain
-                X509Certificate2 serverRootCa = null;
-                foreach (var element in serverChain.ChainElements)
+                Console.WriteLine("---------------------------------------------------");
+                try
                 {
-                    if (element.Certificate.Subject == element.Certificate.Issuer)
+                    // Build the client certificate chain
+                    chain.ChainPolicy.ExtraStore.Add(caCertificate);
+                    chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
+                    chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
+                    chain.ChainPolicy.VerificationFlags |= X509VerificationFlags.IgnoreRootRevocationUnknown;
+                    chain.ChainPolicy.VerificationFlags |= X509VerificationFlags.IgnoreCertificateAuthorityRevocationUnknown;
+
+                    Console.WriteLine($"Client certificate: {cert.Subject}");
+                    var valid = chain.Build(cert);
+                    Console.WriteLine($"Certificate chain valid: {valid}");
+
+                    // Log client chain elements
+                    //foreach (var element in chain.ChainElements)
+                    //{
+                    //    Console.WriteLine($"Client Certificate Chain Element: {element.Certificate.Subject}");
+                    //}
+
+                    // Extract the root CA certificate from the client certificate chain
+                    X509Certificate2 clientRootCa = null;
+                    foreach (var element in chain.ChainElements)
                     {
-                        serverRootCa = element.Certificate;
-                        break;
+                        if (element.Certificate.Subject == element.Certificate.Issuer)
+                        {
+                            clientRootCa = element.Certificate;
+                            //Console.WriteLine($"Client Root CA Found: {clientRootCa.Subject}");
+                            break;
+                        }
                     }
-                }
 
-                if (serverRootCa == null)
+                    if (clientRootCa == null)
+                    {
+                        Console.WriteLine("Unable to extract root CA certificate from client certificate chain.");
+                        return false;
+                    }
+
+                    // Log the details of the client root CA
+                    //Console.WriteLine($"Client Root CA Details:");
+                    //Console.WriteLine($"Subject: {clientRootCa.Subject}");
+                    //Console.WriteLine($"Issuer: {clientRootCa.Issuer}");
+                    //Console.WriteLine($"Thumbprint: {clientRootCa.Thumbprint}");
+
+                    // Compare the root CA certificates of both client and server
+                    bool caMatch = clientRootCa.Thumbprint == caCertificate.Thumbprint;
+                    Console.WriteLine($"CA Certificate Thumbprint: {caCertificate.Thumbprint}");
+                    Console.WriteLine($"Client Root CA Thumbprint: {clientRootCa.Thumbprint}");
+                    Console.WriteLine($"Certificates have the same root CA: {caMatch}");
+
+                    // Return the result of the chain validation and root CA matching
+                    return valid && caMatch;
+                }
+                catch (Exception ex)
                 {
-                    Console.WriteLine("Unable to extract root CA certificate from server certificate chain.");
+                    Console.WriteLine($"Exception during certificate validation: {ex}");
                     return false;
                 }
-
-                // Build the client certificate chain
-                chain.ChainPolicy.ExtraStore.Add(serverRootCa);
-                chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
-                chain.ChainPolicy.VerificationFlags = X509VerificationFlags.NoFlag;
-
-                Console.WriteLine($"Client certificate: {cert.Subject}");
-                var valid = chain.Build(cert);
-                Console.WriteLine($"Certificate chain valid: {valid}");
-
-                // Extract the root CA certificate from the client certificate chain
-                X509Certificate2 clientRootCa = null;
-                foreach (var element in chain.ChainElements)
-                {
-                    if (element.Certificate.Subject == element.Certificate.Issuer)
-                    {
-                        clientRootCa = element.Certificate;
-                        break;
-                    }
-                }
-
-                if (clientRootCa == null)
-                {
-                    Console.WriteLine("Unable to extract root CA certificate from client certificate chain.");
-                    return false;
-                }
-
-                // Compare the root CA certificates of both client and server
-                bool caMatch = clientRootCa.Thumbprint == serverRootCa.Thumbprint;
-                Console.WriteLine($"Certificates have the same root CA: {caMatch}");
-
-                // Return the result of the chain validation and root CA matching
-                return valid && caMatch;
             };
         });
 
         listenOptions.UseMqtt();
     });
-    options.Listen(new IPAddress([172, 16, 90, 151]), 1883, l => l.UseMqtt()); // MQTT over TCP
-    //options.ListenAnyIP(5000); // HTTP for WebSocket connection
 });
 
 
