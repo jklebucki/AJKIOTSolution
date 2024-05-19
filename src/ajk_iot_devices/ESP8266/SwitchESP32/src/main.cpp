@@ -34,53 +34,32 @@ LinkedList<ScheduleEntry *> scheduleEntries = LinkedList<ScheduleEntry *>();
 String signalSchedule = "";
 unsigned long localMillis = 0;
 
-bool isTimeWithinInterval(time_t currentTime, tmElements_t start, tmElements_t end)
+bool isDaylightSavingTime(const tm &timeinfo)
 {
-  // Set a fixed date for all time comparisons (e.g., January 1, 2000)
-  int fixedYear = 2000;
-  int fixedMonth = 1;
-  int fixedDay = 1;
+  // Sprawdzanie czy jest czas letni (ostatnia niedziela marca do ostatniej niedzieli października)
+  int month = timeinfo.tm_mon + 1;
+  int day = timeinfo.tm_mday;
+  int wday = timeinfo.tm_wday;
 
-  // Configure the fixed start and end dates
-  tmElements_t fixedStart, fixedEnd;
-  fixedStart.Year = fixedYear - 1970;
-  fixedStart.Month = fixedMonth;
-  fixedStart.Day = fixedDay;
-  fixedStart.Hour = start.Hour;
-  fixedStart.Minute = start.Minute;
-  fixedStart.Second = 0;
-
-  fixedEnd.Year = fixedYear - 1970;
-  fixedEnd.Month = fixedMonth;
-  fixedEnd.Day = fixedDay;
-  fixedEnd.Hour = end.Hour;
-  fixedEnd.Minute = end.Minute;
-  fixedEnd.Second = 0;
-
-  // Convert to time_t for easier comparison
-  time_t fixedStartTime = makeTime(fixedStart);
-  time_t fixedEndTime = makeTime(fixedEnd);
-
-  // Extract current time components
-  tmElements_t tempCurrent;
-  breakTime(currentTime, tempCurrent);
-  tempCurrent.Year = fixedYear - 1970;
-  tempCurrent.Month = fixedMonth;
-  tempCurrent.Day = fixedDay;
-  time_t adjustedCurrentTime = makeTime(tempCurrent);
-
-  // Adjust for midnight crossing
-  if (fixedEndTime <= fixedStartTime)
+  // Marzec: sprawdzamy ostatnią niedzielę
+  if (month == 3 && (day - wday) >= 25)
   {
-    fixedEndTime += SECS_PER_DAY; // Add one day to the end time
-    if (adjustedCurrentTime < fixedStartTime)
-    {
-      adjustedCurrentTime += SECS_PER_DAY; // Adjust current time to the next day for comparison
-    }
+    return true;
   }
 
-  // Perform the comparison
-  return (adjustedCurrentTime >= fixedStartTime && adjustedCurrentTime <= fixedEndTime);
+  // Kwiecień do września: zawsze czas letni
+  if (month > 3 && month < 10)
+  {
+    return true;
+  }
+
+  // Październik: sprawdzamy ostatnią niedzielę
+  if (month == 10 && (day - wday) < 25)
+  {
+    return true;
+  }
+
+  return false;
 }
 
 int mondayAsFirstDayOfWeek(int weekDay)
@@ -93,33 +72,39 @@ int mondayAsFirstDayOfWeek(int weekDay)
 }
 void maintainPinState()
 {
+  timeClient.update();
   struct tm timeinfo;
-  int currentDayOfWeek = -1;
   if (getLocalTime(&timeinfo))
   {
-    currentDayOfWeek = mondayAsFirstDayOfWeek(timeinfo.tm_wday);
+    int timeOffsetSeconds = 0;
+    if (isDaylightSavingTime(timeinfo))
+    {
+      timeOffsetSeconds = 3600; // Przesunięcie czasowe dla CEST (UTC+2)
+    }
+
+    time_t currentTime = (timeClient.getEpochTime() + timeOffsetSeconds) % 86400; // Użycie czasu NTP z przesunięciem czasowym
+
+    int currentDayOfWeek = mondayAsFirstDayOfWeek(timeinfo.tm_wday);
+    bool pinShouldBeOn = false;
+
+    for (int i = 0; i < scheduleEntries.size(); i++)
+    {
+      ScheduleEntry *entry = scheduleEntries.get(i);
+      if (entry->DayNumber == currentDayOfWeek)
+      {
+        if (entry->isCurrentTimeInRange(currentTime))
+        {
+          pinShouldBeOn = true;
+          break;
+        }
+      }
+    }
+    digitalWrite(OUT_PIN, pinShouldBeOn ? HIGH : LOW); // Ustawienie stanu pinu
   }
   else
   {
     Serial.println("Failed to obtain time");
-    return;
   }
-
-  bool pinShouldBeOn = false;
-  time_t currentTime = mktime(&timeinfo);
-  for (int i = 0; i < scheduleEntries.size(); i++)
-  {
-    ScheduleEntry *entry = scheduleEntries.get(i);
-    if (entry->DayNumber == currentDayOfWeek)
-    {
-      if (isTimeWithinInterval(currentTime, entry->StartTime, entry->EndTime))
-      {
-        pinShouldBeOn = true;
-        break;
-      }
-    }
-  }
-  digitalWrite(OUT_PIN, pinShouldBeOn ? HIGH : LOW); // Ustawienie stanu pinu
 }
 
 void showEntries()
@@ -127,7 +112,9 @@ void showEntries()
   for (int i = 0; i < scheduleEntries.size(); i++)
   {
     ScheduleEntry *entry = scheduleEntries.get(i);
-    Serial.printf("Entry %d: Day: %d, StartTime: %02d:%02d, EndTime: %02d:%02d\n", i, entry->DayNumber, entry->StartTime.Hour, entry->StartTime.Minute, entry->EndTime.Hour, entry->EndTime.Minute);
+    Serial.printf("Entry %d: Day: %d, StartTime: %s, EndTime: %s", i, entry->DayNumber, entry->timeToString(entry->StartTime), entry->timeToString(entry->EndTime));
+    Serial.printf(" - StartTime: %d, EndTime: %d", entry->StartTime, entry->EndTime);
+    Serial.println();
   }
 }
 
@@ -148,7 +135,7 @@ void parseSchedule(const char *json)
 
 void setTime()
 {
-  configTime(3600, 3600, "pool.ntp.org", "time.nist.gov");
+  configTime(0, 0, "pool.ntp.org", "time.nist.gov");
   while (time(nullptr) < SECS_YR_2000)
   { // Wait until the time is set
     delay(100);
@@ -162,11 +149,22 @@ void printLocalTime()
   struct tm timeinfo;
   if (getLocalTime(&timeinfo))
   {
+    int timeOffsetSeconds = 0;
+    if (isDaylightSavingTime(timeinfo))
+    {
+      timeOffsetSeconds = 3600; // Przesunięcie czasowe dla CEST (UTC+2)
+    }
+
+    time_t currentTime = timeClient.getEpochTime() + timeOffsetSeconds; // Dodanie przesunięcia czasowego
+    struct tm *localTimeInfo = localtime(&currentTime);
+
     char buffer[64]; // Bufor na sformatowany czas
-    strftime(buffer, sizeof(buffer), "%A, %B %d %Y %H:%M:%S", &timeinfo);
+    strftime(buffer, sizeof(buffer), "%A, %B %d %Y %H:%M:%S", localTimeInfo);
     Serial.println(buffer);
-    Serial.println(timeClient.getEpochTime());
-    Serial.println(mktime(&timeinfo));
+    Serial.print("Epoch time: \t");
+    Serial.println(currentTime % 86400); // Czas z klienta NTP
+    Serial.print("Current time: \t");
+    Serial.println(mktime(localTimeInfo) % 86400); // Czas z `localtime`
   }
   else
   {
@@ -315,6 +313,7 @@ void setup()
   Serial.begin(115200);
   setup_wifi();
   setTime();
+  timeClient.update();
   digitalWrite(OUT_PIN, LOW);
   loadCertificates(espClient);
   client.setServer(mqtt_server, mqtt_port);
@@ -328,7 +327,7 @@ void debugSystemStatus()
   Serial.printf("Free RAM: %d bytes\n", ESP.getFreeHeap());
   struct tm timeinfo;
   getLocalTime(&timeinfo);
-  Serial.printf("Current time: %d:%d:%d - Current weekday: %d\n", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, mondayAsFirstDayOfWeek(timeinfo.tm_wday));
+  Serial.printf("Current time: %02d:%02d:%02d - Current weekday: %d\n", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, mondayAsFirstDayOfWeek(timeinfo.tm_wday));
   showEntries();
 }
 
@@ -338,11 +337,11 @@ void loop()
   {
     reconnect();
   }
-  timeClient.update();
   maintainPinState();
   unsigned long currentMillis = millis();
   if (currentMillis - localMillis >= 5000)
   {
+    timeClient.update();
     localMillis = currentMillis;
     printLocalTime();
     debugSystemStatus();
