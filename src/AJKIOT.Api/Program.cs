@@ -5,7 +5,6 @@ using AJKIOT.Api.Middleware;
 using AJKIOT.Api.Models;
 using AJKIOT.Api.Repositories;
 using AJKIOT.Api.Services;
-using AJKIOT.Api.Utils;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;

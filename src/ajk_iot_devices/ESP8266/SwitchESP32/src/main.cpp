@@ -1,95 +1,21 @@
+#define OUT_PIN 2
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <PubSubClient.h>
 #include "FS.h"
 #include "SPIFFS.h"
-
-static const char cacert[] PROGMEM = R"EOF(
------BEGIN CERTIFICATE-----
-MIIDuzCCAqOgAwIBAgIUUpgos+QK4YkAuxL178EeFH5huLEwDQYJKoZIhvcNAQEL
-BQAwbTEWMBQGA1UEAwwNYWprZGVza3RvcCBDQTEPMA0GA1UECwwGQUpLIElUMQww
-CgYDVQQKDANBSksxEDAOBgNVBAcMB0xlZ25pY2ExFTATBgNVBAgMDGRvbG5vc2xh
-c2tpZTELMAkGA1UEBhMCUEwwHhcNMjQwNTE4MTc0MTE5WhcNMjUwNTE4MTc0MTE5
-WjBtMRYwFAYDVQQDDA1hamtkZXNrdG9wIENBMQ8wDQYDVQQLDAZBSksgSVQxDDAK
-BgNVBAoMA0FKSzEQMA4GA1UEBwwHTGVnbmljYTEVMBMGA1UECAwMZG9sbm9zbGFz
-a2llMQswCQYDVQQGEwJQTDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEB
-AK5A8FxKiLvColj6iWWa1yCV290PGpwRD+Z+tWZhm2YURXDoxipZdSMjqTV0Io2a
-Vy53i3JHcuLx3t/IwBzHerCNMzU9wQiuoMQ20mEY+hitMVfBo1kGJF4+g/HQ37i7
-M/aqOf3fF6Qs4l8Yu7qRfJYev/vnwhIiY8rjmHFZwxVUI+MD1rBR75zhRT8UBCmN
-aoupxj4y+advkB2UxF7MJPb6dbJ7opkmGVJH97JN9Wm26KTWNXRvAZePGiqlZDfW
-W2GjPiyEh3mfFI5eHHloeEWYyV6ftaAj4kZQtUd64HGCavvmnsE7LStwLvs4mHhY
-+prKDQvoA3ywyq7boCiBFtMCAwEAAaNTMFEwHQYDVR0OBBYEFBn+qZPwxqxk49FG
-H0kiHBoMM+WnMB8GA1UdIwQYMBaAFBn+qZPwxqxk49FGH0kiHBoMM+WnMA8GA1Ud
-EwEB/wQFMAMBAf8wDQYJKoZIhvcNAQELBQADggEBABRxZ7HRORFXmQVM2LIcn6uh
-LrTA5UjMA3L5uwJN0ekvCr6hTGto6SXnw2HU+d7UfoWK6mmuLyozrc5z0kprjbcF
-/M7Uf5a/YRCmQMwKTli7OivdmUDhJkZnfvQ5sbYpZgfXUaHS0DsQ/r+wKzVtD6H4
-jBHHGn/V7mNZt70NmuomgARAioRcefxQOtrT5O46iHV7ok+sTUGo7qYleOcQZNgJ
-ypgSYMneZI3M0PgOdFslLFlbhkW2rcXB2PLlwNst7y9nH3okTx5JxMn8LNNnGK3V
-r0O3yNY40sBkw2O+uSk86+noGsn9FuH5aKZYsU3Jm3TR71rDcyjXZ+g4+ew6zSw=
------END CERTIFICATE-----
-)EOF";
-
-static const char client_cert[] PROGMEM = R"EOF(
------BEGIN CERTIFICATE-----
-MIIDXTCCAkUCFHfSFCXN6H6gsTlARCDOyJYGWyPQMA0GCSqGSIb3DQEBCwUAMG0x
-FjAUBgNVBAMMDWFqa2Rlc2t0b3AgQ0ExDzANBgNVBAsMBkFKSyBJVDEMMAoGA1UE
-CgwDQUpLMRAwDgYDVQQHDAdMZWduaWNhMRUwEwYDVQQIDAxkb2xub3NsYXNraWUx
-CzAJBgNVBAYTAlBMMB4XDTI0MDUxODE3NDEyMFoXDTI1MDUxODE3NDEyMFowaTES
-MBAGA1UEAwwJSW9URGV2aWNlMQ8wDQYDVQQLDAZBSksgSVQxDDAKBgNVBAoMA0FK
-SzEQMA4GA1UEBwwHTGVnbmljYTEVMBMGA1UECAwMZG9sbm9zbGFza2llMQswCQYD
-VQQGEwJQTDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALUJzcZnvZz2
-Lj0G6axTzDoOR4/8Ntf38iv9rLX5iEsEm6W+rUA2JaP/AwBIJf/QUZ5ABIp/PxPm
-uU6jyIc4H++85NUaavV78cL9JeeeqtDasACELGabPLMBkXYWWjnAsswVAtCIDyIi
-dJV9i/AzibD37hb3BdMWzeHhP46qqtVSQ5vI5bWuMWLYbA7R3S246v3arjxbdRST
-RQF4VtVPyzgImwNzfpvDzBSe9ogjIBkaPNpUnYmyq3FzlJfVFMC98lhOrIy6gZPJ
-/leRI/6xENz7uEao1I9+/DHeNHdfiM8v1mrRuS9ZwN+cjEg1y/L9XkYY1r1gnBta
-0sQLQCJdUs0CAwEAATANBgkqhkiG9w0BAQsFAAOCAQEAUKRZfk8cHJ02bZWueSGr
-8sSlOK+w4zpPPYebyVojpXbFh9czutl30xvguiQrjIEci7zd0sxgx9fQBRMzutHR
-puiJpbk009H2d0UBDGsF4h6yj7rM02CbuP9S5G+cdTDDklKRZVr/s2r5VE1yWBhm
-XKDVnMKbT5wbc31Tf/dAt9rTCbGzTzsRSv4KEeyF1hHOzsyhJ1tb98VDhw3NZ/JH
-TZHpkJl0xyx+CGhPtAfMu3NMBCMmKAcEXRU80WZSxE1WRz2kO012R7flV0ry30O2
-/pRalBVg8msIJZk/riVC+9xYxNFlihamXiZlBH6PLQVfHXewF3GHug35Sw2AVmzX
-YQ==
------END CERTIFICATE-----
-)EOF";
-
-static const char client_key[] PROGMEM = R"EOF(
------BEGIN PRIVATE KEY-----
-MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC1Cc3GZ72c9i49
-BumsU8w6DkeP/DbX9/Ir/ay1+YhLBJulvq1ANiWj/wMASCX/0FGeQASKfz8T5rlO
-o8iHOB/vvOTVGmr1e/HC/SXnnqrQ2rAAhCxmmzyzAZF2Flo5wLLMFQLQiA8iInSV
-fYvwM4mw9+4W9wXTFs3h4T+OqqrVUkObyOW1rjFi2GwO0d0tuOr92q48W3UUk0UB
-eFbVT8s4CJsDc36bw8wUnvaIIyAZGjzaVJ2Jsqtxc5SX1RTAvfJYTqyMuoGTyf5X
-kSP+sRDc+7hGqNSPfvwx3jR3X4jPL9Zq0bkvWcDfnIxINcvy/V5GGNa9YJwbWtLE
-C0AiXVLNAgMBAAECggEAQjpm6+kxpYUt3ydzPpadRLPKnDLxQUq0bkFr+Fpj8MWr
-xxOdP7tPQ9Jbn7PFKvNjmFflEWGBit9B9THXfxgaHtLkh80VSd7gz6taPYR/Cs6l
-ylqP/61UpEuzkhaVRUFoZ15cXDsaBivCqJl4IxRHj9TzZbVSjSlvge2sGZ33xvem
-uZ7v37IOVbwlcj9cdMk0FF3rdKJRMXuufCH54x1MXdW80LtVbccdqyec9TA0YPN9
-tVwmI8yZX1EELpLMrQ8zw5XPCcolsLtMrG/3UWXZTGEMuKNafYK1wprirvQWoaSx
-sQep1t2L1RZWxcR7G+gIxSQ8gRbLzY4QaamSVndhpQKBgQDTzvnCUv4znnrrRuOF
-xdNIDRWGbmRSH8ljOCQo4McvHw63gBMi0YKIw+wLDj6CSnjoyhS5dB+nCl0FEt6s
-d1mnnE9VnfeyAATyVpj43g79odCH5ly6/kMEHMofNPx/vaglcoX30F1BR2DMkwtt
-vPEy1Gq7MaI6pybgUCqe4q/85wKBgQDaz1fnnXrpYqiIsGN4IbctydQIEy5lXQ79
-LUzPxrEgd/xplBiiVkcT3Dj6cBbOgcMd1SOL+MH57b3YHz8AxFvF33aB+qdwRMES
-B2P+0knTkVWyOK6O8yBHVxeiuye0EMH9CprC/8SzE4GzV3cW2OoRfAbde6ue9wSX
-Z/NWXXBoKwKBgGOSRHWnAFuR4CUk4SbtFeMkS38z/DNjQBBFvzH8YYb0ab24Fsbi
-iSP0Ps3/t0EW83o0LcP1JEAprgsJkOaxANO7tswABAaI3cpzDVzJP3DaliadE/DQ
-QP747cf358/Bf/+CtBoIuR5MCOSDJ/dBwH3tv/MaZTJ/i9YdubuRw7v3AoGAc1YR
-3uuaq0Su04YumFclSER3uF3r+dAoo3lqYKc6HIRCj6BZr9BMnQJbIl9NFkM+Bw6f
-MxvHm6ceh7pIqm3WdiHJRNBLzBjhsFAm/F36PkQAaPYJxR4QqKoWsld2oSqoJmqd
-kyXgmAgzOMZk5q0mDFtU/xA+MYfBatGHacHNC4sCgYAPgl2/IT860poye+6kr7oi
-1D+8aBML7HDgYbzJs5llPIm9HO+6X5ekcfIgnTnAt6AZnBTN3aeuIf7j6xM/WQK2
-EypWWh0VYSzeynsO+DezLUMaWAlC5IRnCd1wdlC62I0Zg4GDPO9JimaLyii1zgXU
-mS8BVDuJsq6/AriqbXjBHg==
------END PRIVATE KEY-----
-)EOF";
+#include <ScheduleEntry.h>
+#include <vector>
+#include <LinkedList.h>
+#include <TimeLib.h>
+#include <NTPClient.h>
 
 const char *ssid = "Orange_Swiatlowod_B5AC";
 const char *password = "cdHqhMotvgMSJ9L4tD";
 
 // MQTT Server details
 const char *mqtt_server = "ajkdesktop";
-const int mqtt_port = 8883; // Updated to use SSL port
+const int mqtt_port = 8883;
 const char *deviceId = "3";
 const char *updateFeatureTopic = "updateFeature/3";
 const char *updateScheduleTopic = "configSchedule/3";
@@ -98,64 +24,154 @@ const char *configDeviceTopic = "configDevice/3";
 const char *controlDeviceTopic = "controlDevice/3";
 const char *controlOnline = "online:3";
 
-WiFiClientSecure espClient; // Using secure client
-// X509List ssl_cert_list(ssl_cert);
+WiFiClientSecure espClient;
 PubSubClient client(espClient);
 
-char *prepare_certificate(const char *certs[])
+const char *ntpServer = "pool.ntp.org";
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, "pool.ntp.org", 3600, 60000);
+LinkedList<ScheduleEntry *> scheduleEntries = LinkedList<ScheduleEntry *>();
+String signalSchedule = "";
+unsigned long localMillis = 0;
+
+bool isTimeWithinInterval(time_t currentTime, tmElements_t start, tmElements_t end)
 {
-  if (!certs)
-    return NULL;
-  int total_len = 0;
-  for (int i = 0; certs[i] != NULL; i++)
-  {
-    total_len += strlen(certs[i]) + 1; // +1 for '\n'
-  }
+  // Set a fixed date for all time comparisons (e.g., January 1, 2000)
+  int fixedYear = 2000;
+  int fixedMonth = 1;
+  int fixedDay = 1;
 
-  char *full_cert = (char *)malloc(total_len + 1); // +1 for final null character
-  if (!full_cert)
-    return NULL;
+  // Configure the fixed start and end dates
+  tmElements_t fixedStart, fixedEnd;
+  fixedStart.Year = fixedYear - 1970;
+  fixedStart.Month = fixedMonth;
+  fixedStart.Day = fixedDay;
+  fixedStart.Hour = start.Hour;
+  fixedStart.Minute = start.Minute;
+  fixedStart.Second = 0;
 
-  full_cert[0] = '\0'; // Initialize the string
-  for (int i = 0; certs[i] != NULL; i++)
+  fixedEnd.Year = fixedYear - 1970;
+  fixedEnd.Month = fixedMonth;
+  fixedEnd.Day = fixedDay;
+  fixedEnd.Hour = end.Hour;
+  fixedEnd.Minute = end.Minute;
+  fixedEnd.Second = 0;
+
+  // Convert to time_t for easier comparison
+  time_t fixedStartTime = makeTime(fixedStart);
+  time_t fixedEndTime = makeTime(fixedEnd);
+
+  // Extract current time components
+  tmElements_t tempCurrent;
+  breakTime(currentTime, tempCurrent);
+  tempCurrent.Year = fixedYear - 1970;
+  tempCurrent.Month = fixedMonth;
+  tempCurrent.Day = fixedDay;
+  time_t adjustedCurrentTime = makeTime(tempCurrent);
+
+  // Adjust for midnight crossing
+  if (fixedEndTime <= fixedStartTime)
   {
-    strcat(full_cert, certs[i]);
-    if (certs[i][strlen(certs[i]) - 1] != '\n')
+    fixedEndTime += SECS_PER_DAY; // Add one day to the end time
+    if (adjustedCurrentTime < fixedStartTime)
     {
-      strcat(full_cert, "\n"); // Ensure each part ends with a newline
+      adjustedCurrentTime += SECS_PER_DAY; // Adjust current time to the next day for comparison
     }
   }
 
-  return full_cert;
+  // Perform the comparison
+  return (adjustedCurrentTime >= fixedStartTime && adjustedCurrentTime <= fixedEndTime);
 }
 
-char *create_cert_string(const char **cert_array)
+int mondayAsFirstDayOfWeek(int weekDay)
 {
-  if (cert_array == NULL)
-    return NULL;
-
-  // Obliczanie całkowitej długości potrzebnej na certyfikat
-  size_t total_length = 0;
-  for (int i = 0; cert_array[i] != NULL; i++)
+  if (weekDay == 0)
   {
-    total_length += strlen(cert_array[i]) + 1; // +1 dla '\0'
+    return 7;
+  }
+  return weekDay;
+}
+void maintainPinState()
+{
+  struct tm timeinfo;
+  int currentDayOfWeek = -1;
+  if (getLocalTime(&timeinfo))
+  {
+    currentDayOfWeek = mondayAsFirstDayOfWeek(timeinfo.tm_wday);
+  }
+  else
+  {
+    Serial.println("Failed to obtain time");
+    return;
   }
 
-  // Alokuje pamięć dla całego certyfikatu
-  char *cert = (char *)malloc(total_length);
-  if (cert == NULL)
-    return NULL; // W przypadku, gdy alokacja nie powiedzie się
-
-  // Kopiowanie pierwszego fragmentu
-  strcpy(cert, cert_array[0]);
-
-  // Konkatenacja pozostałych fragmentów
-  for (int i = 1; cert_array[i] != NULL; i++)
+  bool pinShouldBeOn = false;
+  time_t currentTime = mktime(&timeinfo);
+  for (int i = 0; i < scheduleEntries.size(); i++)
   {
-    strcat(cert, cert_array[i]);
+    ScheduleEntry *entry = scheduleEntries.get(i);
+    if (entry->DayNumber == currentDayOfWeek)
+    {
+      if (isTimeWithinInterval(currentTime, entry->StartTime, entry->EndTime))
+      {
+        pinShouldBeOn = true;
+        break;
+      }
+    }
   }
+  digitalWrite(OUT_PIN, pinShouldBeOn ? HIGH : LOW); // Ustawienie stanu pinu
+}
 
-  return cert;
+void showEntries()
+{
+  for (int i = 0; i < scheduleEntries.size(); i++)
+  {
+    ScheduleEntry *entry = scheduleEntries.get(i);
+    Serial.printf("Entry %d: Day: %d, StartTime: %02d:%02d, EndTime: %02d:%02d\n", i, entry->DayNumber, entry->StartTime.Hour, entry->StartTime.Minute, entry->EndTime.Hour, entry->EndTime.Minute);
+  }
+}
+
+void parseSchedule(const char *json)
+{
+  ScheduleEntry *entry = new ScheduleEntry();
+  if (entry->parseJson(json))
+  {
+    scheduleEntries.add(entry);
+    Serial.println("Entry added!");
+  }
+  else
+  {
+    Serial.println("Failed to parse JSON.");
+    delete entry; // Important to prevent memory leak
+  }
+}
+
+void setTime()
+{
+  configTime(3600, 3600, "pool.ntp.org", "time.nist.gov");
+  while (time(nullptr) < SECS_YR_2000)
+  { // Wait until the time is set
+    delay(100);
+    Serial.print(".");
+  }
+  Serial.println("Time set!");
+}
+
+void printLocalTime()
+{
+  struct tm timeinfo;
+  if (getLocalTime(&timeinfo))
+  {
+    char buffer[64]; // Bufor na sformatowany czas
+    strftime(buffer, sizeof(buffer), "%A, %B %d %Y %H:%M:%S", &timeinfo);
+    Serial.println(buffer);
+    Serial.println(timeClient.getEpochTime());
+    Serial.println(mktime(&timeinfo));
+  }
+  else
+  {
+    Serial.println("Failed to obtain time");
+  }
 }
 
 void setup_wifi()
@@ -184,11 +200,11 @@ void reconnect()
     if (client.connect(deviceId))
     {
       Serial.println("connected");
-      client.subscribe(updateFeatureTopic);
-      client.subscribe(updateScheduleTopic);
-      client.subscribe(signalScheduleTopic);
-      client.subscribe(configDeviceTopic);
-      client.subscribe(controlDeviceTopic);
+      client.subscribe(updateFeatureTopic, 1);
+      client.subscribe(updateScheduleTopic, 1);
+      client.subscribe(signalScheduleTopic, 1);
+      client.subscribe(configDeviceTopic, 1);
+      client.subscribe(controlDeviceTopic, 1);
     }
     else
     {
@@ -199,109 +215,121 @@ void reconnect()
     }
   }
 }
+void clearScheduleEntries()
+{
+  while (scheduleEntries.size() > 0)
+  {
+    ScheduleEntry *entry = scheduleEntries.shift(); // Retrieve and remove the first element
+    delete entry;                                   // Delete the dynamically allocated ScheduleEntry
+  }
+}
 
 void callback(char *topic, byte *payload, unsigned int length)
 {
-  Serial.print("Message arrived [");
+  Serial.print("[");
   Serial.print(topic);
   Serial.print("] ");
-  for (int i = 0; i < length; i++)
+  String data = String((char *)payload).substring(0, length);
+  Serial.println(data);
+  String topicStr(topic);
+  if (topicStr == signalScheduleTopic)
   {
-    Serial.print((char)payload[i]);
+    if (data == String("start"))
+    {
+      signalSchedule = String("start");
+      clearScheduleEntries(); // Clear existing schedule entries if starting anew
+    }
+    else if (data == String("stop"))
+    {
+      signalSchedule = String("stop");
+    }
   }
-  Serial.println();
+  // Process schedule updates only if the signal is "start"
+  if (signalSchedule == String("start") && topicStr == updateScheduleTopic)
+  {
+    parseSchedule(data.c_str());
+  }
 }
 
-void readCertFiles()
+bool loadCertFile(const char *path, std::function<bool(Stream &, size_t)> loadFunction)
+{
+  if (!SPIFFS.exists(path))
+  {
+    Serial.printf("File %s does not exist\n", path);
+    return false;
+  }
+  File file = SPIFFS.open(path, "r");
+  if (!file)
+  {
+    Serial.printf("Failed to open file %s\n", path);
+    return false;
+  }
+  size_t size = file.size();
+  bool result = loadFunction(file, size);
+  file.close();
+  return result;
+}
+
+void loadCertificates(WiFiClientSecure &client)
 {
   if (!SPIFFS.begin(true))
   {
-    Serial.println("Wystąpił błąd podczas montowania SPIFFS");
+    Serial.println("An error occurred while mounting SPIFFS");
     return;
   }
 
-  // Ładowanie certyfikatu
-  File cert = SPIFFS.open("/cert.crt", "r");
-  if (!cert)
+  if (loadCertFile("/client-cert.pem", [&client](Stream &stream, size_t size)
+                   { return client.loadCertificate(stream, size); }))
   {
-    Serial.println("Nie udało się otworzyć pliku certyfikatu");
-    return;
+    Serial.println("Certificate loaded");
+  }
+  else
+  {
+    Serial.println("Failed to load certificate");
   }
 
-  size_t certSize = cert.size();
-  char *certBuf = new char[certSize];
-  if (cert.readBytes(certBuf, certSize) != certSize)
+  if (loadCertFile("/client-key.pem", [&client](Stream &stream, size_t size)
+                   { return client.loadPrivateKey(stream, size); }))
   {
-    Serial.println("Błąd odczytu certyfikatu");
-    delete[] certBuf;
-    cert.close();
-    return;
+    Serial.println("Private key loaded");
   }
-  cert.close();
-  espClient.setCertificate(certBuf);
-  Serial.println("Certyfikat załadowany");
-  // Serial.println(certBuf);
-  delete[] certBuf; // Zwolnienie pamięci
-
-  // Ładowanie klucza prywatnego
-  File key = SPIFFS.open("/key.key", "r");
-  if (!key)
+  else
   {
-    Serial.println("Nie udało się otworzyć pliku klucza");
-    return;
+    Serial.println("Failed to load private key");
   }
 
-  size_t keySize = key.size();
-  char *keyBuf = new char[keySize];
-  if (key.readBytes(keyBuf, keySize) != keySize)
+  if (loadCertFile("/ca-cert.pem", [&client](Stream &stream, size_t size)
+                   { return client.loadCACert(stream, size); }))
   {
-    Serial.println("Błąd odczytu klucza prywatnego");
-    delete[] keyBuf;
-    key.close();
-    return;
+    Serial.println("Root CA loaded");
   }
-  key.close();
-  espClient.setPrivateKey(keyBuf);
-  Serial.println("Klucz prywatny załadowany");
-  // Serial.println(keyBuf);
-  delete[] keyBuf; // Zwolnienie pamięci
-
-  // Ładowanie rootCA
-  File root = SPIFFS.open("/ca.crt", "r");
-  if (!root)
+  else
   {
-    Serial.println("Nie udało się otworzyć pliku rootCA");
-    return;
+    Serial.println("Failed to load root CA");
   }
-
-  size_t rootSize = root.size();
-  char *rootBuf = new char[rootSize];
-  if (root.readBytes(rootBuf, rootSize) != rootSize)
-  {
-    Serial.println("Błąd odczytu rootCA");
-    delete[] rootBuf;
-    root.close();
-    return;
-  }
-  root.close();
-  espClient.setCACert(rootBuf);
-  Serial.println("Klucz rootCA załadowany");
-  Serial.println(rootBuf);
-  delete[] rootBuf; // Zwolnienie pamięci
 }
 
 void setup()
 {
+  pinMode(OUT_PIN, OUTPUT);
   Serial.begin(115200);
   setup_wifi();
-  // readCertFiles();
-  //  Serial.println(prepare_certificate(ssl_cert));
-  espClient.setInsecure();
-  espClient.setCertificate(client_cert);
-  espClient.setPrivateKey(client_key);
-  espClient.setCACert(cacert);
+  setTime();
+  digitalWrite(OUT_PIN, LOW);
+  loadCertificates(espClient);
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
+}
+
+void debugSystemStatus()
+{
+  int pinStatus = digitalRead(OUT_PIN);
+  Serial.printf("Pin is %s\n", pinStatus == HIGH ? "HIGH" : "LOW");
+  Serial.printf("Free RAM: %d bytes\n", ESP.getFreeHeap());
+  struct tm timeinfo;
+  getLocalTime(&timeinfo);
+  Serial.printf("Current time: %d:%d:%d - Current weekday: %d\n", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, mondayAsFirstDayOfWeek(timeinfo.tm_wday));
+  showEntries();
 }
 
 void loop()
@@ -309,6 +337,15 @@ void loop()
   if (!client.connected())
   {
     reconnect();
+  }
+  timeClient.update();
+  maintainPinState();
+  unsigned long currentMillis = millis();
+  if (currentMillis - localMillis >= 5000)
+  {
+    localMillis = currentMillis;
+    printLocalTime();
+    debugSystemStatus();
   }
   client.loop();
 }
