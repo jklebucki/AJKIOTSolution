@@ -43,9 +43,9 @@
                 }
             </div>
             <div class="card-body">
-                <Alert Color="Color.Info" Visible>
+                <Alert Color="OnlineStatus!.IsOnline ? Color.Success : Color.Danger" Visible>
                     <AlertMessage>
-                        Device ID: @IotDevice.Id
+                        Device ID: @IotDevice.Id @(OnlineStatus!.IsOnline ? "Online" : "Offline")
                     </AlertMessage>
                 </Alert>
                 @foreach (var feature in features)
@@ -126,7 +126,7 @@
     [Parameter]
     public IotDevice? IotDevice { get; set; }
     [Parameter]
-    public string Status { get; set; } = string.Empty;
+    public IotDeviceStatus? OnlineStatus { get; set; }
     [Parameter]
     public EventCallback<IotDevice> OnDeviceChanged { get; set; }
     [Parameter]
