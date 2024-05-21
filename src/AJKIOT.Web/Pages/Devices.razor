@@ -117,17 +117,9 @@
         foreach (var deviceStatus in deviceStatuses)
         {
             if ((DateTime.Now - deviceStatus.LastOnlineSignal).Seconds > TimeSpan.FromSeconds(12).Seconds)
-            {
                 deviceStatus.IsOnline = false;
-                Console.WriteLine($"Device {deviceStatus.DeviceId} is offline ST:{(DateTime.Now - deviceStatus.LastOnlineSignal).Seconds} S:{TimeSpan.FromSeconds(12).Seconds}");
-            }
             else
-            {
                 deviceStatus.IsOnline = true;
-                deviceStatus.LastOnlineSignal = DateTime.Now;
-                Console.WriteLine($"Device {deviceStatus.DeviceId} is online ST:{(DateTime.Now - deviceStatus.LastOnlineSignal).Seconds} S:{TimeSpan.FromSeconds(12).Seconds}");
-            }
-
         }
     }
 
