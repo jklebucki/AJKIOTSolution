@@ -21,21 +21,22 @@
 @if (!AddMode)
 {
     <div class="container">
-        <div class="row mb-4">
-            <div class="col-4">
-                <Button Color="Color.Primary" Clicked="@(()=> AddMode = !AddMode)">Add Device</Button>
-            </div>
+    <div class="row mb-4">
+        <div class="col-4">
+            <Button Color="Color.Primary" Clicked="@(()=> AddMode = !AddMode)">Add Device</Button>
         </div>
     </div>
+</div>
 }
 @if (devices != null && !AddMode)
 {
     <div class="container">
-        <div class="row">
-            @foreach (var device in devices)
+    <div class="row">
+        @foreach (var device in devices)
             {
                 <div class="col-md-4 mb-4">
-                    <IotDeviceTile IotDevice="device" OnlineStatus="@deviceStatuses.FirstOrDefault(x=>x.DeviceId == device.Id)" OnDeviceChanged="HandleDeviceChanged" OnDeviceDeleted="HandleDeviceDeleted" />
+                    <IotDeviceTile IotDevice="device" OnlineStatus="@deviceStatuses.FirstOrDefault(x=>x.DeviceId == device.Id)"
+                        OnDeviceChanged="HandleDeviceChanged" OnDeviceDeleted="HandleDeviceDeleted" />
                 </div>
             }
         </div>
@@ -54,12 +55,10 @@
     private string errorMessage = string.Empty;
     private List<IotDevice> devices = new List<IotDevice>();
     private List<IotDeviceStatus> deviceStatuses = new List<IotDeviceStatus>();
-    private System.Threading.Timer timer;
     private bool isCommunicationActive = true;
 
     protected override async Task OnInitializedAsync()
     {
-        timer = new System.Threading.Timer(CheckCommunicationStatus!, null, TimeSpan.Zero, TimeSpan.FromSeconds(10));
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         var userData = await LocalStorage.GetApplicationUserAsync();
@@ -70,7 +69,12 @@
             {
                 var apiResponse = await api.GetUserDevicesAsync(userData.Email);
                 devices.AddRange(apiResponse.Data!.OrderBy(x => x.Id));
-                deviceStatuses.AddRange(apiResponse.Data!.Select(x => new IotDeviceStatus() { DeviceId = x.Id, IsOnline = true, LastOnlineSignal = DateTime.Now }));
+                deviceStatuses.AddRange(apiResponse.Data!.Select(x => new IotDeviceStatus()
+                    {
+                        DeviceId = x.Id,
+                        IsOnline = true,
+                        LastOnlineSignal = DateTime.Now
+                    }));
             }
             catch (UnauthorizedAccessException)
             {
@@ -85,9 +89,9 @@
         }
 
         var hubConnection = new HubConnectionBuilder()
-            .WithUrl($"https://localhost:7253/notificationHub?clientId={userData.Email}")
-            .WithAutomaticReconnect()
-            .Build();
+        .WithUrl($"https://localhost:7253/notificationHub?clientId={userData.Email}")
+        .WithAutomaticReconnect()
+        .Build();
 
         hubConnection.On<IotDevice>("DeviceUpdated", (updatedDevice) =>
         {
@@ -99,28 +103,7 @@
             }
         });
 
-        hubConnection.On<string>("ControlSignal", (signal) =>
-        {
-            var split = signal.Split(":");
-            var index = devices.FindIndex(d => d.Id == int.Parse(split[1]));
-            if (index != -1)
-            {
-                deviceStatuses[index].LastOnlineSignal = DateTime.Now;
-            }
-        });
-
         await hubConnection.StartAsync();
-    }
-
-    private void CheckCommunicationStatus(object state)
-    {
-        foreach (var deviceStatus in deviceStatuses)
-        {
-            if ((DateTime.Now - deviceStatus.LastOnlineSignal).Seconds > TimeSpan.FromSeconds(12).Seconds)
-                deviceStatus.IsOnline = false;
-            else
-                deviceStatus.IsOnline = true;
-        }
     }
 
     private async Task HandleDeviceChanged(IotDevice iotDevice)
