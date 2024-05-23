@@ -21,22 +21,22 @@
 @if (!AddMode)
 {
     <div class="container">
-    <div class="row mb-4">
-        <div class="col-4">
-            <Button Color="Color.Primary" Clicked="@(()=> AddMode = !AddMode)">Add Device</Button>
+        <div class="row mb-4">
+            <div class="col-4">
+                <Button Color="Color.Primary" Clicked="@(()=> AddMode = !AddMode)">Add Device</Button>
+            </div>
         </div>
     </div>
-</div>
 }
 @if (devices != null && !AddMode)
 {
     <div class="container">
-    <div class="row">
-        @foreach (var device in devices)
+        <div class="row">
+            @foreach (var device in devices)
             {
                 <div class="col-md-4 mb-4">
                     <IotDeviceTile IotDevice="device" OnlineStatus="@deviceStatuses.FirstOrDefault(x=>x.DeviceId == device.Id)"
-                        OnDeviceChanged="HandleDeviceChanged" OnDeviceDeleted="HandleDeviceDeleted" />
+                                   OnDeviceChanged="HandleDeviceChanged" OnDeviceDeleted="HandleDeviceDeleted" />
                 </div>
             }
         </div>

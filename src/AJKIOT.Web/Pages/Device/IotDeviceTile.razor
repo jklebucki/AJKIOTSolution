@@ -14,18 +14,18 @@
 @if (errorMessage != string.Empty)
 {
     <Alert Color="Color.Danger" Visible>
-    <AlertMessage>
-        @errorMessage
-    </AlertMessage>
-</Alert>
+        <AlertMessage>
+            @errorMessage
+        </AlertMessage>
+    </Alert>
 }
 
 @switch (mode)
 {
     case ViewMode.BasicMode:
         <div class="card">
-    <div class="card-header d-flex justify-content-center">
-        @if (editing)
+            <div class="card-header d-flex justify-content-center">
+                @if (editing)
                 {
                     <TextEdit @bind-Text="@IotDevice!.DeviceName" OnValueChanged="OnEditDeviceName" />
                     <Tooltip Text="Save">
@@ -65,7 +65,7 @@
                             {
                                 <Tooltip Text="Add schedule">
                                     <Button Size="Size.Large" Class="btn btn-outline-primary me-2"
-                                        onclick="@(() => OnScheduleButton(feature.Id))">
+                                            onclick="@(() => OnScheduleButton(feature.Id))">
                                         <Icon Name="IconName.Calendar" />
                                     </Button>
                                 </Tooltip>
@@ -107,7 +107,7 @@
 
     case ViewMode.ScheduleMode:
         <DailySchedule WeekSchedules="@IotDevice!.GetSchedule().ToList()" OnScheduleChanged="@OnScheduleChanged"
-    FeatureId="featureId"></DailySchedule>
+                       FeatureId="featureId"></DailySchedule>
         break;
 
     case ViewMode.DownloadCodeMode:
