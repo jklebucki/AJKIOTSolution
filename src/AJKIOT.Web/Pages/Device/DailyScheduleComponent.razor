@@ -27,10 +27,12 @@
             <div>
                 <div class="row">
                     <div class="col-5">
-                        <TimePicker TValue="TimeSpan?" Size="Size.Small" Time="@newStartDateTime" TimeAs24hr="true" TimeChanged="@((TimeSpan? value) => StartDateTimeChanged(value))" />
+                        <TimePicker TValue="TimeSpan?" Size="Size.Small" Time="@newStartDateTime" TimeAs24hr="true"
+                            TimeChanged="@((TimeSpan? value) => StartDateTimeChanged(value))" />
                     </div>
                     <div class="col-5">
-                        <TimePicker TValue="TimeSpan?" Size="Size.Small" Time="@newEndDateTime" TimeAs24hr="true" TimeChanged="@((TimeSpan? value) => EndDateTimeChanged(value))" />
+                        <TimePicker TValue="TimeSpan?" Size="Size.Small" Time="@newEndDateTime" TimeAs24hr="true"
+                            TimeChanged="@((TimeSpan? value) => EndDateTimeChanged(value))" />
                     </div>
                     <div class="col-2">
                         <Button Color="Color.Primary" Size="Size.Small" Outline @onclick="AddScheduleEntry">
@@ -115,8 +117,8 @@
                     FeatureId = FeatureId,
                     DayNumber = DayNumber,
                     EntryNumber = (Schedule.Any() ? Schedule.Max(e => e.EntryNumber) + 1 : 1),
-                    StartTime = TimeOnly.FromTimeSpan(newStartDateTime.Value),
-                    EndTime = TimeOnly.FromTimeSpan(newEndDateTime.Value)
+                    StartTime = TimeOnly.FromTimeSpan(newStartDateTime!.Value),
+                    EndTime = TimeOnly.FromTimeSpan(newEndDateTime!.Value)
                 };
             Schedule.Add(newEntry);
             Schedule = Schedule.OrderBy(s => s.StartTime.ToTimeSpan()).ToList();
