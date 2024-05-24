@@ -58,8 +58,9 @@ namespace AJKIOT.Shared.Models
                 else
                     return new List<DailyScheduleEntry>();
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"Error deserializing schedule: {ex.Message}");
                 return new List<DailyScheduleEntry>();
             }
         }

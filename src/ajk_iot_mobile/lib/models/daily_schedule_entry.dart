@@ -18,12 +18,12 @@ class DailyScheduleEntry {
   });
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'featureId': featureId,
-        'dayNumber': dayNumber,
-        'entryNumber': entryNumber,
-        'startTime': startTime.toJson(),
-        'endTime': endTime.toJson(),
+        'Id': id,
+        'FeatureId': featureId,
+        'DayNumber': dayNumber,
+        'EntryNumber': entryNumber,
+        'StartTime': startTime.toJson(),
+        'EndTime': endTime.toJson(),
       };
 
   static DailyScheduleEntry fromJson(Map<String, dynamic> json) =>

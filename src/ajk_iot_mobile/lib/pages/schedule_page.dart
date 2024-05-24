@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 class SchedulePage extends StatelessWidget {
   final int featureId;
   final int deviceId;
-
   const SchedulePage(
       {super.key, required this.featureId, required this.deviceId});
 

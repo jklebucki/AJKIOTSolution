@@ -5,8 +5,15 @@ import 'package:flutter_time_picker_spinner/flutter_time_picker_spinner.dart';
 
 class DailyScheduleWidget extends StatefulWidget {
   final List<DailyScheduleEntry> entries;
-
-  const DailyScheduleWidget({super.key, required this.entries});
+  final void Function(List<DailyScheduleEntry>) onEntriesChange;
+  final int dayNumber;
+  final int featureId;
+  const DailyScheduleWidget(
+      {super.key,
+      required this.entries,
+      required this.onEntriesChange,
+      required this.dayNumber,
+      required this.featureId});
 
   @override
   DailyScheduleWidgetState createState() => DailyScheduleWidgetState();
@@ -16,6 +23,8 @@ class DailyScheduleWidgetState extends State<DailyScheduleWidget> {
   late List<DailyScheduleEntry> _entries;
   late TimeOfDay _startTime;
   late TimeOfDay _endTime;
+  late int _dayNumber;
+  late int _featureId;
 
   @override
   void initState() {
@@ -23,12 +32,22 @@ class DailyScheduleWidgetState extends State<DailyScheduleWidget> {
     _entries = widget.entries;
     _startTime = TimeOfDay.now();
     _endTime = TimeOfDay.now();
+    _dayNumber = widget.dayNumber;
+    _featureId = widget.featureId;
   }
 
   void _addEntry(DailyScheduleEntry entry) {
     setState(() {
       _entries.add(entry);
     });
+  }
+
+  void _saveEntries() {
+    widget.onEntriesChange(_entries);
+  }
+
+  void _removeEntry(DailyScheduleEntry entry) {
+    _entries.remove(entry);
   }
 
   void _showAddEntryDialog() {
@@ -92,8 +111,8 @@ class DailyScheduleWidgetState extends State<DailyScheduleWidget> {
                 if (formKey.currentState?.validate() ?? false) {
                   final newEntry = DailyScheduleEntry(
                     id: _entries.length + 1,
-                    featureId: 1, // Replace with actual feature ID if necessary
-                    dayNumber: 1, // Replace with actual day number if necessary
+                    featureId: _featureId,
+                    dayNumber: _dayNumber,
                     entryNumber: _entries.length + 1,
                     startTime: TimeOnly.fromHourAndMinute(
                         _startTime.hour, _startTime.minute),
@@ -114,11 +133,13 @@ class DailyScheduleWidgetState extends State<DailyScheduleWidget> {
 
   @override
   Widget build(BuildContext context) {
+    var entriesOfDay =
+        _entries.where((element) => element.dayNumber == _dayNumber).toList();
     return Scaffold(
       body: ListView.builder(
-        itemCount: _entries.length,
+        itemCount: entriesOfDay.length,
         itemBuilder: (context, index) {
-          final entry = _entries[index];
+          final entry = entriesOfDay[index];
           return Card(
             child: ListTile(
               title: Text('Entry ${entry.entryNumber}'),
@@ -131,7 +152,7 @@ class DailyScheduleWidgetState extends State<DailyScheduleWidget> {
                 icon: const Icon(Icons.delete),
                 onPressed: () {
                   setState(() {
-                    _entries.removeAt(index);
+                    _removeEntry(entry);
                   });
                 },
               ),
@@ -139,9 +160,21 @@ class DailyScheduleWidgetState extends State<DailyScheduleWidget> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddEntryDialog,
-        child: const Icon(Icons.add),
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            heroTag: UniqueKey(),
+            onPressed: _showAddEntryDialog,
+            child: const Icon(Icons.add),
+          ),
+          const SizedBox(width: 10),
+          FloatingActionButton(
+            heroTag: UniqueKey(),
+            onPressed: _saveEntries,
+            child: const Icon(Icons.save),
+          ),
+        ],
       ),
     );
   }

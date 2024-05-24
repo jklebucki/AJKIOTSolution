@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:ajk_iot_mobile/models/days_of_week.dart';
 import 'package:ajk_iot_mobile/models/daily_schedule_entry.dart';
 import 'package:ajk_iot_mobile/providers/device_provider.dart';
@@ -21,6 +23,7 @@ class ScheduleEntryPage extends StatefulWidget {
 
 class ScheduleEntryPageState extends State<ScheduleEntryPage> {
   List<DailyScheduleEntry> entries = [];
+  bool showLoader = true;
   @override
   void initState() {
     super.initState();
@@ -29,11 +32,18 @@ class ScheduleEntryPageState extends State<ScheduleEntryPage> {
         entries = Provider.of<DeviceProvider>(context, listen: false)
             .devices
             .firstWhere((element) => element.id == widget.deviceId)
-            .getSchedule()
-            .where((element) => element.dayNumber == (widget.day.index + 1))
-            .toList();
+            .getSchedule();
+        showLoader = false;
       });
     });
+  }
+
+  void _saveNewSchedule(List<DailyScheduleEntry> newEntries) {
+    var device = Provider.of<DeviceProvider>(context, listen: false)
+        .devices
+        .firstWhere((element) => element.id == widget.deviceId);
+    device.setSchedule(newEntries);
+    Provider.of<DeviceProvider>(context, listen: false).updateDevice(device);
   }
 
   @override
@@ -42,9 +52,15 @@ class ScheduleEntryPageState extends State<ScheduleEntryPage> {
       appBar: AppBar(
         title: Text('Schedule for ${widget.day.toString().split('.').last}'),
       ),
-      body: entries.isEmpty
+      body: showLoader
           ? const Center(child: CircularProgressIndicator())
-          : DailyScheduleWidget(entries: entries),
+          : DailyScheduleWidget(
+              entries: entries,
+              dayNumber: widget.day.index + 1,
+              featureId: widget.featureId,
+              onEntriesChange: (newEntries) {
+                _saveNewSchedule(newEntries);
+              }),
     );
   }
 }
