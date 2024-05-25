@@ -344,6 +344,11 @@ void loadCertificates(WiFiClientSecure &client)
   }
 }
 
+void configDemand()
+{
+  client.publish(configDeviceTopic, deviceId);
+}
+
 void setup()
 {
   if (!EEPROM.begin(EEPROM_SIZE))
@@ -365,6 +370,7 @@ void setup()
   loadCertificates(espClient);
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(callback);
+  configDemand();
 }
 
 void debugSystemStatus()
@@ -383,6 +389,7 @@ void loop()
   if (!client.connected())
   {
     reconnect();
+    configDemand();
   }
   maintainPinState();
   unsigned long currentMillis = millis();

@@ -1,20 +1,24 @@
 ﻿using AJKIOT.Api.Hubs;
+using AJKIOT.Api.Services;
 using Microsoft.AspNetCore.SignalR;
 using MQTTnet;
 using MQTTnet.Server;
 using System.Text;
+using System.Text.Json;
 
 namespace AJKIOT.Api.Controllers
 {
     public class MqttController
     {
         private readonly MqttServer _mqttServer;
+        private readonly IDeviceData _deviceData;
         private readonly IHubContext<NotificationHub> _hubContext;
-        public MqttController(MqttServer mqttServer, IHubContext<NotificationHub> hubContext)
+        public MqttController(MqttServer mqttServer, IHubContext<NotificationHub> hubContext, IDeviceData deviceData)
         {
             _mqttServer = mqttServer;
             _mqttServer.ClientDisconnectedAsync += OnClientDisconnected;
             _hubContext = hubContext;
+            _deviceData = deviceData;
         }
 
         public async Task OnClientConnected(ClientConnectedEventArgs eventArgs)
@@ -46,7 +50,17 @@ namespace AJKIOT.Api.Controllers
             Console.WriteLine($"Client '{eventArgs.ClientId}' {eventArgs.ApplicationMessage.Topic} {Encoding.UTF8.GetString(eventArgs.ApplicationMessage.PayloadSegment)}");
             if (eventArgs.ApplicationMessage.Topic == $"controlDevice/{eventArgs.ClientId}")
                 await _hubContext.Clients.All.SendAsync("ControlSignal", Encoding.UTF8.GetString(eventArgs.ApplicationMessage.PayloadSegment));
-            await Task.FromResult(true);
+            if (eventArgs.ApplicationMessage.Topic == $"configDevice/{eventArgs.ClientId}")
+            {
+                var device = await _deviceData.GetDeviceAsync(int.Parse(Encoding.UTF8.GetString(eventArgs.ApplicationMessage.PayloadSegment)));
+                await PublishMessageAsync($"updateFeature/{eventArgs.ClientId}", JsonSerializer.Serialize(device.GetFeatures().ToList()[0]));
+                await PublishMessageAsync($"signalSchedule/{eventArgs.ClientId}", "start");
+                foreach (var shedule in device.GetSchedule())
+                {
+                    await PublishMessageAsync($"configSchedule/{eventArgs.ClientId}", JsonSerializer.Serialize(shedule));
+                }
+                await PublishMessageAsync($"signalSchedule/{eventArgs.ClientId}", "stop");
+            }
         }
 
         public async Task PublishMessageAsync(string topic, string payload)

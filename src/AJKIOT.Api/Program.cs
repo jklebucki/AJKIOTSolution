@@ -1,7 +1,6 @@
 using AJKIOT.Api.Controllers;
 using AJKIOT.Api.Data;
 using AJKIOT.Api.Hubs;
-using AJKIOT.Api.Middleware;
 using AJKIOT.Api.Models;
 using AJKIOT.Api.Repositories;
 using AJKIOT.Api.Services;
@@ -25,9 +24,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(opt => opt.UseNpgsql(connectionString));
-
 // Services
-builder.Services.AddSingleton<IWebSocketManager, MyWebSocketManager>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IIotDeviceRepository, IotDeviceRepository>();
@@ -154,6 +151,8 @@ builder.Services.AddMqttServer(mqttServer =>
               .WithoutDefaultEndpoint();
 })
 .AddConnections();
+
+builder.Services.AddSingleton<IDeviceData, DeviceData>();
 builder.Services.AddSingleton<MqttController>();
 
 // Endpoint filters
@@ -188,7 +187,7 @@ builder.WebHost.ConfigureKestrel(options =>
                 try
                 {
                     // Build the client certificate chain
-                    chain.ChainPolicy.ExtraStore.Add(caCertificate);
+                    chain!.ChainPolicy.ExtraStore.Add(caCertificate);
                     chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
                     chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
                     chain.ChainPolicy.VerificationFlags |= X509VerificationFlags.IgnoreRootRevocationUnknown;
@@ -205,7 +204,7 @@ builder.WebHost.ConfigureKestrel(options =>
                     //}
 
                     // Extract the root CA certificate from the client certificate chain
-                    X509Certificate2 clientRootCa = null;
+                    X509Certificate2 clientRootCa = null!;
                     foreach (var element in chain.ChainElements)
                     {
                         if (element.Certificate.Subject == element.Certificate.Issuer)
