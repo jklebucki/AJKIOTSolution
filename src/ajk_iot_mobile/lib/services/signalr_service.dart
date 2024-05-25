@@ -8,18 +8,29 @@ class SignalRService {
   String apiUrl;
   String userEmail;
 
-
-  SignalRService({required this.apiUrl, required this.userEmail, this.onUpdateDevice}) {
-    _hubConnection = HubConnectionBuilder().withUrl('$apiUrl/notificationHub?clientId=$userEmail').build();
+  SignalRService(
+      {required this.apiUrl, required this.userEmail, this.onUpdateDevice}) {
+    _hubConnection = HubConnectionBuilder()
+        .withUrl('$apiUrl/notificationHub?clientId=$userEmail')
+        .build();
     _hubConnection.onclose(_connectionClosed);
-    _hubConnection.on("DeviceUpdated", _handleAClientProvidedFunction);
+    _hubConnection.on("DeviceUpdated", _handleUpdated);
+    _hubConnection.on("ControlSignal", _handleControl);
   }
 
-  void _handleAClientProvidedFunction(List<Object?>? arguments) {
+  void _handleUpdated(List<Object?>? arguments) {
     var device = IotDevice.fromJson(arguments![0] as Map<String, dynamic>);
     onUpdateDevice?.call(device);
     if (kDebugMode) {
       print('Received message: ${arguments[0]}');
+    }
+  }
+
+  void _handleControl(List<Object?>? arguments) {
+    var controlSignal = arguments![0] as String;
+    // TODO: Handle control signal
+    if (kDebugMode) {
+      print('Received message: $controlSignal');
     }
   }
 

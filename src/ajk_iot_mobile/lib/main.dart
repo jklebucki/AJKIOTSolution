@@ -1,14 +1,13 @@
 import 'dart:io';
-
 import 'package:ajk_iot_mobile/pages/create_account_page.dart';
 import 'package:ajk_iot_mobile/pages/home_page.dart';
 import 'package:ajk_iot_mobile/pages/try_login_page.dart';
 import 'package:ajk_iot_mobile/providers/device_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 import 'package:ajk_iot_mobile/pages/login_page.dart';
-
 
 class MyHttpOverrides extends HttpOverrides {
   @override
@@ -18,8 +17,10 @@ class MyHttpOverrides extends HttpOverrides {
           (X509Certificate cert, String host, int port) => true;
   }
 }
-void main() {
+
+void main() async {
   HttpOverrides.global = MyHttpOverrides();
+  await ScreenUtil.ensureScreenSize();
   runApp(const AjkIotApp());
 }
 
@@ -28,20 +29,70 @@ class AjkIotApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    ScreenUtil.init(context, designSize: const Size(360, 690));
     return MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (context) => AuthProvider()),
-          ChangeNotifierProvider(create: (context) => DeviceProvider()),
-        ],
-        child: MaterialApp(
-          title: 'AJK IoT',
-          initialRoute: '/trylogin',
-          routes: {
-            '/trylogin': (context) => const TryLoginPage(),
-            '/login': (context) => const LoginPage(),
-            '/home': (context) => const HomePage(),
-            '/register': (context) => const CreateAccountPage(),
-          },
-        ));
+      providers: [
+        ChangeNotifierProvider(create: (context) => AuthProvider()),
+        ChangeNotifierProvider(create: (context) => DeviceProvider()),
+      ],
+      child: MaterialApp(
+        title: 'AJK IoT',
+        theme: ThemeData(
+            appBarTheme: AppBarTheme(
+              backgroundColor: Colors.black,
+              foregroundColor: Colors.white,
+              titleTextStyle: TextStyle(
+                  color: Colors.white,
+                  fontSize: 28.spMax,
+                  fontWeight: FontWeight.bold),
+            ),
+            primarySwatch: Colors.red,
+            textTheme: TextTheme(
+              displayLarge:
+                  TextStyle(fontSize: 24.sp, fontWeight: FontWeight.bold),
+              bodyLarge: TextStyle(fontSize: 14.sp),
+            ),
+            switchTheme: SwitchThemeData(
+              trackColor: MaterialStateProperty.resolveWith((states) {
+                if (states.contains(MaterialState.selected)) {
+                  return Colors.green; // Active state color
+                }
+                return Colors.red; // Inactive state color
+              }),
+              thumbColor: MaterialStateProperty.all(Colors.white),
+            ),
+            buttonTheme: ButtonThemeData(
+              buttonColor: Colors.blue,
+              textTheme: ButtonTextTheme.primary,
+              minWidth: 100.spMax,
+            ),
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ButtonStyle(
+                minimumSize:
+                    MaterialStateProperty.all<Size>(Size(120.spMax, 40.spMax)),
+                backgroundColor: MaterialStateProperty.all<Color>(Colors.blue),
+                foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
+                textStyle: MaterialStateProperty.all<TextStyle>(
+                  TextStyle(fontSize: 16.sp),
+                ),
+                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6.spMax),
+                  ),
+                ),
+              ),
+            ),
+            colorScheme: ColorScheme.fromSwatch(
+              backgroundColor: Colors.grey[300],
+            )),
+        initialRoute: '/trylogin',
+        routes: {
+          '/trylogin': (context) => const TryLoginPage(),
+          '/login': (context) => const LoginPage(),
+          '/home': (context) => const HomePage(),
+          '/register': (context) => const CreateAccountPage(),
+        },
+      ),
+    );
   }
 }

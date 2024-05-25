@@ -57,7 +57,7 @@ class DeviceFeatureWidgetState extends State<DeviceFeatureWidget> {
               },
             ),
             ElevatedButton(
-                child: const Text('Schedule'),
+                child: const Icon(Icons.schedule),
                 onPressed: () {
                   Navigator.push(
                     context,

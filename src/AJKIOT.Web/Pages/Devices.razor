@@ -157,6 +157,12 @@
                 if (deviceData != null && deviceData.Data != null && deviceData.IsSuccess)
                 {
                     devices.Add(deviceData.Data);
+                    deviceStatuses.Add(new IotDeviceStatus()
+                        {
+                            DeviceId = deviceData.Data.Id,
+                            IsOnline = true,
+                            LastOnlineSignal = DateTime.Now
+                        });
                 }
                 errorMessage = string.Join("; ", deviceData!.Errors);
             }

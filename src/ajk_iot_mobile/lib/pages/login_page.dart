@@ -1,5 +1,6 @@
 import 'package:ajk_iot_mobile/pages/create_account_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
@@ -70,17 +71,34 @@ class LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Login Page')),
+      appBar: AppBar(title: const Text('AJK IoT Mobile')),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20.0),
           child: Column(
             children: [
+              SizedBox(height: 0.05.sh),
+              Text(
+                "Welcome!",
+                style: TextStyle(fontSize: 36.sp),
+                textAlign: TextAlign.center,
+                softWrap: true,
+              ),
+              Text(
+                "AJK IoT Mobile",
+                style: TextStyle(fontSize: 36.sp),
+                textAlign: TextAlign.center,
+                softWrap: true,
+              ),
+              SizedBox(height: 0.03.sh),
               TextFormField(
                 controller: _apiAddressController,
                 autocorrect: false,
-                decoration: const InputDecoration(labelText: 'API Address'),
+                decoration: InputDecoration(
+                    labelText: 'API Address',
+                    labelStyle:
+                        TextStyle(color: Colors.black, fontSize: 16.spMax)),
                 validator: (value) => Uri.tryParse(value!)?.isAbsolute == true
                     ? null
                     : 'Please enter a valid URL',
@@ -89,13 +107,20 @@ class LoginPageState extends State<LoginPage> {
                 controller: _emailController,
                 autocorrect: false,
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(labelText: 'Email'),
+                decoration: InputDecoration(
+                    labelText: 'Email',
+                    labelStyle:
+                        TextStyle(color: Colors.black, fontSize: 16.spMax)),
                 validator: (value) =>
                     value!.contains('@') ? null : 'Please enter a valid email',
               ),
               TextFormField(
                 controller: _passwordController,
-                decoration: const InputDecoration(labelText: 'Password'),
+                decoration: InputDecoration(
+                    labelText: 'Password',
+                    labelStyle:
+                        TextStyle(color: Colors.black, fontSize: 16.spMax)),
+                autocorrect: false,
                 obscureText: true,
                 validator: (value) => value!.length >= 6
                     ? null

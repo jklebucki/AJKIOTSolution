@@ -2,6 +2,7 @@ import 'package:ajk_iot_mobile/providers/device_provider.dart';
 import 'package:ajk_iot_mobile/services/signalr_service.dart';
 import 'package:ajk_iot_mobile/widgets/iot_device_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
@@ -26,6 +27,13 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void _refreshWidgets() {
+    setState(() {
+      Provider.of<DeviceProvider>(context, listen: false).getDevices();
+      _initializeSignalR();
+    });
+  }
+
   Future<void> _initializeSignalR() async {
     var apiUrl = await _storage.read(key: 'apiUrl') ?? '';
     var userEmail = await _storage.read(key: 'email') ?? '';
@@ -43,16 +51,26 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Strona Główna'),
+        title: const Text('AJK IoT Mobile'),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Consumer<AuthProvider>(
-              builder: (context, authProvider, child) => Text(
-                'Witaj, ${authProvider.userInfo['username'] ?? 'Gościu'}!',
-                style: const TextStyle(fontSize: 20),
+            SizedBox(
+              width: 0.9.sw,
+              child: Card(
+                color: Colors.blue,
+                elevation: 6,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(5.spMax),
+                ),
+                child: Text(
+                  'Your devices',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontSize: 20.spMax, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
             Expanded(
@@ -66,15 +84,27 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-            Consumer<AuthProvider>(
-              builder: (context, authProvider, child) => ElevatedButton(
-                onPressed: () {
-                  authProvider.logout();
-                  Navigator.of(context).pushReplacementNamed('/login');
-                },
-                child: const Text('Wyloguj'),
-              ),
+            SizedBox(height: 10.spMax),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Consumer<AuthProvider>(
+                  builder: (context, authProvider, child) => ElevatedButton(
+                    onPressed: _refreshWidgets,
+                    child: const Text('Refresh'),
+                  ),
+                ),
+                SizedBox(width: 10.spMax),
+                Consumer<AuthProvider>(
+                  builder: (context, authProvider, child) => ElevatedButton(
+                    onPressed: () {
+                      authProvider.logout();
+                      Navigator.of(context).pushReplacementNamed('/login');
+                    },
+                    child: const Text('Logout'),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

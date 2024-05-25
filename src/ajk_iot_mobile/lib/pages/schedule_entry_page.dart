@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:ajk_iot_mobile/models/days_of_week.dart';
 import 'package:ajk_iot_mobile/models/daily_schedule_entry.dart';
 import 'package:ajk_iot_mobile/providers/device_provider.dart';
