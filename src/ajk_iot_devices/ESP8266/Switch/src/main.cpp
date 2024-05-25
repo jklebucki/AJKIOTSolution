@@ -1,6 +1,7 @@
 #define DEBUG_ESP_PORT Serial
-// define DEFAULT_MQTT_BUFFER_SIZE_BYTES 4096
-// define DEFAULT_MQTT_MAX_QUEUE (4096 * 8)
+#define OUT_PIN 2
+#define EEPROM_SIZE 512
+#include <EEPROM.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266MQTTClient.h>
 #include <ArduinoJson.h>
@@ -8,20 +9,23 @@
 #include <LinkedList.h>
 #include <TimeLib.h>
 #include <NTPClient.h>
-#include <WiFiClientSecureBearSSL.h> // Zaktualizowana biblioteka dla BearSSL
-#include <WiFiUdp.h>                 // Dodajemy bibliotekę do obsługi UDP
+#include <WiFiClientSecureBearSSL.h>
+#include <WiFiUdp.h>
 
 #define OUT_PIN 2
 
 const char *ntpServer = "pool.ntp.org";
-WiFiUDP ntpUDP; // Obiekt UDP dla komunikacji z serwerem NTP
+WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", 3600, 60000);
 
 LinkedList<ScheduleEntry *> scheduleEntries = LinkedList<ScheduleEntry *>();
 
 // WiFi credentials
-const char *ssid = "Orange_Swiatlowod_B5AC";
-const char *password = "cdHqhMotvgMSJ9L4tD";
+const int ssidAddress = 0;
+const int passAddress = 64;
+const int maxLength = 64;
+char ssid[maxLength];
+char password[maxLength];
 
 // Device settings
 const char *deviceId = "3";
@@ -53,6 +57,37 @@ static const char client_key[] PROGMEM = R"EOF(
 
 BearSSL::WiFiClientSecure net;
 MQTTClient mqtt;
+
+void readEEPROM(char *strToRead, int addrOffset)
+{
+  for (int i = 0; i < maxLength; i++)
+  {
+    char c = EEPROM.read(addrOffset + i);
+    if (c == '\0')
+    {
+      strToRead[i] = '\0';
+      break;
+    }
+    strToRead[i] = c;
+  }
+}
+
+void writeEEPROM(const char *strToWrite, int addrOffset)
+{
+  int len = strlen(strToWrite);
+  for (int i = 0; i < len; i++)
+  {
+    EEPROM.write(addrOffset + i, strToWrite[i]);
+  }
+  EEPROM.write(addrOffset + len, '\0');
+  EEPROM.commit();
+}
+
+void setWiFiCredentials(const char *newSsid, const char *newPassword)
+{
+  writeEEPROM(newSsid, ssidAddress);
+  writeEEPROM(newPassword, passAddress);
+}
 
 void setup_wifi()
 {
@@ -233,7 +268,12 @@ void clearScheduleEntries()
 void setup()
 {
   pinMode(OUT_PIN, OUTPUT);
+  EEPROM.begin(EEPROM_SIZE);
+  // setWiFiCredentials("YourSSID", "YourPassword");
   Serial.begin(115200);
+  // Read EEPROM
+  readEEPROM(ssid, ssidAddress);
+  readEEPROM(password, passAddress);
   setup_wifi();
   setTime();
   Serial.println("\nTime set.");
