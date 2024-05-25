@@ -130,6 +130,8 @@
     [Parameter]
     public IotDeviceStatus? OnlineStatus { get; set; }
     [Parameter]
+    public EventCallback<IotDeviceStatus> OnOnlineStatus { get; set; }
+    [Parameter]
     public EventCallback<IotDevice> OnDeviceChanged { get; set; }
     [Parameter]
     public EventCallback<int> OnDeviceDeleted { get; set; }
@@ -153,7 +155,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        timer = new System.Threading.Timer(CheckCommunicationStatus!, null, TimeSpan.Zero, TimeSpan.FromSeconds(10));
+        Console.WriteLine($"Iot device tile: {IotDevice!.Id}");
+        timer = new Timer(CheckCommunicationStatus!, null, TimeSpan.Zero, TimeSpan.FromSeconds(10));
         var userData = await LocalStorage.GetApplicationUserAsync();
         var hubConnection = new HubConnectionBuilder()
         .WithUrl($"https://localhost:7253/notificationHub?clientId={userData.Email}")
@@ -165,20 +168,25 @@
             var split = signal.Split(":");
             if (OnlineStatus!.DeviceId == int.Parse(split[1]))
             {
-                OnlineStatus.IsOnline = true;
                 OnlineStatus.LastOnlineSignal = DateTime.Now;
+                Console.WriteLine($"Device {OnlineStatus.DeviceId} online.");
             }
         });
         await hubConnection.StartAsync();
     }
-    private void CheckCommunicationStatus(object state)
+
+    private async void CheckCommunicationStatus(object state)
     {
+        await Task.Run(async () =>
+        {
+            bool shouldBeOnline = DateTime.Now <= OnlineStatus!.LastOnlineSignal.AddSeconds(12);
 
-        if ((DateTime.Now - OnlineStatus!.LastOnlineSignal).Seconds > TimeSpan.FromSeconds(12).Seconds)
-            OnlineStatus.IsOnline = false;
-        else
-            OnlineStatus.IsOnline = true;
-
+            if (OnlineStatus.IsOnline != shouldBeOnline)
+            {
+                OnlineStatus.IsOnline = shouldBeOnline;
+                await OnOnlineStatus.InvokeAsync(OnlineStatus);
+            }
+        });
     }
 
     private async Task OnScheduleChanged(List<DailyScheduleEntry> dailyScheduleEntries)
@@ -289,7 +297,6 @@
             featureToUpdate.Update(feature);
         IotDevice.SetFeatures(features);
         await OnDeviceChanged.InvokeAsync(IotDevice);
-        StateHasChanged();
     }
 
     protected override void OnParametersSet()

@@ -1,4 +1,6 @@
 #define OUT_PIN 2
+#define EEPROM_SIZE 512
+#include <EEPROM.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <PubSubClient.h>
@@ -10,9 +12,11 @@
 #include <TimeLib.h>
 #include <NTPClient.h>
 
-const char *ssid = "Orange_Swiatlowod_B5AC";
-const char *password = "cdHqhMotvgMSJ9L4tD";
-
+// const char *ssid = "";
+// const char *password = "";
+const int ssidAddress = 0;
+const int passAddress = 64;
+const int maxLength = 64;
 // MQTT Server details
 const char *mqtt_server = "ajkdesktop";
 const int mqtt_port = 8883;
@@ -23,6 +27,8 @@ const char *signalScheduleTopic = "signalSchedule/3";
 const char *configDeviceTopic = "configDevice/3";
 const char *controlDeviceTopic = "controlDevice/3";
 const char *controlOnline = "online:3";
+char ssid[maxLength];
+char password[maxLength];
 
 WiFiClientSecure espClient;
 PubSubClient client(espClient);
@@ -33,6 +39,37 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org", 3600, 60000);
 LinkedList<ScheduleEntry *> scheduleEntries = LinkedList<ScheduleEntry *>();
 String signalSchedule = "";
 unsigned long localMillis = 0;
+
+void readEEPROM(char *strToRead, int addrOffset)
+{
+  for (int i = 0; i < maxLength; i++)
+  {
+    char c = EEPROM.read(addrOffset + i);
+    if (c == '\0')
+    {
+      strToRead[i] = '\0';
+      break;
+    }
+    strToRead[i] = c;
+  }
+}
+
+void writeEEPROM(const char *strToWrite, int addrOffset)
+{
+  int len = strlen(strToWrite);
+  for (int i = 0; i < len; i++)
+  {
+    EEPROM.write(addrOffset + i, strToWrite[i]);
+  }
+  EEPROM.write(addrOffset + len, '\0');
+  EEPROM.commit();
+}
+
+void setWiFiCredentials(const char *newSsid, const char *newPassword)
+{
+  writeEEPROM(newSsid, ssidAddress);
+  writeEEPROM(newPassword, passAddress);
+}
 
 bool isDaylightSavingTime(const tm &timeinfo)
 {
@@ -309,8 +346,18 @@ void loadCertificates(WiFiClientSecure &client)
 
 void setup()
 {
+  if (!EEPROM.begin(EEPROM_SIZE))
+  {
+    Serial.println("Błąd inicjalizacji EEPROM");
+    return;
+  }
+  // setWiFiCredentials("YourSSID", "YourPassword");
   pinMode(OUT_PIN, OUTPUT);
   Serial.begin(115200);
+  // Read EEPROM
+  readEEPROM(ssid, ssidAddress);
+  readEEPROM(password, passAddress);
+
   setup_wifi();
   setTime();
   timeClient.update();
@@ -345,6 +392,7 @@ void loop()
     localMillis = currentMillis;
     printLocalTime();
     debugSystemStatus();
+    client.publish(controlDeviceTopic, controlOnline);
   }
   client.loop();
 }

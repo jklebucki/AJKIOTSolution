@@ -173,12 +173,12 @@ namespace AJKIOT.Api.Controllers
             try
             {
                 var device = await _iotDeviceService.GetDeviceAsync(deviceId);
-                await _iotDeviceService.UpdateDeviceAsync(device);
-                string ownerId = device.OwnerId;
-                foreach (var connection in _connectionMapping.GetAllClients().Where(c => c.Value == ownerId))
-                {
-                    await _hubContext.Clients.Client(connection.Key).SendAsync("DeviceUpdated", device);
-                }
+                // await _iotDeviceService.UpdateDeviceAsync(device);
+                // string ownerId = device.OwnerId;
+                // foreach (var connection in _connectionMapping.GetAllClients().Where(c => c.Value == ownerId))
+                // {
+                //     await _hubContext.Clients.Client(connection.Key).SendAsync("DeviceUpdated", device);
+                // }
                 await _hubContext.Clients.All.SendAsync("DeviceUpdated", device);
 
                 var response = new ApiResponse<IotDevice> { Data = device };

@@ -35,7 +35,7 @@
             @foreach (var device in devices)
             {
                 <div class="col-md-4 mb-4">
-                    <IotDeviceTile IotDevice="device" OnlineStatus="@deviceStatuses.FirstOrDefault(x=>x.DeviceId == device.Id)"
+                    <IotDeviceTile OnOnlineStatus="HandleOnlineStatusChanged" IotDevice="device" OnlineStatus="@deviceStatuses.FirstOrDefault(x=>x.DeviceId == device.Id)"
                                    OnDeviceChanged="HandleDeviceChanged" OnDeviceDeleted="HandleDeviceDeleted" />
                 </div>
             }
@@ -104,6 +104,19 @@
         });
 
         await hubConnection.StartAsync();
+    }
+
+    private void HandleOnlineStatusChanged(IotDeviceStatus iotDeviceStatus)
+    {
+        if (iotDeviceStatus != null)
+        {
+            var index = deviceStatuses.FindIndex(d => d.DeviceId == iotDeviceStatus.DeviceId);
+            if (index != -1)
+            {
+                deviceStatuses[index] = iotDeviceStatus;
+            }
+        }
+        StateHasChanged();
     }
 
     private async Task HandleDeviceChanged(IotDevice iotDevice)

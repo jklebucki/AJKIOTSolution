@@ -1,4 +1,6 @@
-﻿using MQTTnet;
+﻿using AJKIOT.Api.Hubs;
+using Microsoft.AspNetCore.SignalR;
+using MQTTnet;
 using MQTTnet.Server;
 using System.Text;
 
@@ -7,10 +9,12 @@ namespace AJKIOT.Api.Controllers
     public class MqttController
     {
         private readonly MqttServer _mqttServer;
-        public MqttController(MqttServer mqttServer)
+        private readonly IHubContext<NotificationHub> _hubContext;
+        public MqttController(MqttServer mqttServer, IHubContext<NotificationHub> hubContext)
         {
             _mqttServer = mqttServer;
             _mqttServer.ClientDisconnectedAsync += OnClientDisconnected;
+            _hubContext = hubContext;
         }
 
         public async Task OnClientConnected(ClientConnectedEventArgs eventArgs)
@@ -40,6 +44,8 @@ namespace AJKIOT.Api.Controllers
         public async Task OnInterceptingPublish(InterceptingPublishEventArgs eventArgs)
         {
             Console.WriteLine($"Client '{eventArgs.ClientId}' {eventArgs.ApplicationMessage.Topic} {Encoding.UTF8.GetString(eventArgs.ApplicationMessage.PayloadSegment)}");
+            if (eventArgs.ApplicationMessage.Topic == $"controlDevice/{eventArgs.ClientId}")
+                await _hubContext.Clients.All.SendAsync("ControlSignal", Encoding.UTF8.GetString(eventArgs.ApplicationMessage.PayloadSegment));
             await Task.FromResult(true);
         }
 
