@@ -133,6 +133,13 @@
                 {
                     var device = devices.First(x => x.Id == apiResponse.Data.Id);
                     device.Update(apiResponse.Data);
+                    var deviceStatus = deviceStatuses.First(x => x.DeviceId == apiResponse.Data.Id);
+                    deviceStatus = new IotDeviceStatus()
+                        {
+                            DeviceId = device.Id,
+                            IsOnline = true,
+                            LastOnlineSignal = DateTime.Now
+                        };
                 }
                 errorMessage = string.Join("; ", apiResponse!.Errors);
             }
