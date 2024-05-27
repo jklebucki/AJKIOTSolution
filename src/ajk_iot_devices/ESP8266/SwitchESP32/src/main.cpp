@@ -1,5 +1,7 @@
 #define OUT_PIN 2
 #define EEPROM_SIZE 512
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
 #include <EEPROM.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
@@ -16,19 +18,22 @@
 // const char *password = "";
 const int ssidAddress = 0;
 const int passAddress = 64;
+const int deviceIdAddress = 128;
+const int mqttServerAddress = 192;
 const int maxLength = 64;
 // MQTT Server details
-const char *mqtt_server = "ajkdesktop";
-const int mqtt_port = 8883;
-const char *deviceId = "3";
-const char *updateFeatureTopic = "updateFeature/3";
-const char *updateScheduleTopic = "configSchedule/3";
-const char *signalScheduleTopic = "signalSchedule/3";
-const char *configDeviceTopic = "configDevice/3";
-const char *controlDeviceTopic = "controlDevice/3";
-const char *controlOnline = "online:3";
 char ssid[maxLength];
 char password[maxLength];
+char deviceId[maxLength];
+char mqtt_server[maxLength];
+
+const int mqtt_port = 8883;
+char updateFeatureTopic[64];
+char updateScheduleTopic[64];
+char signalScheduleTopic[64];
+char configDeviceTopic[64];
+char controlDeviceTopic[64];
+char controlOnline[64];
 
 WiFiClientSecure espClient;
 PubSubClient client(espClient);
@@ -36,9 +41,10 @@ PubSubClient client(espClient);
 const char *ntpServer = "pool.ntp.org";
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", 3600, 60000);
-LinkedList<ScheduleEntry *> scheduleEntries = LinkedList<ScheduleEntry *>();
+AjkLinkedList<ScheduleEntry *> scheduleEntries = AjkLinkedList<ScheduleEntry *>();
 String signalSchedule = "";
 unsigned long localMillis = 0;
+AsyncWebServer server(80);
 
 void readEEPROM(char *strToRead, int addrOffset)
 {
@@ -69,6 +75,38 @@ void setWiFiCredentials(const char *newSsid, const char *newPassword)
 {
   writeEEPROM(newSsid, ssidAddress);
   writeEEPROM(newPassword, passAddress);
+}
+
+void setDeviceId(const char *newDeviceId)
+{
+  writeEEPROM(newDeviceId, deviceIdAddress);
+}
+
+void setMQTTServer(const char *newMQTTServer)
+{
+  writeEEPROM(newMQTTServer, mqttServerAddress);
+}
+
+void handleNewWiFiCredentials(const String &newSSID, const String &newPassword, const String &newDeviceId, const String &newMQTTServer)
+{
+  newSSID.toCharArray(ssid, maxLength);
+  newPassword.toCharArray(password, maxLength);
+  newDeviceId.toCharArray(deviceId, maxLength);
+  newMQTTServer.toCharArray(mqtt_server, maxLength);
+
+  setWiFiCredentials(ssid, password);
+  setDeviceId(deviceId);
+  setMQTTServer(mqtt_server);
+
+  snprintf(updateFeatureTopic, sizeof(updateFeatureTopic), "updateFeature/%s", deviceId);
+  snprintf(updateScheduleTopic, sizeof(updateScheduleTopic), "configSchedule/%s", deviceId);
+  snprintf(signalScheduleTopic, sizeof(signalScheduleTopic), "signalSchedule/%s", deviceId);
+  snprintf(configDeviceTopic, sizeof(configDeviceTopic), "configDevice/%s", deviceId);
+  snprintf(controlDeviceTopic, sizeof(controlDeviceTopic), "controlDevice/%s", deviceId);
+  snprintf(controlOnline, sizeof(controlOnline), "online:%s", deviceId);
+
+  Serial.println("New WiFi credentials, Device ID, and MQTT Server saved. Restarting...");
+  ESP.restart();
 }
 
 bool isDaylightSavingTime(const tm &timeinfo)
@@ -209,22 +247,67 @@ void printLocalTime()
   }
 }
 
+void enterWiFiConfigMode()
+{
+  Serial.println("Entering WiFi Config Mode...");
+  WiFi.disconnect();
+  WiFi.softAP("ESP32_Config");
+  Serial.print("AP IP address: ");
+  Serial.println(WiFi.softAPIP());
+
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+            { request->send(200, "text/html", "<form action=\"/setWiFi\" method=\"POST\">SSID: <input type=\"text\" name=\"ssid\"><br>Password: <input type=\"text\" name=\"password\"><br>Device ID: <input type=\"text\" name=\"deviceid\"><br>MQTT Server: <input type=\"text\" name=\"mqttserver\"><br><input type=\"submit\" value=\"Submit\"></form>"); });
+
+  server.on("/setWiFi", HTTP_POST, [](AsyncWebServerRequest *request)
+            {
+    String newSSID;
+    String newPassword;
+    String newDeviceId;
+    String newMQTTServer;
+
+    if (request->hasParam("ssid", true) && request->hasParam("password", true) && request->hasParam("deviceid", true) && request->hasParam("mqttserver", true)) {
+      newSSID = request->getParam("ssid", true)->value();
+      newPassword = request->getParam("password", true)->value();
+      newDeviceId = request->getParam("deviceid", true)->value();
+      newMQTTServer = request->getParam("mqttserver", true)->value();
+      handleNewWiFiCredentials(newSSID, newPassword, newDeviceId, newMQTTServer);
+      request->send(200, "text/plain", "WiFi credentials, Device ID, and MQTT Server received. Restarting...");
+    } else {
+      request->send(400, "text/plain", "Missing SSID, Password, Device ID, or MQTT Server");
+    } });
+
+  server.begin();
+}
+
 void setup_wifi()
 {
   delay(10);
-  Serial.println("Connecting to WiFi...");
-  WiFi.begin(ssid, password);
-
-  while (WiFi.status() != WL_CONNECTED)
+  if (strlen(ssid) == 0 || strlen(deviceId) == 0 || strlen(mqtt_server) == 0)
   {
-    delay(500);
-    Serial.print(".");
+    Serial.println("No WiFi credentials, Device ID, or MQTT Server found. Entering config mode.");
+    enterWiFiConfigMode();
   }
+  else
+  {
+    Serial.println("Connecting to WiFi...");
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED)
+    {
+      delay(500);
+      Serial.print(".");
+    }
+    Serial.println("");
+    Serial.println("WiFi connected");
+    Serial.println("IP Address: ");
+    Serial.println(WiFi.localIP());
 
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP Address: ");
-  Serial.println(WiFi.localIP());
+    snprintf(updateFeatureTopic, sizeof(updateFeatureTopic), "updateFeature/%s", deviceId);
+    snprintf(updateScheduleTopic, sizeof(updateScheduleTopic), "configSchedule/%s", deviceId);
+    snprintf(signalScheduleTopic, sizeof(signalScheduleTopic), "signalSchedule/%s", deviceId);
+    snprintf(configDeviceTopic, sizeof(configDeviceTopic), "configDevice/%s", deviceId);
+    snprintf(controlDeviceTopic, sizeof(controlDeviceTopic), "controlDevice/%s", deviceId);
+    snprintf(controlOnline, sizeof(controlOnline), "online:%s", deviceId);
+  }
 }
 
 void reconnect()
@@ -349,6 +432,18 @@ void configDemand()
   client.publish(configDeviceTopic, deviceId);
 }
 
+void resetEEPROM()
+{
+  // Resetujemy wszystkie zapisane zmienne w EEPROM
+  for (int i = 0; i < EEPROM_SIZE; i++)
+  {
+    EEPROM.write(i, 0);
+  }
+  EEPROM.commit();
+  Serial.println("EEPROM reset. Restarting...");
+  ESP.restart();
+}
+
 void setup()
 {
   if (!EEPROM.begin(EEPROM_SIZE))
@@ -356,12 +451,15 @@ void setup()
     Serial.println("Błąd inicjalizacji EEPROM");
     return;
   }
-  // setWiFiCredentials("YourSSID", "YourPassword");
+  // resetEEPROM();
+  //  setWiFiCredentials("YourSSID", "YourPassword");
   pinMode(OUT_PIN, OUTPUT);
   Serial.begin(115200);
   // Read EEPROM
   readEEPROM(ssid, ssidAddress);
   readEEPROM(password, passAddress);
+  readEEPROM(deviceId, deviceIdAddress);
+  readEEPROM(mqtt_server, mqttServerAddress);
 
   setup_wifi();
   setTime();
