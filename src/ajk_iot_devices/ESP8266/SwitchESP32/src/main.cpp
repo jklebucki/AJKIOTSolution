@@ -47,6 +47,7 @@ unsigned long localMillis = 0;
 unsigned long buttonPressStartTime = 0;
 bool buttonPressed = false;
 unsigned long lastWiFiAttemptTime = 0;
+bool cofigMode = false;
 
 AsyncWebServer server(80);
 
@@ -115,7 +116,6 @@ void handleNewWiFiCredentials(const String &newSSID, const String &newPassword, 
 
 bool isDaylightSavingTime(const tm &timeinfo)
 {
-  // Sprawdzanie czy jest czas letni (ostatnia niedziela marca do ostatniej niedzieli października)
   int month = timeinfo.tm_mon + 1;
   int day = timeinfo.tm_mday;
   int wday = timeinfo.tm_wday;
@@ -133,7 +133,11 @@ bool isDaylightSavingTime(const tm &timeinfo)
   }
 
   // Październik: sprawdzamy ostatnią niedzielę
-  if (month == 10 && (day - wday) < 25)
+  if (month == 10 && (day - wday) >= 25 && wday == 0)
+  {
+    return false;
+  }
+  if (month == 10 && (day - wday) >= 25 && wday != 0)
   {
     return true;
   }
@@ -339,13 +343,14 @@ void resetEEPROM()
   ESP.restart();
 }
 
-void checkEEPROM()
+bool checkIfEEPROMEmpty()
 {
-  if (strlen(ssid) == 0 || strlen(deviceId) == 0 || strlen(mqtt_server) == 0)
+  if (strlen(ssid) == 0 || strlen(password) == 0 || strlen(deviceId) == 0 || strlen(mqtt_server) == 0)
   {
     Serial.println("No WiFi credentials, Device ID, or MQTT Server found. Entering config mode.");
-    enterWiFiConfigMode();
+    return true;
   }
+  return false;
 }
 
 void setMqttTopics()
@@ -517,7 +522,7 @@ void setup()
     Serial.println("Błąd inicjalizacji EEPROM");
     return;
   }
-  checkEEPROM(); // Check if WiFi credentials are stored in EEPROM and switch to config mode if not
+
   // resetEEPROM();
   // setWiFiCredentials("YourSSID", "YourPassword");
   // setDeviceId("YourDeviceId");
@@ -528,19 +533,27 @@ void setup()
   readEEPROM(password, passAddress);
   readEEPROM(deviceId, deviceIdAddress);
   readEEPROM(mqtt_server, mqttServerAddress);
-
-  if (!connectToWiFi())
+  if (checkIfEEPROMEmpty()) // Check if WiFi credentials are readed from EEPROM if not enter WiFi config mode
   {
-    Serial.println("Failed to connect to WiFi at startup. Continuing to loop...");
+    Serial.println("No WiFi credentials, Device ID, or MQTT Server found. Entering config mode...");
+    cofigMode = true;
+    enterWiFiConfigMode();
   }
+  else
+  {
+    if (!connectToWiFi())
+    {
+      Serial.println("Failed to connect to WiFi at startup. Continuing to loop...");
+    }
 
-  setTime();
-  timeClient.update();
-  digitalWrite(OUT_PIN, LOW);
-  loadCertificates(espClient);
-  client.setServer(mqtt_server, mqtt_port);
-  client.setCallback(callback);
-  configDemand();
+    setTime();
+    timeClient.update();
+    digitalWrite(OUT_PIN, LOW);
+    loadCertificates(espClient);
+    client.setServer(mqtt_server, mqtt_port);
+    client.setCallback(callback);
+    configDemand();
+  }
 }
 
 void debugSystemStatus()
@@ -557,58 +570,61 @@ void debugSystemStatus()
 void checkResetButton()
 {
   if (digitalRead(RESET_PIN) == LOW)
-  { // Sprawdzamy, czy przycisk jest wciśnięty
+  { // Check if reset button is pressed
     if (!buttonPressed)
     {
       buttonPressed = true;
-      buttonPressStartTime = millis(); // Zapamiętujemy czas rozpoczęcia wciśnięcia przycisku
+      buttonPressStartTime = millis(); // Start measuring time when button is pressed
     }
     if (millis() - buttonPressStartTime >= RESET_HOLD_TIME)
-    {                // Sprawdzamy, czy przycisk jest przytrzymany przez 10 sekund
-      resetEEPROM(); // Wywołujemy metodę resetującą EEPROM
+    { // Check if button is held for RESET_HOLD_TIME
+      resetEEPROM();
     }
   }
   else
   {
-    buttonPressed = false; // Resetujemy flagę, gdy przycisk nie jest wciśnięty
+    buttonPressed = false; // Reset flag when button is released
   }
 }
 
 void loop()
 {
   checkResetButton();
-
-  if (WiFi.status() != WL_CONNECTED)
-  { // Check if WiFi is connected
-    unsigned long currentMillis = millis();
-    if (currentMillis - lastWiFiAttemptTime >= WIFI_RETRY_INTERVAL)
-    {
-      lastWiFiAttemptTime = currentMillis;
-      if (connectToWiFi())
+  if (!cofigMode)
+  {
+    if (WiFi.status() != WL_CONNECTED)
+    { // Check if WiFi is connected
+      unsigned long currentMillis = millis();
+      if (currentMillis - lastWiFiAttemptTime >= WIFI_RETRY_INTERVAL)
       {
-        Serial.println("WiFi reconnected");
+        lastWiFiAttemptTime = currentMillis;
+        if (connectToWiFi())
+        {
+          configDemand();
+          Serial.println("WiFi reconnected");
+        }
       }
     }
-  }
 
-  if (WiFi.status() == WL_CONNECTED)
-  {
-    if (!client.connected())
+    if (WiFi.status() == WL_CONNECTED)
     {
-      reconnect();
-      configDemand();
+      if (!client.connected())
+      {
+        reconnect();
+        configDemand();
+      }
     }
-  }
 
-  maintainPinState();
-  unsigned long currentMillis = millis();
-  if (currentMillis - localMillis >= 5000)
-  {
-    timeClient.update();
-    localMillis = currentMillis;
-    printLocalTime();
-    debugSystemStatus();
-    client.publish(controlDeviceTopic, controlOnline);
+    maintainPinState();
+    unsigned long currentMillis = millis();
+    if (currentMillis - localMillis >= 5000)
+    {
+      timeClient.update();
+      localMillis = currentMillis;
+      printLocalTime();
+      debugSystemStatus();
+      client.publish(controlDeviceTopic, controlOnline);
+    }
+    client.loop();
   }
-  client.loop();
 }
