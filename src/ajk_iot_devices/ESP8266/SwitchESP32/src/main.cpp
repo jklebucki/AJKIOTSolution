@@ -287,7 +287,7 @@ void enterWiFiConfigMode()
                             "body { font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f2f2f2; }"
                             ".container { max-width: 400px; width: 100%; padding: 20px; background-color: white; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); border-radius: 10px; }"
                             "h2 { text-align: center; }"
-                            "input[type=text], input[type=password], input[type=submit] { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; }"
+                            "input[type=text], input[type=password], input[type=submit] { width: 90%; padding: 10px; margin: 10px 10px; border: 1px solid #ccc; border-radius: 5px; }"
                             "input[type=submit] { background-color: #4CAF50; color: white; border: none; cursor: pointer; }"
                             "input[type=submit]:hover { background-color: #45a049; }"
                             "</style>"
@@ -299,7 +299,7 @@ void enterWiFiConfigMode()
                             "<label for=\"ssid\">SSID:</label>"
                             "<input type=\"text\" id=\"ssid\" name=\"ssid\">"
                             "<label for=\"password\">Password:</label>"
-                            "<input type=\"password\" id=\"password\" name=\"password\">"
+                            "<input type=\"text\" id=\"password\" name=\"password\">"
                             "<label for=\"deviceid\">Device ID:</label>"
                             "<input type=\"text\" id=\"deviceid\" name=\"deviceid\">"
                             "<label for=\"mqttserver\">MQTT Server:</label>"
@@ -322,8 +322,8 @@ void enterWiFiConfigMode()
             newPassword = request->getParam("password", true)->value();
             newDeviceId = request->getParam("deviceid", true)->value();
             newMQTTServer = request->getParam("mqttserver", true)->value();
-            handleNewWiFiCredentials(newSSID, newPassword, newDeviceId, newMQTTServer);
             request->send(200, "text/plain", "WiFi credentials, Device ID, and MQTT Server received. Restarting...");
+            handleNewWiFiCredentials(newSSID, newPassword, newDeviceId, newMQTTServer);
         } else {
             request->send(400, "text/plain", "Missing SSID, Password, Device ID, or MQTT Server");
         } });
