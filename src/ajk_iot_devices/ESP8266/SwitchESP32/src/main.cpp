@@ -1,5 +1,8 @@
 #define OUT_PIN 2
+#define RESET_PIN 21
 #define EEPROM_SIZE 512
+#define RESET_HOLD_TIME 10000 // 10 seconds
+#define WIFI_RETRY_INTERVAL 5000
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <EEPROM.h>
@@ -14,26 +17,23 @@
 #include <TimeLib.h>
 #include <NTPClient.h>
 
-// const char *ssid = "";
-// const char *password = "";
 const int ssidAddress = 0;
 const int passAddress = 64;
 const int deviceIdAddress = 128;
 const int mqttServerAddress = 192;
 const int maxLength = 64;
-// MQTT Server details
 char ssid[maxLength];
 char password[maxLength];
 char deviceId[maxLength];
 char mqtt_server[maxLength];
-
-const int mqtt_port = 8883;
 char updateFeatureTopic[64];
 char updateScheduleTopic[64];
 char signalScheduleTopic[64];
 char configDeviceTopic[64];
 char controlDeviceTopic[64];
 char controlOnline[64];
+// MQTT Server details
+const int mqtt_port = 8883;
 
 WiFiClientSecure espClient;
 PubSubClient client(espClient);
@@ -44,6 +44,10 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org", 3600, 60000);
 AjkLinkedList<ScheduleEntry *> scheduleEntries = AjkLinkedList<ScheduleEntry *>();
 String signalSchedule = "";
 unsigned long localMillis = 0;
+unsigned long buttonPressStartTime = 0;
+bool buttonPressed = false;
+unsigned long lastWiFiAttemptTime = 0;
+
 AsyncWebServer server(80);
 
 void readEEPROM(char *strToRead, int addrOffset)
@@ -251,63 +255,132 @@ void enterWiFiConfigMode()
 {
   Serial.println("Entering WiFi Config Mode...");
   WiFi.disconnect();
-  WiFi.softAP("ESP32_Config");
+
+  IPAddress local_IP(192, 168, 4, 1);
+  IPAddress gateway(192, 168, 4, 1);
+  IPAddress subnet(255, 255, 255, 0);
+
+  if (!WiFi.softAPConfig(local_IP, gateway, subnet))
+  {
+    Serial.println("AP Config Failed");
+  }
+
+  if (!WiFi.softAP("AJK_IoT_ESP32_Config"))
+  {
+    Serial.println("AP Start Failed");
+  }
+
   Serial.print("AP IP address: ");
   Serial.println(WiFi.softAPIP());
 
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send(200, "text/html", "<form action=\"/setWiFi\" method=\"POST\">SSID: <input type=\"text\" name=\"ssid\"><br>Password: <input type=\"text\" name=\"password\"><br>Device ID: <input type=\"text\" name=\"deviceid\"><br>MQTT Server: <input type=\"text\" name=\"mqttserver\"><br><input type=\"submit\" value=\"Submit\"></form>"); });
+            { request->send(200, "text/html",
+                            "<!DOCTYPE html>"
+                            "<html>"
+                            "<head>"
+                            "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
+                            "<style>"
+                            "body { font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f2f2f2; }"
+                            ".container { max-width: 400px; width: 100%; padding: 20px; background-color: white; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); border-radius: 10px; }"
+                            "h2 { text-align: center; }"
+                            "input[type=text], input[type=password], input[type=submit] { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; }"
+                            "input[type=submit] { background-color: #4CAF50; color: white; border: none; cursor: pointer; }"
+                            "input[type=submit]:hover { background-color: #45a049; }"
+                            "</style>"
+                            "</head>"
+                            "<body>"
+                            "<div class=\"container\">"
+                            "<h2>WiFi Configuration</h2>"
+                            "<form action=\"/setWiFi\" method=\"POST\">"
+                            "<label for=\"ssid\">SSID:</label>"
+                            "<input type=\"text\" id=\"ssid\" name=\"ssid\">"
+                            "<label for=\"password\">Password:</label>"
+                            "<input type=\"password\" id=\"password\" name=\"password\">"
+                            "<label for=\"deviceid\">Device ID:</label>"
+                            "<input type=\"text\" id=\"deviceid\" name=\"deviceid\">"
+                            "<label for=\"mqttserver\">MQTT Server:</label>"
+                            "<input type=\"text\" id=\"mqttserver\" name=\"mqttserver\">"
+                            "<input type=\"submit\" value=\"Submit\">"
+                            "</form>"
+                            "</div>"
+                            "</body>"
+                            "</html>"); });
 
   server.on("/setWiFi", HTTP_POST, [](AsyncWebServerRequest *request)
             {
-    String newSSID;
-    String newPassword;
-    String newDeviceId;
-    String newMQTTServer;
+        String newSSID;
+        String newPassword;
+        String newDeviceId;
+        String newMQTTServer;
 
-    if (request->hasParam("ssid", true) && request->hasParam("password", true) && request->hasParam("deviceid", true) && request->hasParam("mqttserver", true)) {
-      newSSID = request->getParam("ssid", true)->value();
-      newPassword = request->getParam("password", true)->value();
-      newDeviceId = request->getParam("deviceid", true)->value();
-      newMQTTServer = request->getParam("mqttserver", true)->value();
-      handleNewWiFiCredentials(newSSID, newPassword, newDeviceId, newMQTTServer);
-      request->send(200, "text/plain", "WiFi credentials, Device ID, and MQTT Server received. Restarting...");
-    } else {
-      request->send(400, "text/plain", "Missing SSID, Password, Device ID, or MQTT Server");
-    } });
+        if (request->hasParam("ssid", true) && request->hasParam("password", true) && request->hasParam("deviceid", true) && request->hasParam("mqttserver", true)) {
+            newSSID = request->getParam("ssid", true)->value();
+            newPassword = request->getParam("password", true)->value();
+            newDeviceId = request->getParam("deviceid", true)->value();
+            newMQTTServer = request->getParam("mqttserver", true)->value();
+            handleNewWiFiCredentials(newSSID, newPassword, newDeviceId, newMQTTServer);
+            request->send(200, "text/plain", "WiFi credentials, Device ID, and MQTT Server received. Restarting...");
+        } else {
+            request->send(400, "text/plain", "Missing SSID, Password, Device ID, or MQTT Server");
+        } });
 
   server.begin();
 }
 
-void setup_wifi()
+void resetEEPROM()
 {
-  delay(10);
+  // Resetujemy wszystkie zapisane zmienne w EEPROM
+  for (int i = 0; i < EEPROM_SIZE; i++)
+  {
+    EEPROM.write(i, 0);
+  }
+  EEPROM.commit();
+  Serial.println("EEPROM reset. Restarting...");
+  ESP.restart();
+}
+
+void checkEEPROM()
+{
   if (strlen(ssid) == 0 || strlen(deviceId) == 0 || strlen(mqtt_server) == 0)
   {
     Serial.println("No WiFi credentials, Device ID, or MQTT Server found. Entering config mode.");
     enterWiFiConfigMode();
   }
-  else
-  {
-    Serial.println("Connecting to WiFi...");
-    WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED)
-    {
-      delay(500);
-      Serial.print(".");
-    }
-    Serial.println("");
-    Serial.println("WiFi connected");
-    Serial.println("IP Address: ");
-    Serial.println(WiFi.localIP());
+}
 
-    snprintf(updateFeatureTopic, sizeof(updateFeatureTopic), "updateFeature/%s", deviceId);
-    snprintf(updateScheduleTopic, sizeof(updateScheduleTopic), "configSchedule/%s", deviceId);
-    snprintf(signalScheduleTopic, sizeof(signalScheduleTopic), "signalSchedule/%s", deviceId);
-    snprintf(configDeviceTopic, sizeof(configDeviceTopic), "configDevice/%s", deviceId);
-    snprintf(controlDeviceTopic, sizeof(controlDeviceTopic), "controlDevice/%s", deviceId);
-    snprintf(controlOnline, sizeof(controlOnline), "online:%s", deviceId);
+void setMqttTopics()
+{
+  snprintf(updateFeatureTopic, sizeof(updateFeatureTopic), "updateFeature/%s", deviceId);
+  snprintf(updateScheduleTopic, sizeof(updateScheduleTopic), "configSchedule/%s", deviceId);
+  snprintf(signalScheduleTopic, sizeof(signalScheduleTopic), "signalSchedule/%s", deviceId);
+  snprintf(configDeviceTopic, sizeof(configDeviceTopic), "configDevice/%s", deviceId);
+  snprintf(controlDeviceTopic, sizeof(controlDeviceTopic), "controlDevice/%s", deviceId);
+  snprintf(controlOnline, sizeof(controlOnline), "online:%s", deviceId);
+}
+
+bool connectToWiFi()
+{
+  Serial.println("Connecting to WiFi...");
+  WiFi.begin(ssid, password);
+
+  unsigned long startTime = millis();
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    if (millis() - startTime >= WIFI_RETRY_INTERVAL)
+    {
+      Serial.println("Failed to connect to WiFi");
+      return false;
+    }
+    delay(500);
+    Serial.print(".");
   }
+
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP Address: ");
+  Serial.println(WiFi.localIP());
+  setMqttTopics();
+  return true;
 }
 
 void reconnect()
@@ -432,36 +505,35 @@ void configDemand()
   client.publish(configDeviceTopic, deviceId);
 }
 
-void resetEEPROM()
-{
-  // Resetujemy wszystkie zapisane zmienne w EEPROM
-  for (int i = 0; i < EEPROM_SIZE; i++)
-  {
-    EEPROM.write(i, 0);
-  }
-  EEPROM.commit();
-  Serial.println("EEPROM reset. Restarting...");
-  ESP.restart();
-}
-
 void setup()
 {
+  pinMode(OUT_PIN, OUTPUT);
+  pinMode(RESET_PIN, INPUT_PULLUP);
+  Serial.begin(115200);
+
+  // Initialize EEPROM
   if (!EEPROM.begin(EEPROM_SIZE))
   {
     Serial.println("Błąd inicjalizacji EEPROM");
     return;
   }
+  checkEEPROM(); // Check if WiFi credentials are stored in EEPROM and switch to config mode if not
   // resetEEPROM();
-  //  setWiFiCredentials("YourSSID", "YourPassword");
-  pinMode(OUT_PIN, OUTPUT);
-  Serial.begin(115200);
+  // setWiFiCredentials("YourSSID", "YourPassword");
+  // setDeviceId("YourDeviceId");
+  // setMQTTServer("YourMQTTServer domain name or IP address");
+
   // Read EEPROM
   readEEPROM(ssid, ssidAddress);
   readEEPROM(password, passAddress);
   readEEPROM(deviceId, deviceIdAddress);
   readEEPROM(mqtt_server, mqttServerAddress);
 
-  setup_wifi();
+  if (!connectToWiFi())
+  {
+    Serial.println("Failed to connect to WiFi at startup. Continuing to loop...");
+  }
+
   setTime();
   timeClient.update();
   digitalWrite(OUT_PIN, LOW);
@@ -482,13 +554,52 @@ void debugSystemStatus()
   showEntries();
 }
 
+void checkResetButton()
+{
+  if (digitalRead(RESET_PIN) == LOW)
+  { // Sprawdzamy, czy przycisk jest wciśnięty
+    if (!buttonPressed)
+    {
+      buttonPressed = true;
+      buttonPressStartTime = millis(); // Zapamiętujemy czas rozpoczęcia wciśnięcia przycisku
+    }
+    if (millis() - buttonPressStartTime >= RESET_HOLD_TIME)
+    {                // Sprawdzamy, czy przycisk jest przytrzymany przez 10 sekund
+      resetEEPROM(); // Wywołujemy metodę resetującą EEPROM
+    }
+  }
+  else
+  {
+    buttonPressed = false; // Resetujemy flagę, gdy przycisk nie jest wciśnięty
+  }
+}
+
 void loop()
 {
-  if (!client.connected())
-  {
-    reconnect();
-    configDemand();
+  checkResetButton();
+
+  if (WiFi.status() != WL_CONNECTED)
+  { // Check if WiFi is connected
+    unsigned long currentMillis = millis();
+    if (currentMillis - lastWiFiAttemptTime >= WIFI_RETRY_INTERVAL)
+    {
+      lastWiFiAttemptTime = currentMillis;
+      if (connectToWiFi())
+      {
+        Serial.println("WiFi reconnected");
+      }
+    }
   }
+
+  if (WiFi.status() == WL_CONNECTED)
+  {
+    if (!client.connected())
+    {
+      reconnect();
+      configDemand();
+    }
+  }
+
   maintainPinState();
   unsigned long currentMillis = millis();
   if (currentMillis - localMillis >= 5000)
