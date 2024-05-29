@@ -22,7 +22,7 @@
                 </Alert>
             </Column>
         </Grid>
-        <Validations @ref="validations" Mode="ValidationMode.Manual">
+        @* <Validations @ref="validations" Mode="ValidationMode.Manual">
             <Grid Class="mb-1">
                 <Column ColumnSize="ColumnSize.Is12">
                     <Validation Validator="@ValidationRule.IsNotEmpty">
@@ -50,7 +50,7 @@
                     </Validation>
                 </Column>
             </Grid>
-        </Validations>
+        </Validations> *@
     </CardBody>
     <CardFooter Class="d-flex justify-content-end">
         <Button Color="Color.Secondary" Class="me-2" Outline Clicked="@Cancel">Cancel</Button>
@@ -78,8 +78,8 @@
 
     private async Task DownloadDeviceCode()
     {
-        if (await validations!.ValidateAll())
-        {
+        // if (await validations!.ValidateAll())
+        // {
             try
             {
                 var response = await api.ReceiveDeviceFirmwareAsync(new Shared.Requests.ReceiveDeviceFirmwareRequest
@@ -102,7 +102,7 @@
                 errorMessage = ex.Message;
             }
 
-        }
+        // }
     }
 
     private async Task Cancel()

@@ -37,56 +37,26 @@ namespace AJKIOT.Api.Services
             return await _repository.GetDeviceAsync(devdeviceId);
         }
 
-        private async Task<bool> InjectDeviceFirmwareSettingsAsync(FirmwareSettings firmwareSettings)
-        {
-            var settingsTemplatePath = Path.Combine(Directory.GetCurrentDirectory(), "FirmwareFiles", "FirmwareSettings.txt");
-            var settingsPath = Path.Combine(Directory.GetCurrentDirectory(), "FirmwareFiles", firmwareSettings.DeviceType, "FirmwareSettings.txt");
-            try
-            {
-                using (var sr = new StreamReader(settingsTemplatePath))
-                {
-                    var firmware = await sr.ReadToEndAsync();
-                    if (firmware != null)
-                    {
-                        firmware = firmware.Replace(":ssid", firmwareSettings.WiFiSSID);
-                        firmware = firmware.Replace(":password", firmwareSettings.WiFiPassword);
-                        firmware = firmware.Replace(":apiUrl", firmwareSettings.ApiUrl);
-                        File.WriteAllText(settingsPath, firmware);
-                    }
-                }
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error injecting device firmware settings: {ex.Message}");
-                return false;
-            }
-        }
-
         public async Task<Stream> GetDeviceFirmwareAsStreamAsync(FirmwareSettings firmwareSettings)
         {
-            if (await InjectDeviceFirmwareSettingsAsync(firmwareSettings))
+            var deviceType = firmwareSettings.DeviceType;
+            var memoryStream = new MemoryStream();
+            using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
             {
-                var deviceType = firmwareSettings.DeviceType;
-                var memoryStream = new MemoryStream();
-                using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+                string folderPath = Path.Combine(Directory.GetCurrentDirectory(), "FirmwareFiles", deviceType);
+                var files = Directory.GetFiles(folderPath);
+                foreach (var file in files)
                 {
-                    string folderPath = Path.Combine(Directory.GetCurrentDirectory(), "FirmwareFiles", deviceType);
-                    var files = Directory.GetFiles(folderPath);
-                    foreach (var file in files)
+                    var entry = archive.CreateEntry(Path.GetFileName(file), CompressionLevel.Optimal);
+                    using (var fileStream = File.OpenRead(file))
+                    using (var entryStream = entry.Open())
                     {
-                        var entry = archive.CreateEntry(Path.GetFileName(file), CompressionLevel.Optimal);
-                        using (var fileStream = File.OpenRead(file))
-                        using (var entryStream = entry.Open())
-                        {
-                            await fileStream.CopyToAsync(entryStream);
-                        }
+                        await fileStream.CopyToAsync(entryStream);
                     }
                 }
-                memoryStream.Position = 0;
-                return memoryStream;
             }
-            throw new Exception("Error injecting device firmware settings");
+            memoryStream.Position = 0;
+            return memoryStream;
         }
 
         public async Task<ApiResponse<IEnumerable<IotDevice>>> GetUserDevicesAsync(string userId)

@@ -1,3 +1,0 @@
-"AJK";
-"AJK";
-"https://localhost:7253/";

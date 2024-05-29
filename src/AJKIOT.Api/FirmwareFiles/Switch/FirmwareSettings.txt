@@ -1,3 +1,0 @@
-"asasasdasdsad";
-"asddsadasdsa";
-"https://localhost:7253/";
