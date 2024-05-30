@@ -16,6 +16,7 @@
 #include <LinkedList.h>
 #include <TimeLib.h>
 #include <NTPClient.h>
+#include <IotDevice.h>
 
 const int ssidAddress = 0;
 const int passAddress = 64;
@@ -50,7 +51,8 @@ unsigned long lastWiFiAttemptTime = 0;
 bool cofigMode = false;
 
 AsyncWebServer server(80);
-
+IotDevice device;
+IotDevice::DeviceFeature feature;
 void readEEPROM(char *strToRead, int addrOffset)
 {
   for (int i = 0; i < maxLength; i++)
@@ -182,7 +184,14 @@ void maintainPinState()
         }
       }
     }
-    digitalWrite(OUT_PIN, pinShouldBeOn ? HIGH : LOW); // Ustawienie stanu pinu
+    if (feature.Value == 0)
+    {
+      digitalWrite(OUT_PIN, pinShouldBeOn ? HIGH : LOW);
+    }
+    else
+    {
+      digitalWrite(OUT_PIN, HIGH);
+    }
   }
   else
   {
@@ -445,6 +454,10 @@ void callback(char *topic, byte *payload, unsigned int length)
   {
     parseSchedule(data.c_str());
   }
+  if (topicStr == updateFeatureTopic)
+  {
+    device.decodeFeatureJson(data.c_str(), feature);
+  }
 }
 
 bool loadCertFile(const char *path, std::function<bool(Stream &, size_t)> loadFunction)
@@ -522,7 +535,7 @@ void setup()
     Serial.println("Błąd inicjalizacji EEPROM");
     return;
   }
-
+  feature.Value = 0;
   // resetEEPROM();
   // setWiFiCredentials("YourSSID", "YourPassword");
   // setDeviceId("YourDeviceId");
@@ -565,6 +578,8 @@ void debugSystemStatus()
   getLocalTime(&timeinfo);
   Serial.printf("Current time: %02d:%02d:%02d - Current weekday: %d\n", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, mondayAsFirstDayOfWeek(timeinfo.tm_wday));
   showEntries();
+  Serial.printf("Feature: %s - Value: %d\n", feature.Name, feature.Value);
+  Serial.println();
 }
 
 void checkResetButton()
