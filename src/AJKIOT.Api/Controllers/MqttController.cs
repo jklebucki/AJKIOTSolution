@@ -13,12 +13,14 @@ namespace AJKIOT.Api.Controllers
         private readonly MqttServer _mqttServer;
         private readonly IDeviceData _deviceData;
         private readonly IHubContext<NotificationHub> _hubContext;
-        public MqttController(MqttServer mqttServer, IHubContext<NotificationHub> hubContext, IDeviceData deviceData)
+        private readonly DeviceIdStore _deviceIdStore;
+        public MqttController(MqttServer mqttServer, IHubContext<NotificationHub> hubContext, IDeviceData deviceData, DeviceIdStore deviceIdStore)
         {
             _mqttServer = mqttServer;
             _mqttServer.ClientDisconnectedAsync += OnClientDisconnected;
             _hubContext = hubContext;
             _deviceData = deviceData;
+            _deviceIdStore = deviceIdStore;
         }
 
         public async Task OnClientConnected(ClientConnectedEventArgs eventArgs)
@@ -35,7 +37,9 @@ namespace AJKIOT.Api.Controllers
 
         public async Task ValidateConnection(ValidatingConnectionEventArgs eventArgs)
         {
-            string[] allowedClients = { "device-0000", "device-0001", "3" };
+            var allowedClients = _deviceIdStore.GetAllDeviceIds().ToList();
+            allowedClients.Add( "device-0000");  //for testing
+            allowedClients.Add("device-0001");  //for testing
             if (!allowedClients.Contains(eventArgs.ClientId))
             {
                 Console.WriteLine($"Client '{eventArgs.ClientId}' wants to connect. Not accepting!");

@@ -4,8 +4,8 @@
 
 ScheduleEntry::ScheduleEntry()
 {
-    memset(&StartTime, 0, sizeof(StartTime));
-    memset(&EndTime, 0, sizeof(EndTime));
+    StartTime = 0;
+    EndTime = 0;
 }
 
 bool ScheduleEntry::parseJson(const char *jsonString)
@@ -60,7 +60,7 @@ bool ScheduleEntry::parseJson(const char *jsonString)
         }
     }
 
-    // Dodaj wydruk wartości po zakończeniu parsowania
+    // Print values after parsing
     Serial.println("JSON parsed successfully. Displaying values:");
     Serial.print("Id: ");
     Serial.println(Id);
@@ -71,17 +71,17 @@ bool ScheduleEntry::parseJson(const char *jsonString)
     Serial.print("EntryNumber: ");
     Serial.println(EntryNumber);
     Serial.print("StartTime: ");
-    Serial.printf("%02d:%02d:%02d\n", StartTime.Hour, StartTime.Minute, StartTime.Second);
+    Serial.println(StartTime);
     Serial.print("EndTime: ");
-    Serial.printf("%02d:%02d:%02d\n", EndTime.Hour, EndTime.Minute, EndTime.Second);
+    Serial.println(EndTime);
     Serial.println("JSON parsed successfully");
     return true;
 }
 
-bool ScheduleEntry::parseTime(const String &timeStr, tmElements_t &timeEl)
+bool ScheduleEntry::parseTime(const String &timeStr, time_t &timeEl)
 {
-    int firstColon = timeStr.indexOf(':');    // Znajdź pierwszy dwukropek
-    int lastColon = timeStr.lastIndexOf(':'); // Znajdź ostatni dwukropek
+    int firstColon = timeStr.indexOf(':');    // Find the first colon
+    int lastColon = timeStr.lastIndexOf(':'); // Find the last colon
 
     if (firstColon == -1 || lastColon == -1 || firstColon == lastColon)
     {
@@ -89,24 +89,44 @@ bool ScheduleEntry::parseTime(const String &timeStr, tmElements_t &timeEl)
         return false;
     }
 
-    // Ekstrakcja godzin, minut i sekund
+    // Extract hours, minutes, and seconds
     String hourStr = timeStr.substring(0, firstColon);
     String minuteStr = timeStr.substring(firstColon + 1, lastColon);
     String secondStr = timeStr.substring(lastColon + 1);
 
-    // Konwersja stringów na liczby całkowite
-    timeEl.Hour = hourStr.toInt();
-    timeEl.Minute = minuteStr.toInt();
-    timeEl.Second = secondStr.toInt();
+    // Convert strings to integers
+    int hour = hourStr.toInt();
+    int minute = minuteStr.toInt();
+    int second = secondStr.toInt();
 
-    // Dodatkowe sprawdzenie, czy wartości czasu są w prawidłowym zakresie
-    if (timeEl.Hour < 0 || timeEl.Hour > 23 ||
-        timeEl.Minute < 0 || timeEl.Minute > 59 ||
-        timeEl.Second < 0 || timeEl.Second > 59)
+    // Additional check to ensure time values are within valid ranges
+    if (hour < 0 || hour > 23 ||
+        minute < 0 || minute > 59 ||
+        second < 0 || second > 59)
     {
         Serial.println("Time values out of range: " + timeStr);
         return false;
     }
 
+    // Convert to time_t (seconds since midnight)
+    timeEl = hour * 3600 + minute * 60 + second;
+
     return true;
+}
+
+bool ScheduleEntry::isCurrentTimeInRange(time_t currentTime) const
+{
+    return (currentTime >= StartTime && currentTime <= EndTime);
+}
+
+String ScheduleEntry::timeToString(time_t time) const
+{
+    // Convert time_t (seconds since midnight) to HH:MM:SS format
+    int hours = (time % 86400L) / 3600;
+    int minutes = (time % 3600) / 60;
+    int seconds = time % 60;
+
+    char buffer[9];
+    sprintf(buffer, "%02d:%02d:%02d", hours, minutes, seconds);
+    return String(buffer);
 }

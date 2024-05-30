@@ -41,7 +41,7 @@ namespace AJKIOT.Api.Utils
                     return element.Certificate;
                 }
             }
-            return null;
+            return null!;
         }
 
     }

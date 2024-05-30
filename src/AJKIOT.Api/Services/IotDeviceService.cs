@@ -2,6 +2,7 @@
 using AJKIOT.Shared.Models;
 using AJKIOT.Shared.Settings;
 using System.IO.Compression;
+using System.Linq;
 
 namespace AJKIOT.Api.Services
 {
@@ -71,9 +72,13 @@ namespace AJKIOT.Api.Services
             return new ApiResponse<IotDevice>() { Data = device };
         }
 
-        public async Task<IEnumerable<string>> GetAllowedDevicesAsync()
+        public async IAsyncEnumerable<string> GetAllowedDevicesAsync()
         {
-            return (await _repository.GetAllDevicesAsync()).Select(d => d.Id.ToString()).ToList();
+            var devices = (await _repository.GetAllDevicesAsync()).Select(d => d.Id.ToString());
+            await foreach (var deviceId in devices.ToAsyncEnumerable())
+            {
+                yield return deviceId;
+            }
         }
     }
 }

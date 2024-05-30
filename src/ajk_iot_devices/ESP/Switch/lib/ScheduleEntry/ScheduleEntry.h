@@ -12,14 +12,16 @@ public:
     int FeatureId;
     int DayNumber;
     int EntryNumber;
-    tmElements_t StartTime; // Using tmElements_t to store time
-    tmElements_t EndTime;   // Using tmElements_t to store time
+    time_t StartTime; // Using time_t to store time
+    time_t EndTime;   // Using time_t to store time
 
     ScheduleEntry();
     bool parseJson(const char *jsonString);
+    bool isCurrentTimeInRange(time_t currentTime) const; // Function now takes currentTime as parameter
+    String timeToString(time_t time) const;              // Function to convert time_t to HH:MM:SS string
 
 private:
-    bool parseTime(const String &timeStr, tmElements_t &timeEl);
+    bool parseTime(const String &timeStr, time_t &timeEl);
 };
 
 #endif // SCHEDULE_ENTRY_H

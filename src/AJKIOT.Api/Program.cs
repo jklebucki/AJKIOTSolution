@@ -32,6 +32,7 @@ builder.Services.AddScoped<IIotDeviceService, IotDeviceService>();
 builder.Services.AddSingleton<ITemplateService, TemplateService>();
 builder.Services.AddSingleton<IMessageBus, MessageBus>();
 builder.Services.AddSingleton<ConnectionMapping>();
+builder.Services.AddSingleton<DeviceIdStore>();
 // JSON
 builder.Services.AddControllers().AddJsonOptions(opt =>
 {
@@ -274,4 +275,21 @@ app.UseMqttServer(server =>
     server.InterceptingPublishAsync += mqttController.OnInterceptingPublish;
     server.ClientDisconnectedAsync += mqttController.OnClientDisconnected;
 });
+
+async Task InitializeDeviceIdStore(IServiceProvider services)
+{
+    var deviceIdStore = services.GetRequiredService<DeviceIdStore>();
+    var deviceService = services.GetRequiredService<IIotDeviceService>();
+
+    var deviceIds = deviceService.GetAllowedDevicesAsync();
+
+    await deviceIdStore.LoadDeviceIdsAsync(deviceIds);
+}
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    await InitializeDeviceIdStore(services);
+}
+
 app.Run();
