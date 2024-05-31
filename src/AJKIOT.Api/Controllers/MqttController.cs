@@ -25,7 +25,7 @@ namespace AJKIOT.Api.Controllers
 
         public async Task OnClientConnected(ClientConnectedEventArgs eventArgs)
         {
-            Console.WriteLine($"Client '{eventArgs.ClientId}' connected.");
+            Console.WriteLine($"Client '{eventArgs.ClientId}' connected, protocol version: '{eventArgs.ProtocolVersion}'.");
             await Task.FromResult(true);
         }
 
@@ -45,7 +45,10 @@ namespace AJKIOT.Api.Controllers
                 Console.WriteLine($"Client '{eventArgs.ClientId}' wants to connect. Not accepting!");
                 await eventArgs.ChannelAdapter.DisconnectAsync(CancellationToken.None);
             }
-            Console.WriteLine($"Client '{eventArgs.ClientId}' wants to connect. Accepting!");
+            else
+            {
+                Console.WriteLine($"Client '{eventArgs.ClientId}' wants to connect. Accepting!");
+            }
             await Task.FromResult(true);
         }
 
