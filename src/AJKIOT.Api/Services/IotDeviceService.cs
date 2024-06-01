@@ -10,11 +10,13 @@ namespace AJKIOT.Api.Services
     {
         private readonly IIotDeviceRepository _repository;
         private readonly ILogger _logger;
+        private readonly DeviceIdStore _deviceIdStore;
 
-        public IotDeviceService(IIotDeviceRepository repository, ILogger<IotDeviceService> logger)
+        public IotDeviceService(IIotDeviceRepository repository, ILogger<IotDeviceService> logger, DeviceIdStore deviceIdStore)
         {
             _repository = repository;
             _logger = logger;
+            _deviceIdStore = deviceIdStore;
         }
 
         public async Task<ApiResponse<IotDevice>> AddDeviceAsync(IotDevice iotDevice)
@@ -24,12 +26,18 @@ namespace AJKIOT.Api.Services
             if (deviceId == 0)
                 return new ApiResponse<IotDevice>() { Data = iotDevice, Errors = new List<string> { "Error adding device" } };
             else
+            {
+                _deviceIdStore.AddDeviceId(deviceId.ToString());
                 return new ApiResponse<IotDevice>() { Data = iotDevice, Errors = new List<string>() };
+            }
+
         }
 
         public async Task<ApiResponse<bool>> DeleteDeviceAsync(int id)
         {
             bool deleted = await _repository.DeleteDeviceAsync(id);
+            if (deleted)
+                _deviceIdStore.RemoveDeviceId(id.ToString());
             return new ApiResponse<bool>() { Data = deleted };
         }
 
