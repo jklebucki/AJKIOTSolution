@@ -38,7 +38,7 @@ namespace AJKIOT.Api.Controllers
         public async Task ValidateConnection(ValidatingConnectionEventArgs eventArgs)
         {
             var allowedClients = _deviceIdStore.GetAllDeviceIds().ToList();
-            allowedClients.Add( "device-0000");  //for testing
+            allowedClients.Add("device-0000");  //for testing
             allowedClients.Add("device-0001");  //for testing
             if (!allowedClients.Contains(eventArgs.ClientId))
             {

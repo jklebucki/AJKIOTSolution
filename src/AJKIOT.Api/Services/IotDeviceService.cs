@@ -2,7 +2,6 @@
 using AJKIOT.Shared.Models;
 using AJKIOT.Shared.Settings;
 using System.IO.Compression;
-using System.Linq;
 
 namespace AJKIOT.Api.Services
 {
