@@ -3,12 +3,14 @@
 @using AJKIOT.Shared.Models.DeviceFeatures
 @using AJKIOT.Shared.Requests
 @using AJKIOT.Web.Services
+@using AJKIOT.Web.Settings
 @using Blazorise
 @using Microsoft.AspNetCore.SignalR.Client
 @inject NavigationManager NavigationManager
 @inject LocalStorageService LocalStorage
 @inject IJSRuntime JSRuntime
 @inject IApiService Api
+@inject ApiSettings ApiSettings
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 @if (errorMessage != string.Empty)
@@ -159,7 +161,7 @@
         timer = new Timer(CheckCommunicationStatus!, null, TimeSpan.Zero, TimeSpan.FromSeconds(10));
         var userData = await LocalStorage.GetApplicationUserAsync();
         var hubConnection = new HubConnectionBuilder()
-        .WithUrl($"https://localhost:7253/notificationHub?clientId={userData.Email}")
+        .WithUrl($"{ApiSettings.ApiScheme}://{ApiSettings.ApiBaseUrl}/notificationHub?clientId={userData.Email}")
         .WithAutomaticReconnect()
         .Build();
 

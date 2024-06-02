@@ -4,6 +4,7 @@
 @using AJKIOT.Shared.Requests
 @using AJKIOT.Web.Pages.Device
 @using AJKIOT.Web.Services
+@using AJKIOT.Web.Settings
 @using Microsoft.AspNetCore.Authorization
 @using Blazorise
 @using Microsoft.AspNetCore.SignalR.Client
@@ -12,6 +13,7 @@
 @inject NavigationManager NavigationManager
 @attribute [Authorize]
 @inject IApiService api
+@inject ApiSettings ApiSettings
 
 <PageTitle>Devices</PageTitle>
 @if (!string.IsNullOrEmpty(errorMessage))
@@ -89,7 +91,7 @@
         }
 
         var hubConnection = new HubConnectionBuilder()
-        .WithUrl($"https://localhost:7253/notificationHub?clientId={userData.Email}")
+        .WithUrl($"{ApiSettings.ApiScheme}://{ApiSettings.ApiBaseUrl}/notificationHub?clientId={userData.Email}")
         .WithAutomaticReconnect()
         .Build();
 
