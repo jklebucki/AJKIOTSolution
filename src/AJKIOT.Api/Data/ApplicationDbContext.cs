@@ -15,5 +15,6 @@ namespace AJKIOT.Api.Data
         {
             base.OnModelCreating(modelBuilder);
         }
+
     }
 }
