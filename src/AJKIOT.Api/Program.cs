@@ -23,7 +23,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<ApplicationDbContext>(opt => opt.UseNpgsql(connectionString));
+builder.Services.AddDbContext<ApplicationDbContext>(opt => { 
+    opt.UseNpgsql(connectionString, x=>x.MigrationsHistoryTable("__EFMigrationsHistory"));
+}); 
 // Services
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -162,21 +164,22 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
     options.SuppressModelStateInvalidFilter = true;
 });
 
+// Load the CA certificate from PEM file
+var caCertificate = new X509Certificate2(
+    Path.Combine(Directory.GetCurrentDirectory(), "MqttCert", "ca-cert.pem")
+);
+
+// Load the server certificate from the generated PFX file
+var serverCertificate = new X509Certificate2(
+    Path.Combine(Directory.GetCurrentDirectory(), "MqttCert", "server-cert.pfx"),
+    "AjkCertPass!3300"
+);
 
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.Listen(IPAddress.Parse("172.16.90.151"), 8883, listenOptions =>
+    options.Listen(IPAddress.Any, 8883, listenOptions =>
     {
-        // Load the CA certificate from PEM file
-        var caCertificate = new X509Certificate2(
-            Path.Combine(Directory.GetCurrentDirectory(), "MqttCert", "ca-cert.pem")
-        );
 
-        // Load the server certificate from the generated PFX file
-        var serverCertificate = new X509Certificate2(
-            Path.Combine(Directory.GetCurrentDirectory(), "MqttCert", "server-cert.pfx"),
-            "AjkCertPass!3300"
-        );
 
         listenOptions.UseHttps(httpsOptions =>
         {
@@ -247,10 +250,43 @@ builder.WebHost.ConfigureKestrel(options =>
 
         listenOptions.UseMqtt();
     });
+    options.Listen(IPAddress.Any, 7253, listenOptions =>
+    {
+        listenOptions.UseHttps(httpsOptions =>
+        {
+            httpsOptions.ServerCertificate = serverCertificate;
+        });
+    });
+    options.Listen(IPAddress.Any, 5217);
 });
 
 
 var app = builder.Build();
+// Migrations
+using (var serviceScope = app.Services.CreateScope())
+{
+    var dbContext = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var logger = serviceScope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        logger.LogInformation("Checking for pending migrations...");
+        if (dbContext.Database.GetPendingMigrations().Any())
+        {
+            logger.LogInformation("Applying pending migrations...");
+            dbContext.Database.Migrate();
+            logger.LogInformation("Migrations applied successfully.");
+        }
+        else
+        {
+            logger.LogInformation("No pending migrations to apply.");
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "An error occurred while applying migrations.");
+        // Mo¿esz dodaæ dodatkow¹ obs³ugê b³êdów, np. przerwaæ uruchamianie aplikacji
+    }
+}
 
 // Middleware 
 //app.UseHttpsRedirection();
