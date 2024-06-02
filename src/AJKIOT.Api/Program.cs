@@ -257,7 +257,6 @@ using (var serviceScope = app.Services.CreateScope())
     catch (Exception ex)
     {
         logger.LogError(ex, "An error occurred while applying migrations.");
-        // Mo¿esz dodaæ dodatkow¹ obs³ugê b³êdów, np. przerwaæ uruchamianie aplikacji
     }
 }
 
