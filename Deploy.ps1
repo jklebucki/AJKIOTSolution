@@ -254,8 +254,8 @@ echo 'Creating Docker container for PostgreSQL...' | tee -a $LOG_FILE
 sudo docker run --name ajk_postgres -e POSTGRES_USER=pguser -e POSTGRES_PASSWORD=pguser@99 -p 5432:5432 -v ${postgres_data_dir} -d --restart unless-stopped postgres | tee -a $LOG_FILE
 # Create nginx directives for web application
 echo 'Creating nginx directives...' | tee -a $LOG_FILE
-echo '$web_nginx' | sudo tee /etc/nginx/sites-available/ajkiot_web | tee -a $LOG_FILE
-sudo ln -s /etc/nginx/sites-available/ajkiot_web /etc/nginx/sites-enabled/ajkiot_web | tee -a $LOG_FILE
+echo '$web_nginx' | sudo tee /etc/nginx/sites-available/$server_name | tee -a $LOG_FILE
+sudo ln -s /etc/nginx/sites-available/$server_name /etc/nginx/sites-enabled/$server_name | tee -a $LOG_FILE
 sudo nginx -t && sudo systemctl restart nginx | tee -a $LOG_FILE
 # Create systemd service files for both applications
 sudo systemctl stop ajkiot_api.service | tee -a $LOG_FILE
