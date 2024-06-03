@@ -53,13 +53,13 @@ class AjkIotApp extends StatelessWidget {
               bodyLarge: TextStyle(fontSize: 14.sp),
             ),
             switchTheme: SwitchThemeData(
-              trackColor: MaterialStateProperty.resolveWith((states) {
-                if (states.contains(MaterialState.selected)) {
+              trackColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
                   return Colors.green; // Active state color
                 }
                 return Colors.red; // Inactive state color
               }),
-              thumbColor: MaterialStateProperty.all(Colors.white),
+              thumbColor: WidgetStateProperty.all(Colors.white),
             ),
             buttonTheme: ButtonThemeData(
               buttonColor: Colors.blue,
@@ -69,13 +69,13 @@ class AjkIotApp extends StatelessWidget {
             elevatedButtonTheme: ElevatedButtonThemeData(
               style: ButtonStyle(
                 minimumSize:
-                    MaterialStateProperty.all<Size>(Size(120.spMax, 40.spMax)),
-                backgroundColor: MaterialStateProperty.all<Color>(Colors.blue),
-                foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
-                textStyle: MaterialStateProperty.all<TextStyle>(
+                    WidgetStateProperty.all<Size>(Size(120.spMax, 40.spMax)),
+                backgroundColor: WidgetStateProperty.all<Color>(Colors.blue),
+                foregroundColor: WidgetStateProperty.all<Color>(Colors.white),
+                textStyle: WidgetStateProperty.all<TextStyle>(
                   TextStyle(fontSize: 16.sp),
                 ),
-                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                shape: WidgetStateProperty.all<RoundedRectangleBorder>(
                   RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(6.spMax),
                   ),
