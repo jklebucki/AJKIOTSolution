@@ -18,3 +18,7 @@ This solution delivers four projects:
 Visit the live site: [https://iot.ajksoftware.pl/](https://iot.ajksoftware.pl/)
 
 The current release version is ready for public testing. Considering the current stage and stability, it is recommended to label this release as a **Release Candidate (RC)** version.
+
+---
+
+Coming soon: At the end of the week, on 07.06.2024, we will add information about the availability of the mobile application beta version for download on AppStore (TestFlight) and Google Play (open testing).
