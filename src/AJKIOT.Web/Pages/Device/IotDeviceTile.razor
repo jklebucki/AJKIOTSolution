@@ -25,8 +25,8 @@
 @switch (mode)
 {
     case ViewMode.BasicMode:
-        <div class="card">
-            <div class="card-header d-flex justify-content-center">
+        <Card>
+            <CardHeader class="d-flex justify-content-center">
                 @if (editing)
                 {
                     <TextEdit @bind-Text="@IotDevice!.DeviceName" OnValueChanged="OnEditDeviceName" />
@@ -45,24 +45,29 @@
                 {
                     <h4 class="card-title">@IotDevice!.DeviceName</h4>
                 }
-            </div>
-            <div class="card-body">
+            </CardHeader>
+            <CardBody>
+                                    <div class="row">
+                        <div class="col-12">
                 <Alert Color="OnlineStatus!.IsOnline ? Color.Success : Color.Danger" Visible>
                     <AlertMessage>
                         Device ID: @IotDevice.Id @(OnlineStatus!.IsOnline ? "Online" : "Offline")
                     </AlertMessage>
                 </Alert>
+                </div>
+            </div>
+
                 @foreach (var feature in features)
                 {
-                    <Grid>
-                        <Column ColumnSize="ColumnSize.IsHalf">
+                    <div class="row" style="max-width: 100%;">
+                        <div class="col-9">
                             <Alert Color="@(feature.Value == 1 ? Color.Success : Color.Secondary)" Visible>
                                 <AlertMessage>
-                                    Status : @(feature.Value == 1 ? "ON" : "OFF")
+                                    @(feature.Value == 1 ? "ON" : (feature.IsScheduleAvailable() ? "SCHEDULED" : "OFF"))
                                 </AlertMessage>
                             </Alert>
-                        </Column>
-                        <Column ColumnSize="ColumnSize.IsHalf">
+                        </div>
+                        <div class="col-3">
                             @if (feature.IsScheduleAvailable())
                             {
                                 <Tooltip Text="Add schedule">
@@ -72,8 +77,8 @@
                                     </Button>
                                 </Tooltip>
                             }
-                        </Column>
-                    </Grid>
+                        </div>
+                    </div>
                     switch (feature.Type)
                     {
                         case "Switch":
@@ -85,8 +90,8 @@
                     }
                 }
 
-            </div>
-            <div class="card-footer d-flex justify-content-end">
+            </CardBody>
+            <CardFooter class="d-flex justify-content-end">
 
                 <Tooltip Text="Download firmware">
                     <Button Class="btn btn-outline-secondary me-2" onclick="@(() => OnDownloadButton())">
@@ -103,8 +108,8 @@
                         <Icon Name="IconName.Delete" />
                     </Button>
                 </Tooltip>
-            </div>
-        </div>
+            </CardFooter>
+        </Card>
         break;
 
     case ViewMode.ScheduleMode:

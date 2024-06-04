@@ -151,12 +151,11 @@ $local_publish_dir = "./Release"
 $local_zip_path = "./Release/deploy_package.zip"
 $remote_home_dir = "/home/$ssh_user"
 $remote_zip_path = "$remote_home_dir/deploy_package.zip"
-$remote_script_path = "$remote_home_dir/deploy_script.sh"
-$remote_log_path = "'$remote_home_dir/deploy.log'"
+$remote_script_path = "$remote_home_dir/upload_script.sh"
+$remote_log_path = "'$remote_home_dir/upload.log'"
 $api_dir = '/var/www/dotnetapps/ajk_iot_api'
 $web_dir = '/var/www/dotnetapps/ajk_iot_web'
-$postgres_data_dir = '/var/lib/postgresql/data'
-$script_path = "./Release/deploy_script.sh"
+$script_path = "./Release/upload_script.sh"
 
 # Build the .NET applications
 dotnet publish -c Release -o "$local_publish_dir/api" "./src/AJKIOT.Api/AJKIOT.Api.csproj"
@@ -206,41 +205,6 @@ catch {
 # Copy the zip file and the deployment script to the server
 Copy-FilesToServer $local_zip_path $remote_zip_path
 
-
-$web_nginx = "server {
-    listen 80;
-    server_name $server_name;
-    root $web_dir/wwwroot;
-    index index.html index.htm index.nginx-debian.html;
-    
-    access_log /var/log/nginx/ajk_web.log;
-    error_log /var/log/nginx/ajk_web_error.log;
-
-    location / {    
-        try_files `$uri `$uri/ /index.html =404;
-    }
-}
-"
-
-$api_service = "[Unit]
-Description=AJKIOT API
-
-[Service]
-WorkingDirectory=$api_dir
-ExecStart=/usr/bin/dotnet $api_dir/AJKIOT.Api.dll
-Restart=always
-RestartSec=10
-SyslogIdentifier=dotnet-api
-User=www-data
-Environment=ASPNETCORE_ENVIRONMENT=Production
-Environment=DOTNET_CLI_HOME=$web_dir/.dotnet
-Environment=DOTNET_NOLOGO=true
-Environment=DOTNET_CLI_TELEMETRY_OPTOUT=1
-Environment=DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
-
-[Install]
-WantedBy=multi-user.target
-"
 $LOG_FILE = $remote_log_path
 # Define the deployment script content
 $deploy_script = @"
@@ -262,22 +226,9 @@ sudo cp -r $remote_home_dir/api/* $api_dir/ | tee -a $LOG_FILE
 sudo cp -r $remote_home_dir/web/* $web_dir/ | tee -a $LOG_FILE
 sudo chown -R www-data:www-data /var/www/dotnetapps | tee -a $LOG_FILE
 sudo chmod -R 755 /var/www/dotnetapps | tee -a $LOG_FILE
-# Create Docker container for PostgreSQL with external volume for data
-echo 'Creating Docker container for PostgreSQL...' | tee -a $LOG_FILE
-sudo docker run --name ajk_postgres -e POSTGRES_USER=pguser -e POSTGRES_PASSWORD=pguser@99 -p 5432:5432 -v ${postgres_data_dir} -d --restart unless-stopped postgres | tee -a $LOG_FILE
-# Create nginx directives for web application
-echo 'Creating nginx directives...' | tee -a $LOG_FILE
-echo '$web_nginx' | sudo tee /etc/nginx/sites-available/$server_name | tee -a $LOG_FILE
-sudo ln -s /etc/nginx/sites-available/$server_name /etc/nginx/sites-enabled/$server_name | tee -a $LOG_FILE
-sudo nginx -t && sudo systemctl restart nginx | tee -a $LOG_FILE
-# Create systemd service files for both applications
-sudo systemctl stop ajkiot_api.service | tee -a $LOG_FILE
-echo "$api_service" | sudo tee /etc/systemd/system/ajkiot_api.service | tee -a $LOG_FILE
-# Reload systemd, enable and start the services
-echo 'Reloading systemd and starting services...' | tee -a $LOG_FILE
-sudo systemctl daemon-reload | tee -a $LOG_FILE
-sudo systemctl enable ajkiot_api.service | tee -a $LOG_FILE
-sudo systemctl start ajkiot_api.service | tee -a $LOG_FILE
+# Restart the services
+sudo systemctl restart ajkiot_api.service | tee -a $LOG_FILE
+sudo systemctl status ajkiot_api.service | tee -a $LOG_FILE
 # Clean up
 echo 'Cleaning up...' | tee -a $LOG_FILE
 rm $remote_zip_path | tee -a $LOG_FILE
