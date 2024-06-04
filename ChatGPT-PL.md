@@ -41,4 +41,6 @@ Repozytorium zawiera również pliki konfiguracyjne oraz dokumentację, które u
 
 Projekt "AJKIOTSolution" jest dobrze zorganizowanym rozwiązaniem IoT, które obejmuje zarówno aplikacje webowe, mobilne, jak i oprogramowanie dla urządzeń. Dzięki użyciu różnych technologii i języków programowania, oferuje kompleksowe podejście do zarządzania i monitorowania urządzeń IoT.
 
+Analiza repozytorium przeprowadzona przez ChatGPT-4.
+
 Więcej szczegółów można znaleźć bezpośrednio w repozytorium [AJKIOTSolution](https://github.com/jklebucki/AJKIOTSolution) na GitHubie.
