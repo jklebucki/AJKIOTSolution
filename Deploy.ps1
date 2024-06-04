@@ -302,3 +302,5 @@ Invoke-SSHCommand "chmod +x $remote_script_path"
 # Call the function to clear the contents of the folder 
 Clear-FolderContents -FolderPath "$local_publish_dir/api/"
 Clear-FolderContents -FolderPath "$local_publish_dir/web/"
+
+
