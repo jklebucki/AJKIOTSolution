@@ -397,6 +397,27 @@ bool connectToWiFi()
   return true;
 }
 
+void checkResetButton()
+{
+  if (digitalRead(RESET_PIN) == LOW)
+  { // Check if reset button is pressed
+    Serial.printf("Reset button pressed\n");
+    if (!buttonPressed)
+    {
+      buttonPressed = true;
+      buttonPressStartTime = millis(); // Start measuring time when button is pressed
+    }
+    if (millis() - buttonPressStartTime >= RESET_HOLD_TIME)
+    { // Check if button is held for RESET_HOLD_TIME
+      resetEEPROM();
+    }
+  }
+  else
+  {
+    buttonPressed = false; // Reset flag when button is released
+  }
+}
+
 void reconnect()
 {
   while (!client.connected())
@@ -418,6 +439,7 @@ void reconnect()
       Serial.println(" try again in 5 seconds");
       delay(5000);
     }
+    checkResetButton();
   }
 }
 void clearScheduleEntries()
@@ -562,7 +584,8 @@ void setup()
     setTime();
     timeClient.update();
     digitalWrite(OUT_PIN, LOW);
-    loadCertificates(espClient);
+    // loadCertificates(espClient);
+    espClient.setInsecure();
     client.setServer(mqtt_server, mqtt_port);
     client.setCallback(callback);
     configDemand();
@@ -580,26 +603,6 @@ void debugSystemStatus()
   showEntries();
   Serial.printf("Feature: %s - Value: %d\n", feature.Name, feature.Value);
   Serial.println();
-}
-
-void checkResetButton()
-{
-  if (digitalRead(RESET_PIN) == LOW)
-  { // Check if reset button is pressed
-    if (!buttonPressed)
-    {
-      buttonPressed = true;
-      buttonPressStartTime = millis(); // Start measuring time when button is pressed
-    }
-    if (millis() - buttonPressStartTime >= RESET_HOLD_TIME)
-    { // Check if button is held for RESET_HOLD_TIME
-      resetEEPROM();
-    }
-  }
-  else
-  {
-    buttonPressed = false; // Reset flag when button is released
-  }
 }
 
 void loop()
