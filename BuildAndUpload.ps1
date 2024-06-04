@@ -172,6 +172,7 @@ Update-TextInFile -FilePath "$local_publish_dir/api/appsettings.json" -OldText '
 Update-TextInFile -FilePath "$local_publish_dir/web/wwwroot/appsettings.json" -OldText "appsrv:5217" -NewText $api_host
 Update-TextInFile -FilePath "$local_publish_dir/web/wwwroot/appsettings.json" -OldText "http" -NewText "$api_scheme"
 # Create a zip file containing the published files
+Get-ChildItem -Path $local_publish_dir -Filter *.sh | Remove-Item -Force
 if (Test-Path $local_zip_path) { Remove-Item $local_zip_path }
 Compress-Archive -Path "$local_publish_dir/*" -DestinationPath $local_zip_path
 
@@ -236,6 +237,7 @@ rm $remote_zip_path | tee -a $LOG_FILE
 sudo rm $remote_home_dir/api -R | tee -a $LOG_FILE
 sudo rm $remote_home_dir/web -R | tee -a $LOG_FILE
 echo 'Deployment completed.' | tee -a $LOG_FILE
+echo 'Deployment completed.'
 "@
 
 $deploy_script = $deploy_script -replace "`r`n", "`n"
