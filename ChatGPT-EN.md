@@ -36,4 +36,7 @@ The repository also includes configuration files and documentation to facilitate
 
 The "AJKIOTSolution" project is a well-organized IoT solution encompassing web, mobile, and device software. By using various technologies and programming languages, it offers a comprehensive approach to managing and monitoring IoT devices.
 
+Analysis of the repository conducted by ChatGPT-4.
+
 More details can be found directly in the [AJKIOTSolution repository](https://github.com/jklebucki/AJKIOTSolution) on GitHub.
+
