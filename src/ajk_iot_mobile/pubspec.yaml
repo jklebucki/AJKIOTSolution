@@ -41,16 +41,16 @@ dev_dependencies:
 
 flutter_launcher_icons:
   #  image_path: "assets/images/icon-128x128.png"
-  image_path_android: "assets/icon-android.png"
+  image_path_android: "assets/icon.png"
   image_path_ios: "assets/icon.png"
   android: true # can specify file name here e.g. "ic_launcher"
   ios: true # can specify file name here e.g. "My-Launcher-Icon"
-  adaptive_icon_background: "#000000" # only available for Android 8.0 devices and above
-  adaptive_icon_foreground: "assets/icon-android.png" # only available for Android 8.0 devices and above
+  adaptive_icon_background: "#00FFFFFF" # only available for Android 8.0 devices and above
+  adaptive_icon_foreground: "assets/icon.png" # only available for Android 8.0 devices and above
   min_sdk_android: 21 # android min sdk min:16, default 21
   remove_alpha_ios: true
-  background_color_ios: "#000000"
-  background_color_android: "#000000"
+  background_color_ios: "#00FFFFFF"
+  background_color_android: "#00FFFFFF"
 
 flutter_native_splash:
   image_ios: assets/splash_1152sq.png
