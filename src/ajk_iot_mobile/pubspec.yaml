@@ -53,8 +53,8 @@ flutter_launcher_icons:
   background_color_android: "#00FFFFFF"
 
 flutter_native_splash:
-  image_ios: assets/splash_1152sq.png
-  background_image: assets/splash_1152sq.png
+  image_ios: assets/icon.png
+  background_image: assets/icon.png
   color: "#000000"  # Główny kolor tła dla trybu jasnego
   color_dark: "#000000"  # Główny kolor tła dla trybu ciemnego
   fullscreen: true  # Uruchamia ekran startowy na pełnym ekranie
@@ -62,8 +62,8 @@ flutter_native_splash:
   ios_content_mode: center  # Pozycjonowanie obrazu na iOS
   android_screen_orientation: portrait
   android_12:
-    image: assets/splash_1152sq.png  # Obraz dla Androida 12 i nowszych
-    image_dark: assets/splash_1152sq.png  # Obraz dla Androida 12 i nowszych w trybie ciemnym
+    image: assets/icon.png  # Obraz dla Androida 12 i nowszych
+    image_dark: assets/icon.png  # Obraz dla Androida 12 i nowszych w trybie ciemnym
     color: "#000000"  # Kolor tła dla Androida 12 i nowszych
     color_dark: "#000000"  # Kolor tła dla Androida 12 i nowszych w trybie ciemnym
     icon_background_color: "#000000"  # Kolor tła ikony dla Androida 12 i nowszych
