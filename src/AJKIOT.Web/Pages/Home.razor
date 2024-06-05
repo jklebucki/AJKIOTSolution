@@ -1,14 +1,19 @@
 ﻿@page "/"
 
 <PageTitle>Home</PageTitle>
+<div class="centered-container">
+    <h1>AJKIOT Management System</h1>
+    <div class="text-center mt-2">
+        <AuthorizeView>
+            <Authorized>
+                <h3>Hello, @context.User.Identity?.Name!</h3>
+                <a class="btn btn-outline-primary mt-2" href="/Devices">Go to your devices</a>
+            </Authorized>
+            <NotAuthorized>
+                <a class="btn btn-outline-primary" href="/Account/Login">Log in to manage your devices</a>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
+</div>
 
-<h1>AJKIOT Management System</h1>
 
-<AuthorizeView>
-    <Authorized>
-        Hello, @context.User.Identity?.Name!
-    </Authorized>
-    <NotAuthorized>
-        <a href="/Account/Login">Log in to manage your devices</a>
-    </NotAuthorized>
-</AuthorizeView>

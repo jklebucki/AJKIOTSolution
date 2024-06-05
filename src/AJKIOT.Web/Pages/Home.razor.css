@@ -1,0 +1,67 @@
+﻿/* Styling the container for the component */
+.centered-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 90vh; /* Full viewport height */
+    background-color: #f5f5f5; /* Light background color according to Material Design */
+    font-family: 'Roboto', sans-serif; /* Using Roboto font, recommended by Material Design */
+    margin: 0;
+    padding: 0;
+}
+
+/* Ensuring inner content is displayed in a column */
+div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Styling the h1 header */
+h1 {
+    font-size: 3em; /* Larger font size for emphasis */
+    font-weight: 500; /* Medium font weight */
+    color: #3f51b5; /* Color according to Material Design (Indigo) */
+    text-align: center; /* Center text */
+    margin: 10px 0; /* Margin for spacing */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth effect */
+    animation: fadeIn 1s ease-in-out; /* Optional: fade-in animation for the text */
+}
+
+/* Styling the h2 header */
+h2 {
+    font-size: 2.5em; /* Slightly smaller than h1 */
+    font-weight: 400; /* Regular font weight */
+    color: black; /* Pink color according to Material Design */
+    text-align: center; /* Center text */
+    margin: 10px 0; /* Margin for spacing */
+}
+
+/* Styling the h3 header */
+h3 {
+    font-size: 2em; /* Slightly smaller than h2 */
+    font-weight: 400; /* Regular font weight */
+    color: black; /* Green color according to Material Design */
+    text-align: center; /* Center text */
+    margin: 10px 0; /* Margin for spacing */
+}
+
+/* Styling paragraphs */
+p {
+    font-size: 1em; /* Standard font size */
+    font-weight: 400; /* Regular font weight */
+    color: #333; /* Darker color for better readability */
+    text-align: center; /* Center text */
+    margin: 10px 0; /* Margin for spacing */
+    line-height: 1.5; /* Improved line spacing for readability */
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
