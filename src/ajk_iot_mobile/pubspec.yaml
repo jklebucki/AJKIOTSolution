@@ -22,6 +22,8 @@ dependencies:
   signalr_netcore: ^1.3.7
   flutter_time_picker_spinner: ^2.0.0
   flutter_screenutil: ^5.9.1
+  flutter_native_splash: ^2.4.0
+  flutter_launcher_icons: ^0.13.1
 
 dev_dependencies:
   flutter_test:
@@ -36,6 +38,37 @@ dev_dependencies:
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
+
+flutter_launcher_icons:
+  #  image_path: "assets/images/icon-128x128.png"
+  image_path_android: "assets/icon-android.png"
+  image_path_ios: "assets/icon.png"
+  android: true # can specify file name here e.g. "ic_launcher"
+  ios: true # can specify file name here e.g. "My-Launcher-Icon"
+  adaptive_icon_background: "#000000" # only available for Android 8.0 devices and above
+  adaptive_icon_foreground: "assets/icon-android.png" # only available for Android 8.0 devices and above
+  min_sdk_android: 21 # android min sdk min:16, default 21
+  remove_alpha_ios: true
+  background_color_ios: "#000000"
+  background_color_android: "#000000"
+
+flutter_native_splash:
+  image_ios: assets/splash_1152sq.png
+  background_image: assets/splash_1152sq.png
+  color: "#000000"  # Główny kolor tła dla trybu jasnego
+  color_dark: "#000000"  # Główny kolor tła dla trybu ciemnego
+  fullscreen: true  # Uruchamia ekran startowy na pełnym ekranie
+  android_gravity: center  # Pozycjonowanie obrazu na Androidzie
+  ios_content_mode: center  # Pozycjonowanie obrazu na iOS
+  android_screen_orientation: portrait
+  android_12:
+    image: assets/splash_1152sq.png  # Obraz dla Androida 12 i nowszych
+    image_dark: assets/splash_1152sq.png  # Obraz dla Androida 12 i nowszych w trybie ciemnym
+    color: "#000000"  # Kolor tła dla Androida 12 i nowszych
+    color_dark: "#000000"  # Kolor tła dla Androida 12 i nowszych w trybie ciemnym
+    icon_background_color: "#000000"  # Kolor tła ikony dla Androida 12 i nowszych
+    icon_background_color_dark: "#000000" 
+
 
 # The following section is specific to Flutter packages.
 flutter:

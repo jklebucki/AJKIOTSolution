@@ -1,4 +1,4 @@
-package com.example.ajk_iot_mobile
+package pl.ajksoftware.ajkiot
 
 import io.flutter.embedding.android.FlutterActivity
 
