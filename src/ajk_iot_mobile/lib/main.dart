@@ -36,6 +36,7 @@ class AjkIotApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => DeviceProvider()),
       ],
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'AJK IoT',
         theme: ThemeData(
             appBarTheme: AppBarTheme(
