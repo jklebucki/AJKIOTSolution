@@ -32,3 +32,5 @@ In the second step, click on the link to join the application testing. [https://
 ### Set API Address: [https://iot.ajksoftware.pl:7253](https://iot.ajksoftware.pl:7253)
 
 ### Create an account and feel free to test!
+
+----
