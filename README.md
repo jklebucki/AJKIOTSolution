@@ -23,6 +23,7 @@ The current release version is ready for public testing. Considering the current
 Consent to test: [https://play.google.com/apps/testing/pl.ajksoftware.ajkiot](https://play.google.com/apps/testing/pl.ajksoftware.ajkiot)
 
 Link to the application on Google Store: [https://play.google.com/store/apps/details?id=pl.ajksoftware.ajkiot](https://play.google.com/store/apps/details?id=pl.ajksoftware.ajkiot)
+
 API Address: [https://iot.ajksoftware.pl:7253](https://iot.ajksoftware.pl:7253)
 
 ---
