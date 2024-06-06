@@ -1,3 +1,4 @@
+import 'package:ajk_iot_mobile/pages/device_settins_page.dart';
 import 'package:ajk_iot_mobile/providers/device_provider.dart';
 import 'package:ajk_iot_mobile/widgets/device_feature_widget.dart';
 import 'package:flutter/material.dart';
@@ -32,11 +33,34 @@ class IotDeviceWidgetState extends State<IotDeviceWidget> {
                 padding: EdgeInsets.all(6.spMax),
                 child: Column(
                   children: [
-                    Text(widget.device.deviceName,
-                        style: TextStyle(
-                          fontSize: 22.spMax,
-                          fontWeight: FontWeight.bold,
-                        )),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          widget.device.deviceName,
+                          style: TextStyle(
+                            fontSize: 18.spMax, // Adjust as needed
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        // Add some spacing between the text and the button
+                        SizedBox(width: 4.spMax), // Adjust spacing as needed
+                        // Settings button with icon
+                        IconButton(
+                          icon: const Icon(Icons.settings),
+                          onPressed: () {
+                            // Action to perform when the button is pressed
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => DeviceSettingsPage(
+                                        deviceId: widget.device.id.toString(),
+                                      )),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                     ...widget.device.getFeatures().map((f) =>
                         DeviceFeatureWidget(
                             feature: f, deviceId: widget.device.id))

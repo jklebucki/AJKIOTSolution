@@ -39,53 +39,55 @@ class AjkIotApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'AJK IoT',
         theme: ThemeData(
-            appBarTheme: AppBarTheme(
-              backgroundColor: Colors.black,
-              foregroundColor: Colors.white,
-              titleTextStyle: TextStyle(
-                  color: Colors.white,
-                  fontSize: 28.spMax,
-                  fontWeight: FontWeight.bold),
-            ),
-            primarySwatch: Colors.red,
-            textTheme: TextTheme(
-              displayLarge:
-                  TextStyle(fontSize: 24.sp, fontWeight: FontWeight.bold),
-              bodyLarge: TextStyle(fontSize: 14.sp),
-            ),
-            switchTheme: SwitchThemeData(
-              trackColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.selected)) {
-                  return Colors.green; // Active state color
-                }
-                return Colors.red; // Inactive state color
-              }),
-              thumbColor: WidgetStateProperty.all(Colors.white),
-            ),
-            buttonTheme: ButtonThemeData(
-              buttonColor: Colors.blue,
-              textTheme: ButtonTextTheme.primary,
-              minWidth: 100.spMax,
-            ),
-            elevatedButtonTheme: ElevatedButtonThemeData(
-              style: ButtonStyle(
-                minimumSize:
-                    WidgetStateProperty.all<Size>(Size(120.spMax, 40.spMax)),
-                backgroundColor: WidgetStateProperty.all<Color>(Colors.blue),
-                foregroundColor: WidgetStateProperty.all<Color>(Colors.white),
-                textStyle: WidgetStateProperty.all<TextStyle>(
-                  TextStyle(fontSize: 16.sp),
-                ),
-                shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-                  RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6.spMax),
-                  ),
+          appBarTheme: AppBarTheme(
+            backgroundColor: Colors.black,
+            foregroundColor: Colors.white,
+            titleTextStyle: TextStyle(
+                color: Colors.white,
+                fontSize: 28.spMax,
+                fontWeight: FontWeight.bold),
+          ),
+          primarySwatch: Colors.red,
+          textTheme: TextTheme(
+            displayLarge:
+                TextStyle(fontSize: 24.sp, fontWeight: FontWeight.bold),
+            bodyLarge: TextStyle(fontSize: 14.sp),
+          ),
+          switchTheme: SwitchThemeData(
+            trackColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return Colors.green; // Active state color
+              }
+              return Colors.red; // Inactive state color
+            }),
+            thumbColor: WidgetStateProperty.all(Colors.white),
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ButtonStyle(
+              minimumSize:
+                  WidgetStateProperty.all<Size>(Size(120.spMax, 40.spMax)),
+              backgroundColor: WidgetStateProperty.all<Color>(Colors.blue),
+              foregroundColor: WidgetStateProperty.all<Color>(Colors.white),
+              textStyle: WidgetStateProperty.all<TextStyle>(
+                TextStyle(fontSize: 16.sp),
+              ),
+              shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6.spMax),
                 ),
               ),
+              overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+                if (states.contains(WidgetState.pressed)) {
+                  return Colors.blue.withOpacity(0.5); // Effect color on press
+                }
+                return null;
+              }),
             ),
-            colorScheme: ColorScheme.fromSwatch(
-              backgroundColor: Colors.grey[300],
-            )),
+          ),
+          colorScheme: ColorScheme.fromSwatch(
+            backgroundColor: Colors.grey[300],
+          ),
+        ),
         initialRoute: '/trylogin',
         routes: {
           '/trylogin': (context) => const TryLoginPage(),

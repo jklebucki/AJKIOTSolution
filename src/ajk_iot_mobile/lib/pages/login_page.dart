@@ -71,88 +71,94 @@ class LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('AJK IoT Mobile')),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            children: [
-              SizedBox(height: 0.05.sh),
-              Text(
-                "Welcome!",
-                style: TextStyle(fontSize: 36.sp),
-                textAlign: TextAlign.center,
-                softWrap: true,
+      appBar: AppBar(title: const Center(child: Text('AJK IoT'))),
+      body: Column(
+        children: [
+          SizedBox(height: 0.01.sh),
+          SizedBox(
+            height: 0.2.sh,
+            width: 0.96.sw,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(6.0),
+              child: Image.asset(
+                'assets/AJKIOT.png',
+                fit: BoxFit.fitWidth,
               ),
-              Text(
-                "AJK IoT Mobile",
-                style: TextStyle(fontSize: 36.sp),
-                textAlign: TextAlign.center,
-                softWrap: true,
-              ),
-              SizedBox(height: 0.03.sh),
-              TextFormField(
-                controller: _apiAddressController,
-                autocorrect: false,
-                decoration: InputDecoration(
-                    labelText: 'API Address',
-                    labelStyle:
-                        TextStyle(color: Colors.black, fontSize: 16.spMax)),
-                validator: (value) => Uri.tryParse(value!)?.isAbsolute == true
-                    ? null
-                    : 'Please enter a valid URL',
-              ),
-              TextFormField(
-                controller: _emailController,
-                autocorrect: false,
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                    labelText: 'Email',
-                    labelStyle:
-                        TextStyle(color: Colors.black, fontSize: 16.spMax)),
-                validator: (value) =>
-                    value!.contains('@') ? null : 'Please enter a valid email',
-              ),
-              TextFormField(
-                controller: _passwordController,
-                decoration: InputDecoration(
-                    labelText: 'Password',
-                    labelStyle:
-                        TextStyle(color: Colors.black, fontSize: 16.spMax)),
-                autocorrect: false,
-                obscureText: true,
-                validator: (value) => value!.length >= 6
-                    ? null
-                    : 'Password must be at least 6 characters',
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _attemptLogin,
-                child: const Text('Login'),
-              ),
-              const SizedBox(
-                  height:
-                      20), // Provides spacing between the login form and the create account button.
-              TextButton(
-                onPressed: () {
-                  // Navigate to the CreateAccountPage
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                        builder: (context) => const CreateAccountPage()),
-                  );
-                },
-                child: const Text('Don\'t have an account? Create one'),
-              ),
-              if (_loginError.isNotEmpty) // Display login error message if any
-                Padding(
-                  padding: const EdgeInsets.only(top: 20),
-                  child: Text(_loginError,
-                      style: const TextStyle(color: Colors.red)),
-                ),
-            ],
+            ),
           ),
-        ),
+          Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(18.0),
+              child: Column(
+                children: [
+                  SizedBox(height: 0.03.sh),
+                  TextFormField(
+                    controller: _apiAddressController,
+                    autocorrect: false,
+                    decoration: InputDecoration(
+                        labelText: 'API Address',
+                        labelStyle:
+                            TextStyle(color: Colors.black, fontSize: 16.spMax)),
+                    validator: (value) =>
+                        Uri.tryParse(value!)?.isAbsolute == true
+                            ? null
+                            : 'Please enter a valid URL',
+                  ),
+                  TextFormField(
+                    controller: _emailController,
+                    autocorrect: false,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                        labelText: 'Email',
+                        labelStyle:
+                            TextStyle(color: Colors.black, fontSize: 16.spMax)),
+                    validator: (value) => value!.contains('@')
+                        ? null
+                        : 'Please enter a valid email',
+                  ),
+                  TextFormField(
+                    controller: _passwordController,
+                    decoration: InputDecoration(
+                        labelText: 'Password',
+                        labelStyle:
+                            TextStyle(color: Colors.black, fontSize: 16.spMax)),
+                    autocorrect: false,
+                    obscureText: true,
+                    validator: (value) => value!.length >= 6
+                        ? null
+                        : 'Password must be at least 6 characters',
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _attemptLogin,
+                    child: const Text('Sign in'),
+                  ),
+                  const SizedBox(
+                      height:
+                          20), // Provides spacing between the login form and the create account button.
+                  TextButton(
+                    onPressed: () {
+                      // Navigate to the CreateAccountPage
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                            builder: (context) => const CreateAccountPage()),
+                      );
+                    },
+                    child: const Text('Don\'t have an account? Create one'),
+                  ),
+                  if (_loginError
+                      .isNotEmpty) // Display login error message if any
+                    Padding(
+                      padding: const EdgeInsets.only(top: 20),
+                      child: Text(_loginError,
+                          style: const TextStyle(color: Colors.red)),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

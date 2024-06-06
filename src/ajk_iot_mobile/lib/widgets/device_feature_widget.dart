@@ -2,6 +2,7 @@ import 'package:ajk_iot_mobile/pages/schedule_page.dart';
 import 'package:ajk_iot_mobile/providers/device_provider.dart';
 import 'package:ajk_iot_mobile/widgets/round_button_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import '../models/device_feature.dart';
 
@@ -56,24 +57,53 @@ class DeviceFeatureWidgetState extends State<DeviceFeatureWidget> {
                 });
               },
             ),
-            ElevatedButton(
-                child: const Icon(Icons.schedule),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SchedulePage(
-                          featureId: widget.feature.id,
-                          deviceId: widget.deviceId),
-                    ),
-                  );
-                })
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                    child: const Icon(Icons.schedule),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SchedulePage(
+                              featureId: widget.feature.id,
+                              deviceId: widget.deviceId),
+                        ),
+                      );
+                    }),
+                SizedBox(height: 5.spMax),
+                widget.feature.value == 1
+                    ? Text(
+                        "Not scheduled",
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                    : Text(
+                        "Scheduled",
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+              ],
+            )
           ],
         );
       case 'OpenTimer':
-        return Button3D(
-            feature: widget.feature,
-            onChange: (val) => {widget.feature.value = val, updateFeature()});
+        return Column(
+          children: [
+            Button3D(
+                feature: widget.feature,
+                onChange: (val) =>
+                    {widget.feature.value = val, updateFeature()}),
+            SizedBox(height: 10.spMax),
+          ],
+        );
       default:
         return const Text('Unknown feature type');
     }

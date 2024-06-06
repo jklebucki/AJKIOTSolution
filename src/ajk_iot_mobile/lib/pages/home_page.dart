@@ -51,28 +51,13 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AJK IoT Mobile'),
+        title: const Center(child: Text('AJK IoT devices')),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            SizedBox(
-              width: 0.9.sw,
-              child: Card(
-                color: Colors.blue,
-                elevation: 6,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(5.spMax),
-                ),
-                child: Text(
-                  'Your devices',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 20.spMax, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
+            SizedBox(height: 10.spMax),
             Expanded(
               child: Consumer<DeviceProvider>(
                 builder: (context, deviceProvider, child) => ListView.builder(
@@ -101,11 +86,12 @@ class _HomePageState extends State<HomePage> {
                       authProvider.logout();
                       Navigator.of(context).pushReplacementNamed('/login');
                     },
-                    child: const Text('Logout'),
+                    child: const Text('Sign out'),
                   ),
                 ),
               ],
             ),
+            SizedBox(height: 0.02.sh),
           ],
         ),
       ),
