@@ -21,8 +21,9 @@ The current release version is ready for public testing. Considering the current
 
 ## Android mobile app available
 Consent to test: [https://play.google.com/apps/testing/pl.ajksoftware.ajkiot](https://play.google.com/apps/testing/pl.ajksoftware.ajkiot)
+
 Link to the application on Google Store: [https://play.google.com/store/apps/details?id=pl.ajksoftware.ajkiot](https://play.google.com/store/apps/details?id=pl.ajksoftware.ajkiot)
 
 ---
 
-Coming soon: At the end of the week, on 07.06.2024, we will add information about the availability of the mobile application beta version for download on AppStore (TestFlight) and Google Play (open testing).
+Coming soon: At the end of the week, on 07.06.2024, we will add information about the availability of the mobile application beta version for download on AppStore (TestFlight).
