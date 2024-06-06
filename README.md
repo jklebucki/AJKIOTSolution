@@ -24,8 +24,11 @@ Consent to test: [https://play.google.com/apps/testing/pl.ajksoftware.ajkiot](ht
 
 Link to the application on Google Store: [https://play.google.com/store/apps/details?id=pl.ajksoftware.ajkiot](https://play.google.com/store/apps/details?id=pl.ajksoftware.ajkiot)
 
-API Address: [https://iot.ajksoftware.pl:7253](https://iot.ajksoftware.pl:7253)
+## iOS mobile  app available
+In the first step, install the TestFlight app from the AppStore.
 
----
+In the second step, click on the link to join the application testing. [https://testflight.apple.com/join/piRa838S]()
 
-Coming soon: At the end of the week, on 07.06.2024, we will add information about the availability of the mobile application beta version for download on AppStore (TestFlight).
+### Set API Address: [https://iot.ajksoftware.pl:7253](https://iot.ajksoftware.pl:7253)
+
+### Create an account and feel free to test!
