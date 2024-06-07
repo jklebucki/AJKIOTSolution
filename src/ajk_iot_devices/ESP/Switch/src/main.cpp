@@ -1,5 +1,5 @@
 #define DEBUG_ESP_PORT Serial
-#define OUT_PIN 2
+#define OUT_PIN 0
 #define EEPROM_SIZE 512
 #include <EEPROM.h>
 #include <ESP8266WiFi.h>
