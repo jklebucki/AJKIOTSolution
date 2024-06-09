@@ -36,11 +36,16 @@ class DeviceSettingsPageState extends State<DeviceSettingsPage> {
 
   Future<void> _fetchApiAddress() async {
     // Simulacja zapytania sieciowego w celu pobrania adresu API
-    var apiAddress = await _storage.read(key: 'apiUrl');
+    var apiAddress = (await _storage.read(key: 'apiUrl')) ?? '';
     var wifiSsid = await _storage.read(key: 'wifiSsid');
     var wifiPassword = await _storage.read(key: 'wifiPassword');
     setState(() {
-      _apiAddressController.text = apiAddress ?? 'error fetching api address';
+      _apiAddressController.text = apiAddress.isNotEmpty
+          ? apiAddress
+              .replaceFirst('http://', '')
+              .replaceFirst('https://', '')
+              .split(':')[0]
+          : 'set your api address';
       _wifiSsidController.text = wifiSsid ?? '';
       _wifiPasswordController.text = wifiPassword ?? '';
     });

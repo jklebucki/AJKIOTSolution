@@ -6,7 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthProvider with ChangeNotifier {
   // Initialization of necessary variables
-  String _baseUrl = ''; 
+  String _baseUrl = '';
   String _token = "";
   String _refreshToken = "";
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
@@ -25,7 +25,7 @@ class AuthProvider with ChangeNotifier {
   // Method to load base URL from secure storage
   Future<void> loadBaseUrl() async {
     String? storedUrl = await _storage.read(key: 'apiUrl');
-    _baseUrl = storedUrl ?? ''; 
+    _baseUrl = storedUrl ?? '';
     notifyListeners();
   }
 
@@ -100,40 +100,43 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-Future<bool> register(String email, String username, String password, String applicationAddress, String role) async {
-  final url = Uri.parse('$_baseUrl/api/Users/register');
-  try {
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'email': email,
-        'username': username,
-        'password': password,
-        'applicationAddress': applicationAddress,
-        'role': role,
-      }),
-    );
+  Future<bool> register(String email, String username, String password,
+      String applicationAddress, String role) async {
+    final url = Uri.parse('$_baseUrl/api/Users/register');
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'email': email,
+          'username': username,
+          'password': password,
+          'applicationAddress': applicationAddress,
+          'role': role,
+        }),
+      );
 
-    if (response.statusCode == 200) {
-      // Handle successful registration
-      final responseData = json.decode(response.body);
-      _token = responseData['token'];
-      _refreshToken = responseData['refreshToken'];
-      _userInfo = responseData['user'];
-      await _storage.write(key: 'token', value: _token);
-      await _storage.write(key: 'refreshToken', value: _refreshToken);
-      notifyListeners();
-      return true;
-    } else {
-      _setError("Failed to register");
+      if (response.statusCode == 201) {
+        // Handle successful registration
+        final responseData = json.decode(response.body)['data'];
+        _token = responseData['tokens'][0];
+        _refreshToken = responseData['tokens'][1];
+        var email = responseData['email'];
+        await _storage.write(key: 'token', value: _token);
+        await _storage.write(key: 'refreshToken', value: _refreshToken);
+        await _storage.write(key: 'email', value: email);
+        await _storage.write(key: 'password', value: password);
+        notifyListeners();
+        return true;
+      } else {
+        _setError("Failed to register");
+        return false;
+      }
+    } catch (error) {
+      _setError("Failed to connect to the server.");
       return false;
     }
-  } catch (error) {
-    _setError("Failed to connect to the server.");
-    return false;
   }
-}
 
   // Logout method
   Future<void> logout() async {
@@ -145,5 +148,4 @@ Future<bool> register(String email, String username, String password, String app
     await _storage.delete(key: 'jwtRefresh');
     notifyListeners();
   }
-
 }
