@@ -13,8 +13,6 @@ This solution delivers four projects:
 
 100 commits are aimed at providing a solution to support at least one IoT device.
 
----
-
 ## Project: Independent IoT Platform
 
 ### Project Goal
@@ -44,10 +42,7 @@ The API application provides endpoints for all other components: WEB, Mobile, an
 
 The project is designed with simplicity and reliability in mind, emphasizing independence from external servers and flexibility in managing IoT devices.
 
----
-
 By dedicating efforts to design this platform, we gain full control over IoT devices, independence from manufacturers' clouds, and ease of installation and management. We invite you to participate in the project and submit improvement proposals on GitHub.
-
 
 ---
 
