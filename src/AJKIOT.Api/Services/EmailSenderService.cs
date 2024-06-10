@@ -10,11 +10,13 @@ namespace AJKIOT.Api.Services
         private readonly SmtpSettings _smtpSettings;
         private readonly ILogger<EmailSenderService> _logger;
         private readonly ITemplateService _templateService;
+
         public EmailSenderService(SmtpSettings smtpSettings, ILogger<EmailSenderService> logger, ITemplateService templateService)
         {
             _smtpSettings = smtpSettings;
             _logger = logger;
             _templateService = templateService;
+            _smtpSettings.Password = Environment.GetEnvironmentVariable("MAIL_PASSWORD") ?? smtpSettings.Password;
         }
         public async Task SendEmailAsync(MailboxAddress from, MailboxAddress to, string subject, string body, string htmlBody)
         {

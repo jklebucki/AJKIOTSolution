@@ -234,6 +234,7 @@ RestartSec=10
 SyslogIdentifier=dotnet-api
 User=www-data
 Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=MAIL_PASSWORD=YourMailPassword
 Environment=DOTNET_CLI_HOME=$web_dir/.dotnet
 Environment=DOTNET_NOLOGO=true
 Environment=DOTNET_CLI_TELEMETRY_OPTOUT=1
