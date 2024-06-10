@@ -37,6 +37,7 @@ class AuthProvider with ChangeNotifier {
 
   // Login method
   Future<bool> login(String email, String password) async {
+    _setError("");
     await loadBaseUrl(); // Ensure the latest base URL is loaded
     final Uri url = Uri.parse('$_baseUrl/api/Users/login');
     try {
@@ -71,6 +72,7 @@ class AuthProvider with ChangeNotifier {
 
   // Refresh token method
   Future<bool> refreshToken() async {
+    _setError("");
     await loadBaseUrl(); // Ensure the latest base URL is loaded
     final Uri url = Uri.parse('$_baseUrl/Users/refreshToken');
     try {
@@ -83,9 +85,9 @@ class AuthProvider with ChangeNotifier {
       );
 
       if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
-        _token = responseData['token'];
-        _refreshToken = responseData['refreshToken'];
+        final responseData = json.decode(response.body)['data'];
+        _token = responseData['tokens'][0];
+        _refreshToken = responseData['tokens'][1];
         await _storage.write(key: 'jwt', value: _token);
         await _storage.write(key: 'jwtRefresh', value: _refreshToken);
         notifyListeners();
@@ -102,6 +104,7 @@ class AuthProvider with ChangeNotifier {
 
   Future<bool> register(String email, String username, String password,
       String applicationAddress, String role) async {
+    _setError("");
     final url = Uri.parse('$_baseUrl/api/Users/register');
     try {
       final response = await http.post(
