@@ -9,7 +9,7 @@ This solution delivers four projects:
 - **AJKIOT.Web** - An application that manages accounts and accesses
 - **ajk_iot_mobile** - A mobile application
 - **AJKIOT.Api** - Endpoints for the WebApp and MobileApp
-- **ajk_iot_devices** - Software for the ESP8266 module
+- **ajk_iot_devices** - Software for the ESP32/ESP8266 module
 
 100 commits are aimed at providing a solution to support at least one IoT device.
 
