@@ -68,7 +68,8 @@ In the second step, click on the link to join the application testing. [https://
 
 ----
 
-## IoT boards used in the project
+# IoT boards used in the project
+
 ESP-01 (OpenTimer)
 
 <img src="https://github.com/jklebucki/AJKIOTSolution/blob/main/Assets/Pictures/ESP-01.png" alt="ESP32" width="300" height="300">
