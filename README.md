@@ -68,9 +68,11 @@ In the second step, click on the link to join the application testing. [https://
 
 ----
 
-## IoT boards
+## IoT boards used in the project
 ESP-01
+
 <img src="https://github.com/jklebucki/AJKIOTSolution/blob/main/Assets/Pictures/ESP-01.png" alt="ESP32" width="300" height="300">
 
 ESP32-WROOM-DEVKIT v2
+
 <img src="https://github.com/jklebucki/AJKIOTSolution/blob/main/Assets/Pictures/esp32-wroom-devkit-rev-2.png" alt="ESP32" width="300" height="300">
