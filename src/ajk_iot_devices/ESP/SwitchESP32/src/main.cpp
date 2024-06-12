@@ -1,5 +1,5 @@
-#define OUT_PIN 0
-#define RESET_PIN 2
+#define OUT_PIN 16
+#define RESET_PIN 21
 #define EEPROM_SIZE 512
 #define RESET_HOLD_TIME 10000 // 10 seconds
 #define WIFI_RETRY_INTERVAL 5000
@@ -225,17 +225,6 @@ void parseSchedule(const char *json)
   }
 }
 
-void setTime()
-{
-  configTime(0, 0, "pool.ntp.org", "time.nist.gov");
-  while (time(nullptr) < SECS_YR_2000)
-  { // Wait until the time is set
-    delay(100);
-    Serial.print(".");
-  }
-  Serial.println("Time set!");
-}
-
 void printLocalTime()
 {
   struct tm timeinfo;
@@ -416,6 +405,18 @@ void checkResetButton()
   {
     buttonPressed = false; // Reset flag when button is released
   }
+}
+
+void setTime()
+{
+  configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+  while (time(nullptr) < SECS_YR_2000)
+  { // Wait until the time is set
+    delay(100);
+    Serial.print("._");
+    checkResetButton();
+  }
+  Serial.println("Time set!");
 }
 
 void reconnect()

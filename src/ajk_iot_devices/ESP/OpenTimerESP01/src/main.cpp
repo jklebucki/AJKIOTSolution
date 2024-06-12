@@ -1,4 +1,4 @@
-#define OUT_PIN 2
+#define OUT_PIN 0
 #define RESET_PIN 2
 #define EEPROM_SIZE 512
 #define RESET_HOLD_TIME 10000 // 10 seconds
@@ -226,7 +226,7 @@ bool connectToWiFi()
   unsigned long startTime = millis();
   while (WiFi.status() != WL_CONNECTED)
   {
-    if (millis() - startTime >= WIFI_RETRY_INTERVAL)
+    if (millis() - startTime >= 10000)
     {
       Serial.println("Failed to connect to WiFi");
       return false;
@@ -439,7 +439,7 @@ void debugSystemStatus()
   getLocalTime(&timeinfo);
   Serial.printf("Current time: %02d:%02d:%02d - Current weekday: %d\n", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, mondayAsFirstDayOfWeek(timeinfo.tm_wday));
   Serial.printf("Feature: %s - Value: %d\n", feature.Name, feature.Value);
-  Serial.println();
+  Serial.printf_P("Client state: %d                                                                                                                                   ", client.state());
 }
 
 void maintainPinState()
@@ -461,9 +461,10 @@ void loop()
   checkResetButton();
   if (!cofigMode)
   {
+    unsigned long currentMillis = millis();
     if (WiFi.status() != WL_CONNECTED)
-    { // Check if WiFi is connected
-      unsigned long currentMillis = millis();
+    {
+      Serial.println("WiFi disconnected");
       if (currentMillis - lastWiFiAttemptTime >= WIFI_RETRY_INTERVAL)
       {
         lastWiFiAttemptTime = currentMillis;
@@ -477,14 +478,14 @@ void loop()
 
     if (WiFi.status() == WL_CONNECTED)
     {
-      if (!client.connected())
+      if (client.state() != MQTT_CONNECTED)
       {
         reconnect();
         configDemand();
       }
     }
+
     maintainPinState();
-    unsigned long currentMillis = millis();
     if (currentMillis - localMillis >= 5000)
     {
       timeClient.update();
